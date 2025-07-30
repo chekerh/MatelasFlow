@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<BorderPane xmlns:fx="http://javafx.com/fxml" fx:id="root" fx:controller="com.warehouse.controller.DashboardController" stylesheets="/css/modern.css" styleClass="root,dashboard">
+    <top>
+        <VBox alignment="CENTER" spacing="8" style="-fx-padding: 0 0 10 0;" styleClass="dashboard-top">
+            <ImageView fx:id="logoImage" fitHeight="60" fitWidth="60" pickOnBounds="true" preserveRatio="true" styleClass="logoImage"/>
+            <Label text="Tableau de bord - Gestion d'entrepôt" style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;" />
+            <HBox spacing="10" alignment="CENTER_LEFT" style="-fx-padding: 10;">
+                <Label fx:id="welcomeLabel" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+                <Button text="Déconnexion" fx:id="logoutButton" onAction="#handleLogout"/>
+            </HBox>
+        </VBox>
+    </top>
+    <left>
+        <VBox fx:id="navBox" styleClass="centered" spacing="14" style="-fx-padding: 30;">
+            <Button text="🛏  Matelas" fx:id="inventoryButton" onAction="#showInventory">
+                <tooltip><Tooltip text="Gérer les matelas"/></tooltip>
+            </Button>
+            <Button text="💶 Transactions" fx:id="transactionsButton" onAction="#showTransactions">
+                <tooltip><Tooltip text="Voir les ventes, prêts, retours"/></tooltip>
+            </Button>
+            <Button text="🏪 Propriétaires de magasin" fx:id="storeOwnersButton" onAction="#showStoreOwners">
+                <tooltip><Tooltip text="Gérer les propriétaires"/></tooltip>
+            </Button>
+            <Button text="📄 Rapports" fx:id="reportsButton" onAction="#showReports">
+                <tooltip><Tooltip text="Voir les rapports"/></tooltip>
+            </Button>
+            <Button text="📊 Statistiques" fx:id="statisticsButton" onAction="#showStatistics">
+                <tooltip><Tooltip text="Voir les statistiques"/></tooltip>
+            </Button>
+            <Button text="👤 Utilisateurs" fx:id="userManagementButton" onAction="#showUserManagement" visible="false" managed="false">
+                <tooltip><Tooltip text="Gérer les utilisateurs"/></tooltip>
+            </Button>
+        </VBox>
+    </left>
+    <center>
+        <StackPane>
+            <!-- Lively background shape -->
+            <Pane style="-fx-background-radius: 80 0 80 0; -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, #fbc2eb88 0%, #a6c1ee88 100%); -fx-pref-width: 900; -fx-pref-height: 600; -fx-translate-x: 120; -fx-translate-y: 80;"/>
+            <StackPane fx:id="contentPane" style="-fx-padding: 30;"/>
+            <!-- Overlay for dialogs -->
+            <StackPane fx:id="overlayPane" visible="false" managed="false" style="-fx-background-color: rgba(0,0,0,0.35); -fx-alignment: center;">
+                <!-- Dialog content will be injected here -->
+            </StackPane>
+        </StackPane>
+    </center>
+</BorderPane> 

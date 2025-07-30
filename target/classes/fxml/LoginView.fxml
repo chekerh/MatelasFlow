@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<VBox xmlns:fx="http://javafx.com/fxml" fx:controller="com.warehouse.controller.LoginController" alignment="CENTER" spacing="18" stylesheets="/css/modern.css" styleClass="root">
+    <ImageView fx:id="logoImage" fitHeight="80" fitWidth="80" pickOnBounds="true" preserveRatio="true" styleClass="logoImage"/>
+    <Label text="Bienvenue! Veuillez vous connecter" style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #0288d1;" />
+    <VBox fx:id="loginPane" alignment="CENTER" spacing="12" styleClass="loginPane">
+        <Label text="Nom d'utilisateur:" />
+        <TextField fx:id="usernameField" promptText="Entrez votre nom d'utilisateur" />
+        <Label text="Mot de passe:" />
+        <PasswordField fx:id="passwordField" promptText="Entrez votre mot de passe" />
+        <Button fx:id="loginButton" text="Connexion" onAction="#handleLogin" />
+        <Label fx:id="errorLabel" styleClass="errorLabel" />
+    </VBox>
+</VBox> 

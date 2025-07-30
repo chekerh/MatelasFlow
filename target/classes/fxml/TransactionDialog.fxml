@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<GridPane xmlns:fx="http://javafx.com/fxml" fx:controller="com.warehouse.controller.TransactionDialogController" hgap="14" vgap="14" alignment="CENTER" style="-fx-padding: 28; -fx-background-radius: 16; -fx-background-color: #fff;">
+    <Label text="Type de transaction:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+    <ComboBox fx:id="typeComboBox" promptText="Vente, Transfert ou Retour" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+    <Label text="Matelas:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+    <ComboBox fx:id="mattressComboBox" promptText="Sélectionnez le matelas" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+    <Label text="Quantité:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+    <TextField fx:id="quantityField" promptText="Entrez la quantité" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+    <Label text="Prix:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+    <TextField fx:id="prixField" promptText="Entrez le prix" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+    <!-- Destination field for Transfert -->
+    <HBox fx:id="destinationBox" spacing="8" GridPane.rowIndex="4" GridPane.columnIndex="0" GridPane.columnSpan="2">
+        <Label text="Lieu de destination:" />
+        <TextField fx:id="destinationField" promptText="Où transférer le matelas ?" />
+    </HBox>
+    <VBox fx:id="lendingFieldsBox" GridPane.rowIndex="5" GridPane.columnIndex="0" GridPane.columnSpan="2" spacing="8">
+        <HBox spacing="8">
+            <Label text="Propriétaire:" />
+            <ComboBox fx:id="storeOwnerComboBox" promptText="Sélectionnez le propriétaire" />
+            <Button fx:id="addStoreOwnerButton" text="+" styleClass="button-accent-purple">
+                <tooltip><Tooltip text="Ajouter un propriétaire sur le champ"/></tooltip>
+            </Button>
+        </HBox>
+        <HBox spacing="8">
+            <Label text="Date de retour prévue:" />
+            <DatePicker fx:id="expectedReturnDatePicker" promptText="Date de retour" />
+        </HBox>
+    </VBox>
+    <Label text="Notes:" GridPane.rowIndex="6" GridPane.columnIndex="0"/>
+    <TextField fx:id="notesField" promptText="Notes supplémentaires" GridPane.rowIndex="6" GridPane.columnIndex="1"/>
+    <HBox spacing="18" alignment="CENTER" GridPane.rowIndex="7" GridPane.columnIndex="0" GridPane.columnSpan="2">
+        <Button fx:id="okButton" text="OK">
+            <tooltip><Tooltip text="Valider"/></tooltip>
+        </Button>
+        <Button fx:id="cancelButton" text="Annuler">
+            <tooltip><Tooltip text="Annuler"/></tooltip>
+        </Button>
+    </HBox>
+    <Label fx:id="errorLabel" styleClass="errorLabel" GridPane.rowIndex="8" GridPane.columnIndex="0" GridPane.columnSpan="2"/>
+</GridPane> 

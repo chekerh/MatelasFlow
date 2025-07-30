@@ -1,0 +1,276 @@
+/* Modern French UI for Login Screen */
+.root {
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, #667eea 0%, #764ba2 100%);
+    -fx-font-family: 'Segoe UI', 'Arial', sans-serif;
+}
+
+/* Dashboard specific styling */
+.root.dashboard {
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, #667eea 0%, #764ba2 100%);
+    -fx-background-image: url('/images/background.JPG');
+    -fx-background-size: cover;
+    -fx-background-position: center;
+}
+
+/* Dashboard top section */
+.dashboard-top {
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.85) 100%);
+    -fx-background-radius: 0 0 24 24;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0.2, 0, 2);
+}
+
+#logoImage {
+    -fx-padding: 0 0 20 0;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 10, 0.2, 0, 2);
+}
+
+/* Welcome label styling */
+#welcomeLabel {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2c3e50;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 2, 0.2, 0, 1);
+}
+
+/* Logout button */
+#logoutButton {
+    -fx-background-color: linear-gradient(to bottom, #e74c3c, #c0392b);
+    -fx-text-fill: white;
+    -fx-background-radius: 20;
+    -fx-border-radius: 20;
+    -fx-padding: 12 24 12 24;
+    -fx-font-weight: bold;
+    -fx-effect: dropshadow(gaussian, rgba(231,76,60,0.3), 6, 0.2, 0, 2);
+}
+
+#logoutButton:hover {
+    -fx-background-color: linear-gradient(to bottom, #c0392b, #e74c3c);
+    -fx-effect: dropshadow(gaussian, rgba(231,76,60,0.4), 8, 0.2, 0, 3);
+}
+
+.label {
+    -fx-font-size: 16px;
+    -fx-text-fill: #222;
+}
+
+.text-field, .password-field {
+    -fx-font-size: 16px;
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-border-color: #b0bec5;
+    -fx-background-color: #fff;
+    -fx-padding: 8 12 8 12;
+}
+
+.button {
+    -fx-font-size: 18px;
+    -fx-background-color: linear-gradient(to bottom, #4fc3f7, #0288d1);
+    -fx-text-fill: white;
+    -fx-background-radius: 16;
+    -fx-border-radius: 16;
+    -fx-padding: 16 32 16 32;
+    -fx-effect: dropshadow(gaussian, rgba(2,136,209,0.2), 6, 0.2, 0, 2);
+    -fx-font-weight: bold;
+}
+.button:hover {
+    -fx-background-color: linear-gradient(to bottom, #0288d1, #4fc3f7);
+}
+
+#errorLabel {
+    -fx-text-fill: #d32f2f;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-padding: 8 0 0 0;
+}
+
+#loginPane {
+    -fx-background-color: white;
+    -fx-background-radius: 16;
+    -fx-padding: 32 32 32 32;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.13), 20, 0.2, 0, 4);
+} 
+
+/* Dashboard navigation animation */
+#navBox.centered {
+    -fx-translate-x: 0;
+    -fx-pref-width: 400px;
+    -fx-max-width: 400px;
+    -fx-min-width: 320px;
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.9) 100%);
+    -fx-background-radius: 24;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 20, 0.2, 0, 6);
+    -fx-padding: 32 0 32 0;
+    -fx-border-color: rgba(255,255,255,0.3);
+    -fx-border-width: 1;
+    -fx-border-radius: 24;
+}
+
+#navBox.left {
+    -fx-translate-x: 0;
+    -fx-pref-width: 220px;
+    -fx-max-width: 220px;
+    -fx-min-width: 220px;
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.9) 100%);
+    -fx-background-radius: 24;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 16, 0.2, 0, 4);
+    -fx-padding: 32 0 32 0;
+    -fx-border-color: rgba(255,255,255,0.3);
+    -fx-border-width: 1;
+    -fx-border-radius: 24;
+}
+
+/* Navigation buttons */
+#navBox .button {
+    -fx-font-size: 16px;
+    -fx-background-color: linear-gradient(to bottom, #667eea, #764ba2);
+    -fx-text-fill: white;
+    -fx-background-radius: 20;
+    -fx-border-radius: 20;
+    -fx-padding: 14 20 14 20;
+    -fx-effect: dropshadow(gaussian, rgba(102,126,234,0.3), 8, 0.2, 0, 3);
+    -fx-font-weight: bold;
+    -fx-min-width: 180px;
+    -fx-max-width: 180px;
+}
+
+#navBox .button:hover {
+    -fx-background-color: linear-gradient(to bottom, #764ba2, #667eea);
+    -fx-effect: dropshadow(gaussian, rgba(102,126,234,0.4), 10, 0.2, 0, 4);
+    -fx-scale-x: 1.05;
+    -fx-scale-y: 1.05;
+}
+
+/* Content pane styling */
+#contentPane {
+    -fx-background-color: rgba(255,255,255,0.1);
+    -fx-background-radius: 16;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0.2, 0, 2);
+}
+
+/* Overlay styling */
+#overlayPane {
+    -fx-background-color: rgba(0,0,0,0.4);
+    -fx-alignment: center;
+}
+
+.overlay-dialog {
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.95) 100%);
+    -fx-background-radius: 20;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 20, 0.2, 0, 8);
+    -fx-padding: 24;
+    -fx-min-width: 500;
+    -fx-max-width: 600;
+    -fx-min-height: 400;
+    -fx-max-height: 500;
+}
+
+/* Add icons to buttons (optional, if using glyphs or SVG) */
+.button .icon {
+    -fx-padding: 0 8 0 0;
+    -fx-font-size: 18px;
+}
+
+/* Table and CRUD polish */
+.table-view {
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-font-size: 16px;
+    -fx-background-color: rgba(255,255,255,0.9);
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 8, 0.2, 0, 2);
+}
+
+.table-view .column-header-background {
+    -fx-background-color: linear-gradient(to bottom, #667eea, #764ba2);
+    -fx-background-radius: 12 12 0 0;
+}
+
+.table-view .column-header {
+    -fx-background-color: transparent;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+.table-view .table-row-cell:selected {
+    -fx-background-color: linear-gradient(to right, #667eea, #764ba2);
+    -fx-text-fill: white;
+}
+
+.table-view .table-row-cell:odd {
+    -fx-background-color: rgba(255,255,255,0.8);
+}
+
+.table-view .table-row-cell:even {
+    -fx-background-color: rgba(255,255,255,0.9);
+}
+
+.tooltip {
+    -fx-background-color: rgba(0,0,0,0.8);
+    -fx-text-fill: white;
+    -fx-background-radius: 8;
+    -fx-padding: 8 12 8 12;
+}
+
+.dialog-pane, .custom-dialog {
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.95) 100%);
+    -fx-background-radius: 20;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 20, 0.2, 0, 8);
+    -fx-padding: 24;
+}
+
+.button-accent-green {
+    -fx-background-color: linear-gradient(to bottom, #4caf50, #388e3c);
+    -fx-text-fill: white;
+    -fx-background-radius: 16;
+    -fx-border-radius: 16;
+    -fx-padding: 12 24 12 24;
+    -fx-font-weight: bold;
+    -fx-effect: dropshadow(gaussian, rgba(76,175,80,0.3), 6, 0.2, 0, 2);
+}
+
+.button-accent-orange {
+    -fx-background-color: linear-gradient(to bottom, #ff9800, #f57c00);
+    -fx-text-fill: white;
+    -fx-background-radius: 16;
+    -fx-border-radius: 16;
+    -fx-padding: 12 24 12 24;
+    -fx-font-weight: bold;
+    -fx-effect: dropshadow(gaussian, rgba(255,152,0,0.3), 6, 0.2, 0, 2);
+}
+
+.button-accent-purple {
+    -fx-background-color: linear-gradient(to bottom, #9c27b0, #7b1fa2);
+    -fx-text-fill: white;
+    -fx-background-radius: 16;
+    -fx-border-radius: 16;
+    -fx-padding: 12 24 12 24;
+    -fx-font-weight: bold;
+    -fx-effect: dropshadow(gaussian, rgba(156,39,176,0.3), 6, 0.2, 0, 2);
+}
+
+.lively-shape {
+    -fx-background-radius: 80 0 80 0;
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, rgba(251,194,235,0.4) 0%, rgba(166,193,238,0.4) 100%);
+    -fx-effect: dropshadow(gaussian, rgba(166,193,238,0.2), 20, 0.2, 0, 4);
+}
+
+.large-dialog {
+    -fx-min-width: 600;
+    -fx-max-width: 700;
+    -fx-min-height: 500;
+    -fx-max-height: 600;
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.95) 100%);
+    -fx-background-radius: 24;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.25), 25, 0.2, 0, 10);
+    -fx-padding: 32;
+}
+
+.button .icon-green { -fx-text-fill: #43e97b; }
+.button .icon-orange { -fx-text-fill: #ffb347; }
+.button .icon-purple { -fx-text-fill: #a18cd1; }
+
+.panel-accent {
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.8) 100%);
+    -fx-background-radius: 16;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0.2, 0, 2);
+    -fx-padding: 20;
+} 
