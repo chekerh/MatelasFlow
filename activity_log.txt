@@ -6,3 +6,5 @@
 [2025-07-31 02:05:18] admin (admin) - Déconnexion: Déconnexion depuis le dashboard
 [2025-07-31 02:10:57] admin (admin) - Connexion réussie: Connexion depuis aymou@Windows 11
 [2025-07-31 02:14:35] admin (admin) - Déconnexion: Déconnexion depuis le dashboard
+[2025-07-31 22:43:33] admin (admin) - Connexion réussie: Connexion depuis aymou@Windows 11
+[2025-07-31 22:44:02] admin (admin) - Ajout de matelas: Ouverture de l'interface d'ajout de matelas

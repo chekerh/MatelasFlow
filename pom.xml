@@ -9,7 +9,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
-        <javafx.version>20.0.0.1</javafx.version>
+        <javafx.version>17.0.2</javafx.version>
     </properties>
     <dependencies>
         <!-- JavaFX modules -->
@@ -21,6 +21,16 @@
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-fxml</artifactId>
+            <version>17.0.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-graphics</artifactId>
+            <version>17.0.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-base</artifactId>
             <version>17.0.2</version>
         </dependency>
         <dependency>
@@ -63,6 +73,108 @@
                 <configuration>
                     <mainClass>com.warehouse.App</mainClass>
                 </configuration>
+            </plugin>
+            
+            <!-- Maven Shade Plugin pour créer un JAR avec toutes les dépendances -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.4.1</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>com.warehouse.App</mainClass>
+                                </transformer>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                                    <resource>reference.conf</resource>
+                                </transformer>
+                            </transformers>
+                            <filters>
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/*.SF</exclude>
+                                        <exclude>META-INF/*.DSA</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            
+            <!-- Maven Assembly Plugin pour créer un package complet -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>3.6.0</version>
+                <configuration>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                    <archive>
+                        <manifest>
+                            <mainClass>com.warehouse.App</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>make-assembly</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            
+            <!-- Plugin pour créer l'exécutable -->
+            <plugin>
+                <groupId>org.panteleyev</groupId>
+                <artifactId>jpackage-maven-plugin</artifactId>
+                <version>1.6.0</version>
+                <configuration>
+                    <name>MatelasPro</name>
+                    <appVersion>1.0.0</appVersion>
+                    <vendor>MatelasPro</vendor>
+                    <destination>target/dist</destination>
+                    <module>warehouse-mattress-app/com.warehouse.App</module>
+                    <runtimeImage>target/image</runtimeImage>
+                    <javaOptions>
+                        <option>--module-path</option>
+                        <option>%JAVA_HOME%/lib</option>
+                        <option>--add-modules</option>
+                        <option>javafx.controls,javafx.fxml,javafx.graphics,javafx.base</option>
+                        <option>-Dfile.encoding=UTF-8</option>
+                        <option>-Xmx1024m</option>
+                        <option>-Xms256m</option>
+                    </javaOptions>
+                    <winOptions>
+                        <winDirChooser>true</winDirChooser>
+                        <winMenu>true</winMenu>
+                        <winShortcut>true</winShortcut>
+                    </winOptions>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>win</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>jpackage</goal>
+                        </goals>
+                        <configuration>
+                            <type>exe</type>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
