@@ -7,7 +7,6 @@
     <Label text="Gestion des employés" style="-fx-font-size: 20px; -fx-font-weight: bold;" />
     <TableView fx:id="userTable" prefHeight="400" prefWidth="700">
         <columns>
-            <TableColumn fx:id="idColumn" text="ID" prefWidth="50" />
             <TableColumn fx:id="usernameColumn" text="Nom d'utilisateur" prefWidth="200" />
             <TableColumn fx:id="roleColumn" text="Rôle" prefWidth="100" />
         </columns>

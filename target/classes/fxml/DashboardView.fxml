@@ -49,6 +49,7 @@
                                     <Button text="📊 Statistiques" onAction="#showStatistics" styleClass="nav-button"/>
                 <Button text="📄 Rapports" onAction="#showReports" styleClass="nav-button"/>
                 <Button text="🔍 Surveillance" onAction="#showAdminLogs" styleClass="nav-button" fx:id="adminLogsButton"/>
+                <Button text="🚀 Fonctionnalités Avancées" onAction="#showAdvancedFeatures" styleClass="nav-button" fx:id="advancedFeaturesButton"/>
                 </VBox>
                 
                 <!-- Content Area -->

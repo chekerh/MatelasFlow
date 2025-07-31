@@ -14,7 +14,6 @@ import javafx.stage.Stage;
 
 public class StoreOwnersController {
     @FXML private TableView<StoreOwner> storeOwnerTable;
-    @FXML private TableColumn<StoreOwner, Integer> idColumn;
     @FXML private TableColumn<StoreOwner, String> nameColumn;
     @FXML private TableColumn<StoreOwner, String> contactColumn;
     @FXML private Button addButton;
@@ -32,7 +31,7 @@ public class StoreOwnersController {
 
     @FXML
     public void initialize() {
-        idColumn.setCellValueFactory(cellData -> new javafx.beans.property.SimpleIntegerProperty(cellData.getValue().getId()).asObject());
+        // Set up table columns
         nameColumn.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(cellData.getValue().getName()));
         contactColumn.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(cellData.getValue().getContact()));
         storeOwnerTable.setItems(storeOwnerList);

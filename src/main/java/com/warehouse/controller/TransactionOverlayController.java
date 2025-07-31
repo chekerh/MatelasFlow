@@ -18,6 +18,7 @@ import com.warehouse.model.UserDAO;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.ArrayList;
 
 public class TransactionOverlayController {
     @FXML private ComboBox<String> typeComboBox;
@@ -51,24 +52,59 @@ public class TransactionOverlayController {
         this.transaction = transaction;
         this.isEditMode = (transaction != null);
         
-        initializeComboBoxes();
-        
         if (isEditMode) {
             dialogTitle.setText("Modifier la transaction");
-            typeComboBox.setValue(transaction.getType());
-            mattressComboBox.setValue(MattressDAO.getMattressById(transaction.getMattressId()));
+            
+            // Convert type to display format with icon
+            String displayType = transaction.getType();
+            if ("Vente".equals(displayType)) {
+                displayType = "💰 Vente";
+            } else if ("Prêt".equals(displayType)) {
+                displayType = "📦 Prêt";
+            } else if ("Transfert".equals(displayType)) {
+                displayType = "🚚 Transfert";
+            } else if ("retour".equals(displayType)) {
+                displayType = "🔄 retour";
+            } else if ("Réception".equals(displayType)) {
+                displayType = "📥 Réception";
+            }
+            
+            // Initialize combo boxes first
+            initializeComboBoxes();
+            
+            // Then set values
+            typeComboBox.setValue(displayType);
+            
+            // Set mattress value by finding the matching string
+            Mattress mattress = MattressDAO.getMattressById(transaction.getMattressId());
+            if (mattress != null) {
+                String mattressString = "🛏️ " + mattress.getType() + " (" + mattress.getSize() + ")";
+                mattressComboBox.setValue(mattressString);
+            }
+            
             quantityField.setText(String.valueOf(transaction.getQuantity()));
             prixField.setText(String.valueOf(transaction.getPrix()));
+            
             if (transaction.getStoreOwnerId() != null) {
-                storeOwnerComboBox.setValue(StoreOwnerDAO.getStoreOwnerById(transaction.getStoreOwnerId()));
+                StoreOwner storeOwner = StoreOwnerDAO.getStoreOwnerById(transaction.getStoreOwnerId());
+                if (storeOwner != null) {
+                    String storeOwnerString = "🏪 " + storeOwner.getName();
+                    storeOwnerComboBox.setValue(storeOwnerString);
+                }
             }
+            
             notesField.setText(transaction.getNotes());
             if (transaction.getExpectedReturnDate() != null) {
                 expectedReturnDatePicker.setValue(transaction.getExpectedReturnDate());
             }
         } else {
             dialogTitle.setText("Ajouter une transaction");
-            typeComboBox.setValue("Vente");
+            
+            // Initialize combo boxes first
+            initializeComboBoxes();
+            
+            // Then set default values
+            typeComboBox.setValue("💰 Vente");
             quantityField.clear();
             prixField.clear();
             notesField.clear();
@@ -157,10 +193,52 @@ public class TransactionOverlayController {
     private void handleOk() {
         try {
             String type = typeComboBox.getValue();
-            Mattress selectedMattress = MattressDAO.getMattressById(Integer.parseInt(mattressComboBox.getValue()));
+            
+            // Extract type without icon for database storage
+            String typeForDB = type;
+            if (type.startsWith("💰 ")) {
+                typeForDB = "Vente";
+            } else if (type.startsWith("📦 ")) {
+                typeForDB = "Prêt";
+            } else if (type.startsWith("🚚 ")) {
+                typeForDB = "Transfert";
+            } else if (type.startsWith("🔄 ")) {
+                typeForDB = "retour";
+            } else if (type.startsWith("📥 ")) {
+                typeForDB = "Réception";
+            }
+            
+            // Extract mattress from string with icon
+            String mattressString = mattressComboBox.getValue();
+            Mattress selectedMattress = null;
+            if (mattressString != null && mattressString.startsWith("🛏️ ")) {
+                String mattressInfo = mattressString.substring(2); // Remove icon
+                String mattressType = mattressInfo.substring(0, mattressInfo.indexOf(" ("));
+                List<Mattress> allMattresses = MattressDAO.getAllMattresses();
+                for (Mattress mattress : allMattresses) {
+                    if (mattress.getType().equals(mattressType)) {
+                        selectedMattress = mattress;
+                        break;
+                    }
+                }
+            }
+            
             String quantityStr = quantityField.getText().trim();
             String prixStr = prixField.getText().trim();
-            StoreOwner selectedStoreOwner = StoreOwnerDAO.getStoreOwnerById(Integer.parseInt(storeOwnerComboBox.getValue()));
+            
+            // Extract store owner from string with icon
+            String storeOwnerString = storeOwnerComboBox.getValue();
+            StoreOwner selectedStoreOwner = null;
+            if (storeOwnerString != null && storeOwnerString.startsWith("🏪 ")) {
+                String ownerName = storeOwnerString.substring(2); // Remove icon
+                List<StoreOwner> allStoreOwners = StoreOwnerDAO.getAllStoreOwners();
+                for (StoreOwner owner : allStoreOwners) {
+                    if (owner.getName().equals(ownerName)) {
+                        selectedStoreOwner = owner;
+                        break;
+                    }
+                }
+            }
             String notes = notesField.getText().trim();
             LocalDate expectedReturnDate = expectedReturnDatePicker.getValue();
             String destination = destinationField.getText().trim();
@@ -201,13 +279,13 @@ public class TransactionOverlayController {
                 }
                 
                 // Validate price for different transaction types
-                if ("💰 Vente".equals(type) && prix == 0) {
+                if ("Vente".equals(typeForDB) && prix == 0) {
                     showAlert("Erreur", "Le prix de vente ne peut pas être zéro.", AlertType.ERROR);
                     return;
                 }
                 
                 // For returns, price should be 0 or the original price
-                if ("🔄 retour".equals(type) && prix > 0) {
+                if ("retour".equals(typeForDB) && prix > 0) {
                     showAlert("Erreur", "Le prix pour un retour doit être zéro.", AlertType.ERROR);
                     return;
                 }
@@ -218,19 +296,14 @@ public class TransactionOverlayController {
             }
             
             // Check stock availability for sales, loans, and transfers
-            if (("💰 Vente".equals(type) || "📦 Prêt".equals(type) || "🚚 Transfert".equals(type))) {
+            if (("Vente".equals(typeForDB) || "Prêt".equals(typeForDB) || "Transfert".equals(typeForDB))) {
                 if (selectedMattress.getQuantity() < quantity) {
                     showAlert("Erreur", "Stock insuffisant. Disponible: " + selectedMattress.getQuantity(), AlertType.ERROR);
                     return;
                 }
                 
                 // Additional validation for sales
-                if ("💰 Vente".equals(type)) {
-                    if (prix <= 0) {
-                        showAlert("Erreur", "Le prix de vente doit être supérieur à zéro.", AlertType.ERROR);
-                        return;
-                    }
-                    
+                if ("Vente".equals(typeForDB)) {
                     // Check if selling price is reasonable (not too low compared to original price)
                     double originalPrice = selectedMattress.getPrix();
                     if (prix < originalPrice * 0.5) {
@@ -241,7 +314,7 @@ public class TransactionOverlayController {
             }
             
             // Validate reception
-            if ("📥 Réception".equals(type)) {
+            if ("Réception".equals(typeForDB)) {
                 if (prix != 0) {
                     showAlert("Erreur", "Le prix pour une réception doit être zéro.", AlertType.ERROR);
                     return;
@@ -249,7 +322,7 @@ public class TransactionOverlayController {
             }
             
             // Validate lending requirements
-            if ("📦 Prêt".equals(type)) {
+            if ("Prêt".equals(typeForDB)) {
                 if (selectedStoreOwner == null) {
                     showAlert("Erreur", "Un propriétaire est obligatoire pour un prêt.", AlertType.ERROR);
                     return;
@@ -268,7 +341,7 @@ public class TransactionOverlayController {
             }
             
             // Validate transfer requirements
-            if ("🚚 Transfert".equals(type)) {
+            if ("Transfert".equals(typeForDB)) {
                 if (destination.isEmpty()) {
                     if (dashboardController != null) {
                         dashboardController.showNotification("Une destination est obligatoire pour un transfert.", true);
@@ -284,10 +357,10 @@ public class TransactionOverlayController {
             }
             
             // Validate return requirements
-            if ("🔄 retour".equals(type)) {
+            if ("retour".equals(typeForDB)) {
                 if (returnFromComboBox.getValue() == null) {
                     if (dashboardController != null) {
-                        dashboardController.showNotification("Un propriétaire est obligatoire pour un retour.", true);
+                        dashboardController.showNotification("Veuillez sélectionner le propriétaire de retour.", true);
                     }
                     return;
                 }
@@ -303,15 +376,21 @@ public class TransactionOverlayController {
             
             // Prepare notes field
             String finalNotes = notes;
-            if ("🚚 Transfert".equals(type) && !destination.isEmpty()) {
+            if ("Transfert".equals(typeForDB) && !destination.isEmpty()) {
                 finalNotes = "Transfert vers: " + destination;
-            } else if ("🔄 retour".equals(type) && returnFromComboBox.getValue() != null) {
-                finalNotes = "Retour de: " + returnFromComboBox.getValue();
-            } else if ("📦 Prêt".equals(type) && selectedStoreOwner != null && expectedReturnDate != null) {
+            } else if ("retour".equals(typeForDB) && returnFromComboBox.getValue() != null) {
+                String returnFromString = returnFromComboBox.getValue();
+                if (returnFromString.startsWith("🏪 ")) {
+                    String ownerName = returnFromString.substring(2);
+                    finalNotes = "Retour de: " + ownerName;
+                } else {
+                    finalNotes = "Retour de: " + returnFromString;
+                }
+            } else if ("Prêt".equals(typeForDB) && selectedStoreOwner != null && expectedReturnDate != null) {
                 finalNotes = "Prêt à: " + selectedStoreOwner.getName() + " - Retour prévu: " + expectedReturnDate.toString();
-            } else if ("💰 Vente".equals(type)) {
+            } else if ("Vente".equals(typeForDB)) {
                 finalNotes = "Vente directe - Prix: " + String.format("%.2f", prix) + "€";
-            } else if ("📥 Réception".equals(type)) {
+            } else if ("Réception".equals(typeForDB)) {
                 finalNotes = "Réception de " + quantity + " matelas";
             }
             
@@ -323,7 +402,7 @@ public class TransactionOverlayController {
                 int oldMattressId = transaction.getMattressId();
                 
                 // Update existing transaction
-                transaction.setType(type);
+                transaction.setType(typeForDB);
                 transaction.setMattressId(selectedMattress.getId());
                 transaction.setQuantity(quantity);
                 transaction.setPrix(prix);
@@ -335,16 +414,16 @@ public class TransactionOverlayController {
                 // Adjust stock based on type changes
                 if (success) {
                     // Revert old transaction's stock effect
-                    if ("💰 Vente".equals(oldType) || "📦 Prêt".equals(oldType) || "🚚 Transfert".equals(oldType)) {
+                    if ("Vente".equals(oldType) || "Prêt".equals(oldType) || "Transfert".equals(oldType)) {
                         MattressDAO.increaseQuantity(oldMattressId, oldQuantity);
-                    } else if ("🔄 retour".equals(oldType)) {
+                    } else if ("retour".equals(oldType)) {
                         MattressDAO.decreaseQuantity(oldMattressId, oldQuantity);
                     }
                     
                     // Apply new transaction's stock effect
-                    if ("💰 Vente".equals(type) || "📦 Prêt".equals(type) || "🚚 Transfert".equals(type)) {
+                    if ("Vente".equals(typeForDB) || "Prêt".equals(typeForDB) || "Transfert".equals(typeForDB)) {
                         MattressDAO.decreaseQuantity(selectedMattress.getId(), quantity);
-                    } else if ("🔄 retour".equals(type) || "📥 Réception".equals(type)) {
+                    } else if ("retour".equals(typeForDB) || "Réception".equals(typeForDB)) {
                         MattressDAO.increaseQuantity(selectedMattress.getId(), quantity);
                     }
                 }
@@ -354,7 +433,7 @@ public class TransactionOverlayController {
                     LocalDateTime.now(),
                     selectedMattress.getId(),
                     quantity,
-                    type,
+                    typeForDB,
                     selectedStoreOwner != null ? selectedStoreOwner.getId() : null,
                     userId,
                     prix,
@@ -365,9 +444,9 @@ public class TransactionOverlayController {
                 
                 // Update mattress quantity
                 if (success) {
-                    if ("💰 Vente".equals(type) || "📦 Prêt".equals(type) || "🚚 Transfert".equals(type)) {
+                    if ("Vente".equals(typeForDB) || "Prêt".equals(typeForDB) || "Transfert".equals(typeForDB)) {
                         MattressDAO.decreaseQuantity(selectedMattress.getId(), quantity);
-                    } else if ("🔄 retour".equals(type) || "📥 Réception".equals(type)) {
+                    } else if ("retour".equals(typeForDB) || "Réception".equals(typeForDB)) {
                         MattressDAO.increaseQuantity(selectedMattress.getId(), quantity);
                     }
                 }

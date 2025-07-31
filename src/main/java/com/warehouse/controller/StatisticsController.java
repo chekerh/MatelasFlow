@@ -2,6 +2,8 @@ package com.warehouse.controller;
 
 import com.warehouse.model.Mattress;
 import com.warehouse.model.MattressDAO;
+import com.warehouse.model.StoreOwner;
+import com.warehouse.model.StoreOwnerDAO;
 import com.warehouse.model.Transaction;
 import com.warehouse.model.TransactionDAO;
 import javafx.collections.FXCollections;
@@ -22,12 +24,12 @@ public class StatisticsController {
     @FXML private Button filterButton;
     @FXML private Button resetButton;
     @FXML private TableView<Transaction> transactionTable;
-    @FXML private TableColumn<Transaction, Integer> idColumn;
     @FXML private TableColumn<Transaction, String> dateColumn;
     @FXML private TableColumn<Transaction, String> typeColumn;
-    @FXML private TableColumn<Transaction, Integer> mattressIdColumn;
+    @FXML private TableColumn<Transaction, String> mattressColumn;
     @FXML private TableColumn<Transaction, Integer> quantityColumn;
-    @FXML private TableColumn<Transaction, Integer> storeOwnerIdColumn;
+    @FXML private TableColumn<Transaction, String> storeOwnerColumn;
+    @FXML private TableColumn<Transaction, Double> prixColumn;
     @FXML private TableColumn<Transaction, String> notesColumn;
     @FXML private Label errorLabel;
 
@@ -40,12 +42,21 @@ public class StatisticsController {
         typeComboBox.setValue("Tous");
         
         // Set up table columns
-        idColumn.setCellValueFactory(cellData -> new javafx.beans.property.SimpleIntegerProperty(cellData.getValue().getId()).asObject());
         dateColumn.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(cellData.getValue().getDate().toLocalDate().toString()));
         typeColumn.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(cellData.getValue().getType()));
-        mattressIdColumn.setCellValueFactory(cellData -> new javafx.beans.property.SimpleIntegerProperty(cellData.getValue().getMattressId()).asObject());
+        mattressColumn.setCellValueFactory(cellData -> {
+            Mattress mattress = MattressDAO.getMattressById(cellData.getValue().getMattressId());
+            return new javafx.beans.property.SimpleStringProperty(mattress != null ? mattress.getType() + " (" + mattress.getSize() + ")" : "");
+        });
         quantityColumn.setCellValueFactory(cellData -> new javafx.beans.property.SimpleIntegerProperty(cellData.getValue().getQuantity()).asObject());
-        storeOwnerIdColumn.setCellValueFactory(cellData -> cellData.getValue().getStoreOwnerId() == null ? null : new javafx.beans.property.SimpleIntegerProperty(cellData.getValue().getStoreOwnerId()).asObject());
+        storeOwnerColumn.setCellValueFactory(cellData -> {
+            if (cellData.getValue().getStoreOwnerId() == null) {
+                return new javafx.beans.property.SimpleStringProperty("");
+            }
+            StoreOwner storeOwner = StoreOwnerDAO.getStoreOwnerById(cellData.getValue().getStoreOwnerId());
+            return new javafx.beans.property.SimpleStringProperty(storeOwner != null ? storeOwner.getName() : "");
+        });
+        prixColumn.setCellValueFactory(cellData -> new javafx.beans.property.SimpleDoubleProperty(cellData.getValue().getPrix()).asObject());
         notesColumn.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(cellData.getValue().getNotes()));
         
         transactionTable.setItems(transactionList);

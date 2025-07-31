@@ -33,6 +33,7 @@ public class DashboardController {
     @FXML private Label notificationLabel;
     @FXML private Button userManagementButton;
     @FXML private Button adminLogsButton;
+    @FXML private Button advancedFeaturesButton;
     
     private String currentUser;
     private String currentRole;
@@ -78,6 +79,8 @@ public class DashboardController {
         userManagementButton.setManaged(isAdmin);
         adminLogsButton.setVisible(isAdmin);
         adminLogsButton.setManaged(isAdmin);
+        advancedFeaturesButton.setVisible(isAdmin);
+        advancedFeaturesButton.setManaged(isAdmin);
         
         // Set fullscreen
         Platform.runLater(() -> {
@@ -318,6 +321,21 @@ public class DashboardController {
             // Apply dark mode to new content if needed
             if (isDarkMode) {
                 applyDarkModeToChildren(adminLogsRoot, true);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    
+    @FXML
+    private void showAdvancedFeatures(ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/AdvancedFeaturesView.fxml"));
+            Parent advancedFeaturesRoot = loader.load();
+            contentPane.getChildren().setAll(advancedFeaturesRoot);
+            
+            if (isDarkMode) {
+                applyDarkModeToChildren(advancedFeaturesRoot, true);
             }
         } catch (Exception e) {
             e.printStackTrace();

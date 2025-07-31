@@ -7,7 +7,6 @@
     <Label text="Gestion des propriétaires de magasin" style="-fx-font-size: 20px; -fx-font-weight: bold;" />
     <TableView fx:id="storeOwnerTable" prefHeight="400" prefWidth="700">
         <columns>
-            <TableColumn fx:id="idColumn" text="ID" prefWidth="50" />
             <TableColumn fx:id="nameColumn" text="Nom" prefWidth="200" />
             <TableColumn fx:id="contactColumn" text="Contact" prefWidth="200" />
         </columns>

@@ -14,7 +14,6 @@ import javafx.stage.Stage;
 
 public class UserManagementController {
     @FXML private TableView<User> userTable;
-    @FXML private TableColumn<User, Integer> idColumn;
     @FXML private TableColumn<User, String> usernameColumn;
     @FXML private TableColumn<User, String> roleColumn;
     @FXML private Button addButton;
@@ -32,7 +31,7 @@ public class UserManagementController {
 
     @FXML
     public void initialize() {
-        idColumn.setCellValueFactory(cellData -> new javafx.beans.property.SimpleIntegerProperty(cellData.getValue().getId()).asObject());
+        // Set up table columns
         usernameColumn.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(cellData.getValue().getUsername()));
         roleColumn.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(cellData.getValue().getRole()));
         userTable.setItems(userList);

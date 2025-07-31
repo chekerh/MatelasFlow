@@ -1,5 +1,7 @@
+C:\Users\aymou\Desktop\stockage\warehouse-mattress-app\src\main\java\com\warehouse\ai\DemandPredictor.java
 C:\Users\aymou\Desktop\stockage\warehouse-mattress-app\src\main\java\com\warehouse\App.java
 C:\Users\aymou\Desktop\stockage\warehouse-mattress-app\src\main\java\com\warehouse\controller\AdminLogsController.java
+C:\Users\aymou\Desktop\stockage\warehouse-mattress-app\src\main\java\com\warehouse\controller\AdvancedFeaturesController.java
 C:\Users\aymou\Desktop\stockage\warehouse-mattress-app\src\main\java\com\warehouse\controller\DashboardController.java
 C:\Users\aymou\Desktop\stockage\warehouse-mattress-app\src\main\java\com\warehouse\controller\InventoryController.java
 C:\Users\aymou\Desktop\stockage\warehouse-mattress-app\src\main\java\com\warehouse\controller\LoginController.java
@@ -16,6 +18,7 @@ C:\Users\aymou\Desktop\stockage\warehouse-mattress-app\src\main\java\com\warehou
 C:\Users\aymou\Desktop\stockage\warehouse-mattress-app\src\main\java\com\warehouse\controller\UserDialogController.java
 C:\Users\aymou\Desktop\stockage\warehouse-mattress-app\src\main\java\com\warehouse\controller\UserManagementController.java
 C:\Users\aymou\Desktop\stockage\warehouse-mattress-app\src\main\java\com\warehouse\controller\UserOverlayController.java
+C:\Users\aymou\Desktop\stockage\warehouse-mattress-app\src\main\java\com\warehouse\integration\EcommerceIntegration.java
 C:\Users\aymou\Desktop\stockage\warehouse-mattress-app\src\main\java\com\warehouse\model\DBUtil.java
 C:\Users\aymou\Desktop\stockage\warehouse-mattress-app\src\main\java\com\warehouse\model\Mattress.java
 C:\Users\aymou\Desktop\stockage\warehouse-mattress-app\src\main\java\com\warehouse\model\MattressDAO.java
@@ -25,6 +28,9 @@ C:\Users\aymou\Desktop\stockage\warehouse-mattress-app\src\main\java\com\warehou
 C:\Users\aymou\Desktop\stockage\warehouse-mattress-app\src\main\java\com\warehouse\model\TransactionDAO.java
 C:\Users\aymou\Desktop\stockage\warehouse-mattress-app\src\main\java\com\warehouse\model\User.java
 C:\Users\aymou\Desktop\stockage\warehouse-mattress-app\src\main\java\com\warehouse\model\UserDAO.java
+C:\Users\aymou\Desktop\stockage\warehouse-mattress-app\src\main\java\com\warehouse\security\DataEncryption.java
+C:\Users\aymou\Desktop\stockage\warehouse-mattress-app\src\main\java\com\warehouse\security\TwoFactorAuth.java
+C:\Users\aymou\Desktop\stockage\warehouse-mattress-app\src\main\java\com\warehouse\ui\ThemeManager.java
 C:\Users\aymou\Desktop\stockage\warehouse-mattress-app\src\main\java\com\warehouse\util\ActivityLogger.java
 C:\Users\aymou\Desktop\stockage\warehouse-mattress-app\src\main\java\com\warehouse\util\BackupManager.java
 C:\Users\aymou\Desktop\stockage\warehouse-mattress-app\src\main\java\com\warehouse\util\NotificationSystem.java

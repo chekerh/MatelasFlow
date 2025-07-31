@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<VBox xmlns="http://javafx.com/fxml" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.warehouse.controller.AdvancedFeaturesController"
+      spacing="20" alignment="TOP_CENTER" stylesheets="/css/modern.css">
+    
+    <Label text="🚀 Fonctionnalités Avancées" style="-fx-font-size: 24px; -fx-font-weight: bold;" />
+    
+    <!-- Onglets pour les différentes fonctionnalités -->
+    <TabPane fx:id="featuresTabPane" VBox.vgrow="ALWAYS">
+        
+        <!-- IA et Prédictions -->
+        <Tab text="🤖 Intelligence Artificielle" closable="false">
+            <VBox spacing="15" style="-fx-padding: 20;">
+                <Label text="Prédictions et Détection d'Anomalies" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+                
+                <HBox spacing="10" alignment="CENTER_LEFT">
+                    <Button text="📊 Prédire la Demande" onAction="#predictDemand" styleClass="button-enhanced"/>
+                    <Button text="⚠️ Détecter les Fraudes" onAction="#detectFraud" styleClass="button-enhanced"/>
+                    <Button text="📈 Analyser les Tendances" onAction="#analyzeTrends" styleClass="button-enhanced"/>
+                </HBox>
+                
+                <TextArea fx:id="aiResultsArea" editable="false" prefRowCount="15" wrapText="true"/>
+            </VBox>
+        </Tab>
+        
+        <!-- Sécurité -->
+        <Tab text="🔐 Sécurité Renforcée" closable="false">
+            <VBox spacing="15" style="-fx-padding: 20;">
+                <Label text="Sécurité et Authentification" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+                
+                <GridPane hgap="15" vgap="10">
+                    <Label text="🔑 Authentification 2FA:" GridPane.columnIndex="0" GridPane.rowIndex="0" style="-fx-font-weight: bold;"/>
+                    <Button text="Activer 2FA" onAction="#enable2FA" GridPane.columnIndex="1" GridPane.rowIndex="0" styleClass="button-enhanced"/>
+                    
+                    <Label text="🔒 Chiffrement:" GridPane.columnIndex="0" GridPane.rowIndex="1" style="-fx-font-weight: bold;"/>
+                    <Button text="Chiffrer les Données" onAction="#encryptData" GridPane.columnIndex="1" GridPane.rowIndex="1" styleClass="button-enhanced"/>
+                    
+                    <Label text="📋 Audit Trail:" GridPane.columnIndex="0" GridPane.rowIndex="2" style="-fx-font-weight: bold;"/>
+                    <Button text="Voir l'Audit" onAction="#viewAudit" GridPane.columnIndex="1" GridPane.rowIndex="2" styleClass="button-enhanced"/>
+                </GridPane>
+                
+                <TextArea fx:id="securityResultsArea" editable="false" prefRowCount="10" wrapText="true"/>
+            </VBox>
+        </Tab>
+        
+        <!-- Thèmes -->
+        <Tab text="🎨 Interface Avancée" closable="false">
+            <VBox spacing="15" style="-fx-padding: 20;">
+                <Label text="Personnalisation de l'Interface" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+                
+                <HBox spacing="10" alignment="CENTER_LEFT">
+                    <Label text="Thème:" style="-fx-font-weight: bold;"/>
+                    <ComboBox fx:id="themeComboBox" promptText="Sélectionner un thème" prefWidth="200"/>
+                    <Button text="Appliquer" onAction="#applyTheme" styleClass="button-enhanced"/>
+                </HBox>
+                
+                <HBox spacing="10" alignment="CENTER_LEFT">
+                    <Label text="Mode:" style="-fx-font-weight: bold;"/>
+                    <Button text="🌙 Mode Sombre" onAction="#toggleDarkMode" styleClass="button-enhanced"/>
+                    <Button text="☀️ Mode Clair" onAction="#toggleLightMode" styleClass="button-enhanced"/>
+                </HBox>
+                
+                <Label text="Prévisualisation:" style="-fx-font-weight: bold;"/>
+                <VBox fx:id="themePreview" styleClass="card" prefHeight="200"/>
+            </VBox>
+        </Tab>
+        
+        <!-- Intégrations -->
+        <Tab text="🔧 Intégrations Externes" closable="false">
+            <VBox spacing="15" style="-fx-padding: 20;">
+                <Label text="Intégrations avec Plateformes Externes" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+                
+                <GridPane hgap="15" vgap="10">
+                    <Label text="🛒 E-commerce:" GridPane.columnIndex="0" GridPane.rowIndex="0" style="-fx-font-weight: bold;"/>
+                    <ComboBox fx:id="ecommerceComboBox" promptText="Sélectionner une plateforme" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+                    <Button text="Synchroniser" onAction="#syncEcommerce" GridPane.columnIndex="2" GridPane.rowIndex="0" styleClass="button-enhanced"/>
+                    
+                    <Label text="📊 Comptabilité:" GridPane.columnIndex="0" GridPane.rowIndex="1" style="-fx-font-weight: bold;"/>
+                    <ComboBox fx:id="accountingComboBox" promptText="Sélectionner un logiciel" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+                    <Button text="Exporter" onAction="#exportAccounting" GridPane.columnIndex="2" GridPane.rowIndex="1" styleClass="button-enhanced"/>
+                    
+                    <Label text="🚚 Logistique:" GridPane.columnIndex="0" GridPane.rowIndex="2" style="-fx-font-weight: bold;"/>
+                    <ComboBox fx:id="logisticsComboBox" promptText="Sélectionner un transporteur" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+                    <Button text="Connecter" onAction="#connectLogistics" GridPane.columnIndex="2" GridPane.rowIndex="2" styleClass="button-enhanced"/>
+                </GridPane>
+                
+                <TextArea fx:id="integrationResultsArea" editable="false" prefRowCount="10" wrapText="true"/>
+            </VBox>
+        </Tab>
+        
+    </TabPane>
+    
+    <Label fx:id="statusLabel" styleClass="status-label" />
+</VBox> 

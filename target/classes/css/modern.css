@@ -384,8 +384,25 @@
 }
 
 .error-label {
+    -fx-text-fill: #e74c3c;
     -fx-font-weight: bold;
     -fx-alignment: center;
+    -fx-font-size: 12px;
+}
+
+.dark-mode .error-label {
+    -fx-text-fill: #ff6b6b;
+}
+
+.errorLabel {
+    -fx-text-fill: #e74c3c;
+    -fx-font-weight: bold;
+    -fx-alignment: center;
+    -fx-font-size: 12px;
+}
+
+.dark-mode .errorLabel {
+    -fx-text-fill: #ff6b6b;
 }
 
 /* Dashboard navigation animation */
@@ -983,4 +1000,15 @@
     -fx-background-color: #4a5568;
     -fx-text-fill: #e8e8e8;
     -fx-border-color: #718096;
+} 
+
+.status-label {
+    -fx-font-size: 12px;
+    -fx-text-fill: #7f8c8d;
+    -fx-alignment: center;
+    -fx-padding: 5;
+}
+
+.dark-mode .status-label {
+    -fx-text-fill: #a0aec0;
 } 
