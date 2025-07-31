@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<VBox xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.warehouse.controller.AdminLogsController"
+      spacing="16" alignment="TOP_CENTER" stylesheets="/css/modern.css">
+    
+    <Label text="🔍 Surveillance des Activités" style="-fx-font-size: 20px; -fx-font-weight: bold;" />
+    
+    <!-- Filtres -->
+    <HBox spacing="12" alignment="CENTER">
+        <Label text="Période:" style="-fx-font-weight: bold;"/>
+        <ComboBox fx:id="periodComboBox" promptText="Sélectionner une période"/>
+        <Label text="Type:" style="-fx-font-weight: bold;"/>
+        <ComboBox fx:id="typeComboBox" promptText="Tous les types"/>
+        <Button fx:id="refreshButton" text="🔄 Actualiser" onAction="#handleRefresh"/>
+        <Button fx:id="exportButton" text="📄 Exporter" onAction="#handleExport"/>
+    </HBox>
+    
+    <!-- Onglets -->
+    <TabPane fx:id="tabPane" VBox.vgrow="ALWAYS">
+        <!-- Onglet Activités Récentes -->
+        <Tab text="📋 Activités Récentes" closable="false">
+            <VBox spacing="10">
+                <HBox spacing="10" alignment="CENTER_LEFT">
+                    <Label text="Activités des dernières heures:" style="-fx-font-weight: bold;"/>
+                    <Spinner fx:id="hoursSpinner" editable="true"/>
+                    <Label text="heures"/>
+                </HBox>
+                <TextArea fx:id="recentActivitiesArea" editable="false" prefRowCount="15" wrapText="true"/>
+            </VBox>
+        </Tab>
+        
+        <!-- Onglet Activités Suspectes -->
+        <Tab text="⚠️ Activités Suspectes" closable="false">
+            <VBox spacing="10">
+                <HBox spacing="10" alignment="CENTER_LEFT">
+                    <Label text="Activités suspectes détectées:" style="-fx-font-weight: bold;"/>
+                    <Button fx:id="clearSuspiciousButton" text="🗑️ Effacer" onAction="#handleClearSuspicious"/>
+                </HBox>
+                <TextArea fx:id="suspiciousActivitiesArea" editable="false" prefRowCount="15" wrapText="true"/>
+            </VBox>
+        </Tab>
+        
+        <!-- Onglet Statistiques -->
+        <Tab text="📊 Statistiques" closable="false">
+            <VBox spacing="10">
+                <Label text="Résumé des activités par utilisateur:" style="-fx-font-weight: bold;"/>
+                <TableView fx:id="statsTable" VBox.vgrow="ALWAYS">
+                    <columns>
+                        <TableColumn fx:id="userColumn" text="Utilisateur" prefWidth="150"/>
+                        <TableColumn fx:id="roleColumn" text="Rôle" prefWidth="100"/>
+                        <TableColumn fx:id="activityCountColumn" text="Actions" prefWidth="100"/>
+                        <TableColumn fx:id="lastActivityColumn" text="Dernière activité" prefWidth="200"/>
+                    </columns>
+                </TableView>
+            </VBox>
+        </Tab>
+        
+        <!-- Onglet Configuration -->
+        <Tab text="⚙️ Configuration" closable="false">
+            <VBox spacing="15" style="-fx-padding: 20;">
+                <Label text="Seuils de détection:" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+                
+                <GridPane hgap="15" vgap="10">
+                    <Label text="Actions max par heure:" GridPane.columnIndex="0" GridPane.rowIndex="0" style="-fx-font-weight: bold;"/>
+                    <Spinner fx:id="maxActionsSpinner" editable="true" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+                    
+                    <Label text="Suppressions max par jour:" GridPane.columnIndex="0" GridPane.rowIndex="1" style="-fx-font-weight: bold;"/>
+                    <Spinner fx:id="maxDeletesSpinner" editable="true" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+                    
+                    <Label text="Échecs de connexion max:" GridPane.columnIndex="0" GridPane.rowIndex="2" style="-fx-font-weight: bold;"/>
+                    <Spinner fx:id="maxFailedLoginsSpinner" editable="true" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+                    
+                    <Label text="Ratio prix min (0.0-1.0):" GridPane.columnIndex="0" GridPane.rowIndex="3" style="-fx-font-weight: bold;"/>
+                    <Spinner fx:id="minPriceRatioSpinner" editable="true" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+                </GridPane>
+                
+                <HBox spacing="10" alignment="CENTER">
+                    <Button fx:id="saveConfigButton" text="💾 Sauvegarder" onAction="#handleSaveConfig"/>
+                    <Button fx:id="resetConfigButton" text="🔄 Réinitialiser" onAction="#handleResetConfig"/>
+                </HBox>
+            </VBox>
+        </Tab>
+    </TabPane>
+    
+    <Label fx:id="statusLabel" styleClass="status-label" />
+</VBox> 

@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS transaction (
     date DATETIME NOT NULL,
     mattress_id INT NOT NULL,
     quantity INT NOT NULL,
-    type ENUM('Vente', 'Transfert', 'Prêt') NOT NULL,
+    type ENUM('Vente', 'Transfert', 'Prêt', 'retour', 'Réception') NOT NULL,
     store_owner_id INT,
     user_id INT NOT NULL,
     prix DECIMAL(10,2) NOT NULL,

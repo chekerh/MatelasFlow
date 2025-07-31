@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox xmlns:fx="http://javafx.com/fxml" fx:controller="com.warehouse.controller.UserOverlayController" styleClass="overlay-dialog" spacing="16">
+    <!-- Header -->
+    <HBox spacing="12" alignment="CENTER_LEFT" style="-fx-padding: 0 0 16 0;">
+        <Label text="👤" style="-fx-font-size: 24px;"/>
+        <Label fx:id="dialogTitle" text="Ajouter un utilisateur" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
+    </HBox>
+    
+    <!-- Form Content -->
+    <VBox spacing="12">
+        <GridPane hgap="12" vgap="12">
+            <Label text="👤 Nom d'utilisateur:" GridPane.columnIndex="0" GridPane.rowIndex="0" style="-fx-font-weight: bold;"/>
+            <TextField fx:id="usernameField" promptText="Entrez le nom d'utilisateur" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+            
+            <Label text="🔒 Mot de passe:" GridPane.columnIndex="0" GridPane.rowIndex="1" style="-fx-font-weight: bold;"/>
+            <PasswordField fx:id="passwordField" promptText="Entrez le mot de passe" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+            
+            <Label text="🔄 Confirmer mot de passe:" GridPane.columnIndex="0" GridPane.rowIndex="2" style="-fx-font-weight: bold;"/>
+            <PasswordField fx:id="confirmPasswordField" promptText="Confirmez le mot de passe" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+            
+            <Label text="👑 Rôle:" GridPane.columnIndex="0" GridPane.rowIndex="3" style="-fx-font-weight: bold;"/>
+            <ComboBox fx:id="roleComboBox" promptText="Sélectionner un rôle" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+        </GridPane>
+    </VBox>
+    
+    <!-- Buttons -->
+    <HBox spacing="12" alignment="CENTER_RIGHT" style="-fx-padding: 16 0 0 0;">
+        <Button text="✖ Annuler" onAction="#handleCancel" styleClass="button-accent-orange"/>
+        <Button text="✔ Valider" onAction="#handleOk" styleClass="button-accent-green"/>
+    </HBox>
+</VBox> 

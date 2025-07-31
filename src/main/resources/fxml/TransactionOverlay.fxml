@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox xmlns:fx="http://javafx.com/fxml" fx:controller="com.warehouse.controller.TransactionOverlayController" styleClass="overlay-dialog" spacing="16">
+    <!-- Header -->
+    <HBox spacing="12" alignment="CENTER_LEFT" style="-fx-padding: 0 0 16 0;">
+        <Label text="💶" style="-fx-font-size: 24px;"/>
+        <Label fx:id="dialogTitle" text="Ajouter une transaction" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
+    </HBox>
+    
+    <!-- Form Content -->
+    <VBox spacing="12">
+        <GridPane hgap="12" vgap="12">
+            <Label text="📋 Type:" GridPane.columnIndex="0" GridPane.rowIndex="0" style="-fx-font-weight: bold;"/>
+            <ComboBox fx:id="typeComboBox" promptText="💼 Sélectionner le type" GridPane.columnIndex="1" GridPane.rowIndex="0" styleClass="transaction-type"/>
+            
+            <Label text="🛏️ Matelas:" GridPane.columnIndex="0" GridPane.rowIndex="1" style="-fx-font-weight: bold;"/>
+            <ComboBox fx:id="mattressComboBox" promptText="Sélectionner un matelas" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+            
+            <Label text="📦 Quantité:" GridPane.columnIndex="0" GridPane.rowIndex="2" style="-fx-font-weight: bold;"/>
+            <TextField fx:id="quantityField" promptText="Nombre de matelas" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+            
+            <Label text="💰 Prix (€):" GridPane.columnIndex="0" GridPane.rowIndex="3" style="-fx-font-weight: bold;"/>
+            <TextField fx:id="prixField" promptText="Prix total" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+            
+            <Label text="🏪 Propriétaire:" GridPane.columnIndex="0" GridPane.rowIndex="4" style="-fx-font-weight: bold;"/>
+            <ComboBox fx:id="storeOwnerComboBox" promptText="Sélectionner un propriétaire" GridPane.columnIndex="1" GridPane.rowIndex="4"/>
+            
+            <Label text="📝 Notes:" GridPane.columnIndex="0" GridPane.rowIndex="5" style="-fx-font-weight: bold;"/>
+            <TextField fx:id="notesField" promptText="Notes ou destination" GridPane.columnIndex="1" GridPane.rowIndex="5"/>
+        </GridPane>
+        
+        <!-- Lending specific fields -->
+        <VBox fx:id="lendingFieldsBox" spacing="8" visible="false">
+            <Label text="📅 Date de retour prévue:" style="-fx-font-weight: bold;"/>
+            <DatePicker fx:id="expectedReturnDatePicker" promptText="Sélectionner une date"/>
+        </VBox>
+        
+        <!-- Transfer specific fields -->
+        <VBox fx:id="destinationBox" spacing="8" visible="false">
+            <Label text="📍 Destination:" style="-fx-font-weight: bold;"/>
+            <TextField fx:id="destinationField" promptText="Lieu de destination"/>
+        </VBox>
+        
+        <!-- Return specific fields -->
+        <VBox fx:id="returnFieldsBox" spacing="8" visible="false">
+            <Label text="🏪 Retour de qui:" style="-fx-font-weight: bold;"/>
+            <ComboBox fx:id="returnFromComboBox" promptText="Sélectionner le propriétaire"/>
+        </VBox>
+    </VBox>
+    
+    <!-- Buttons -->
+    <HBox spacing="12" alignment="CENTER_RIGHT" style="-fx-padding: 16 0 0 0;">
+        <Button text="✖ Annuler" onAction="#handleCancel" styleClass="button-accent-orange"/>
+        <Button text="✔ Valider" onAction="#handleOk" styleClass="button-accent-green"/>
+    </HBox>
+</VBox> 

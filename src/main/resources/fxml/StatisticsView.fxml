@@ -1,33 +1,81 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<VBox xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" spacing="10" alignment="TOP_CENTER">
-    <Label text="Warehouse Statistics & Reports" style="-fx-font-size: 20px; -fx-font-weight: bold;" />
+<?import javafx.geometry.Insets?>
+
+<VBox xmlns:fx="http://javafx.com/fxml" fx:controller="com.warehouse.controller.StatisticsController" 
+      spacing="20" alignment="TOP_CENTER" style="-fx-padding: 30;" stylesheets="/css/modern.css">
+    
+    <!-- Header -->
+    <HBox spacing="12" alignment="CENTER_LEFT" style="-fx-padding: 0 0 20 0;">
+        <Label text="📊" style="-fx-font-size: 24px;"/>
+        <Label text="Statistiques et Rapports" style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
+    </HBox>
+    
+    <!-- Statistics Cards -->
     <HBox spacing="20" alignment="CENTER">
-        <Label fx:id="stockLabel" text="Stock: " />
-        <Label fx:id="salesLabel" text="Total Sales: " />
-        <Label fx:id="returnsLabel" text="Total Returns: " />
-        <Label fx:id="lendsLabel" text="Total Lends: " />
+        <VBox styleClass="stat-card" style="-fx-padding: 20; -fx-background-radius: 12; -fx-background-color: linear-gradient(to bottom, #4CAF50, #45a049);" alignment="CENTER" spacing="8">
+            <Label text="📦" style="-fx-font-size: 32px;"/>
+            <Label fx:id="stockLabel" text="Stock: 0" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: white;"/>
+            <Label text="Matelas en stock" style="-fx-font-size: 12px; -fx-text-fill: rgba(255,255,255,0.8);"/>
+        </VBox>
+        
+        <VBox styleClass="stat-card" style="-fx-padding: 20; -fx-background-radius: 12; -fx-background-color: linear-gradient(to bottom, #2196F3, #1976D2);" alignment="CENTER" spacing="8">
+            <Label text="💰" style="-fx-font-size: 32px;"/>
+            <Label fx:id="salesLabel" text="Ventes: 0" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: white;"/>
+            <Label text="Transactions de vente" style="-fx-font-size: 12px; -fx-text-fill: rgba(255,255,255,0.8);"/>
+        </VBox>
+        
+        <VBox styleClass="stat-card" style="-fx-padding: 20; -fx-background-radius: 12; -fx-background-color: linear-gradient(to bottom, #FF9800, #F57C00);" alignment="CENTER" spacing="8">
+            <Label text="🔄" style="-fx-font-size: 32px;"/>
+            <Label fx:id="returnsLabel" text="Retours: 0" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: white;"/>
+            <Label text="Transactions de retour" style="-fx-font-size: 12px; -fx-text-fill: rgba(255,255,255,0.8);"/>
+        </VBox>
+        
+        <VBox styleClass="stat-card" style="-fx-padding: 20; -fx-background-radius: 12; -fx-background-color: linear-gradient(to bottom, #9C27B0, #7B1FA2);" alignment="CENTER" spacing="8">
+            <Label text="📅" style="-fx-font-size: 32px;"/>
+            <Label fx:id="lendsLabel" text="Prêts: 0" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: white;"/>
+            <Label text="Transactions de prêt" style="-fx-font-size: 12px; -fx-text-fill: rgba(255,255,255,0.8);"/>
+        </VBox>
     </HBox>
-    <HBox spacing="10" alignment="CENTER">
-        <Label text="Filter by Date:" />
-        <DatePicker fx:id="filterDatePicker" />
-        <Label text="Type:" />
-        <ComboBox fx:id="typeComboBox" />
-        <Button fx:id="filterButton" text="Filter" />
-        <Button fx:id="resetButton" text="Reset" />
-    </HBox>
-    <TableView fx:id="transactionTable" prefHeight="300" prefWidth="900">
-        <columns>
-            <TableColumn fx:id="idColumn" text="ID" prefWidth="40" />
-            <TableColumn fx:id="dateColumn" text="Date" prefWidth="120" />
-            <TableColumn fx:id="typeColumn" text="Type" prefWidth="80" />
-            <TableColumn fx:id="mattressIdColumn" text="Mattress ID" prefWidth="80" />
-            <TableColumn fx:id="quantityColumn" text="Quantity" prefWidth="80" />
-            <TableColumn fx:id="storeOwnerIdColumn" text="Store Owner ID" prefWidth="100" />
-            <TableColumn fx:id="expectedReturnDateColumn" text="Expected Return" prefWidth="120" />
-            <TableColumn fx:id="notesColumn" text="Notes" prefWidth="200" />
-        </columns>
-    </TableView>
-    <Label fx:id="errorLabel" textFill="red" />
+    
+    <!-- Filter Section -->
+    <VBox styleClass="filter-section" style="-fx-padding: 20; -fx-background-radius: 12; -fx-background-color: rgba(255,255,255,0.9);" spacing="15">
+        <Label text="🔍 Filtres" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
+        <HBox spacing="20" alignment="CENTER">
+            <VBox spacing="5">
+                <Label text="📅 Date:" style="-fx-font-weight: bold;"/>
+                <DatePicker fx:id="filterDatePicker" promptText="Sélectionner une date"/>
+            </VBox>
+            <VBox spacing="5">
+                <Label text="📋 Type:" style="-fx-font-weight: bold;"/>
+                <ComboBox fx:id="typeComboBox" promptText="Sélectionner un type"/>
+            </VBox>
+            <VBox spacing="5" style="-fx-padding: 20 0 0 0;">
+                <Button fx:id="filterButton" text="🔍 Filtrer" styleClass="button-accent-green"/>
+            </VBox>
+            <VBox spacing="5" style="-fx-padding: 20 0 0 0;">
+                <Button fx:id="resetButton" text="🔄 Réinitialiser" styleClass="button-accent-orange"/>
+            </VBox>
+        </HBox>
+    </VBox>
+    
+    <!-- Transactions Table -->
+    <VBox spacing="10" VBox.vgrow="ALWAYS">
+        <Label text="📋 Historique des Transactions" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
+        <TableView fx:id="transactionTable" styleClass="table-view" prefHeight="300">
+            <columns>
+                <TableColumn fx:id="idColumn" text="ID" prefWidth="50" />
+                <TableColumn fx:id="dateColumn" text="Date" prefWidth="120" />
+                <TableColumn fx:id="typeColumn" text="Type" prefWidth="100" />
+                <TableColumn fx:id="mattressIdColumn" text="Matelas ID" prefWidth="100" />
+                <TableColumn fx:id="quantityColumn" text="Quantité" prefWidth="80" />
+                <TableColumn fx:id="storeOwnerIdColumn" text="Propriétaire ID" prefWidth="120" />
+                <TableColumn fx:id="notesColumn" text="Notes" prefWidth="200" />
+            </columns>
+        </TableView>
+    </VBox>
+    
+    <!-- Error Label -->
+    <Label fx:id="errorLabel" styleClass="error-label" style="-fx-font-size: 12px; -fx-text-fill: #e74c3c;"/>
 </VBox> 

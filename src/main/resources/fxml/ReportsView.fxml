@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox xmlns:fx="http://javafx.com/fxml" fx:controller="com.warehouse.controller.ReportsController" styleClass="panel-accent" spacing="20" style="-fx-padding: 30;">
+    <HBox spacing="12" alignment="CENTER_LEFT" style="-fx-padding: 0 0 20 0;">
+        <Label text="📄" style="-fx-font-size: 24px;"/>
+        <Label text="Rapports et Statistiques" style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
+    </HBox>
+    
+    <GridPane hgap="20" vgap="20">
+        <!-- Daily Report Section -->
+        <VBox styleClass="panel-accent" style="-fx-padding: 20;" GridPane.columnIndex="0" GridPane.rowIndex="0">
+            <Label text="📊 Rapport Quotidien" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-padding: 0 0 10 0;"/>
+            <DatePicker fx:id="dailyDatePicker" promptText="Sélectionner une date"/>
+            <Button text="📄 Générer Rapport Quotidien" onAction="#generateDailyReport" styleClass="button-accent-green" style="-fx-margin: 10 0 0 0;"/>
+        </VBox>
+        
+        <!-- Monthly Report Section -->
+        <VBox styleClass="panel-accent" style="-fx-padding: 20;" GridPane.columnIndex="1" GridPane.rowIndex="0">
+            <Label text="📈 Rapport Mensuel" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-padding: 0 0 10 0;"/>
+            <DatePicker fx:id="monthlyDatePicker" promptText="Sélectionner un mois"/>
+            <Button text="📄 Générer Rapport Mensuel" onAction="#generateMonthlyReport" styleClass="button-accent-purple" style="-fx-margin: 10 0 0 0;"/>
+        </VBox>
+        
+        <!-- Stock Report Section -->
+        <VBox styleClass="panel-accent" style="-fx-padding: 20;" GridPane.columnIndex="0" GridPane.rowIndex="1">
+            <Label text="📦 Rapport de Stock" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-padding: 0 0 10 0;"/>
+            <Label text="Générer un rapport complet de l'inventaire actuel"/>
+            <Button text="📄 Générer Rapport de Stock" onAction="#generateStockReport" styleClass="button-accent-orange" style="-fx-margin: 10 0 0 0;"/>
+        </VBox>
+        
+        <!-- Transaction Report Section -->
+        <VBox styleClass="panel-accent" style="-fx-padding: 20;" GridPane.columnIndex="1" GridPane.rowIndex="1">
+            <Label text="💰 Rapport de Transactions" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-padding: 0 0 10 0;"/>
+            <Label text="Générer un rapport des transactions récentes"/>
+            <Button text="📄 Générer Rapport Transactions" onAction="#generateTransactionReport" styleClass="button-accent-green" style="-fx-margin: 10 0 0 0;"/>
+        </VBox>
+    </GridPane>
+    
+    <!-- Status Label -->
+    <Label fx:id="statusLabel" text="Sélectionnez un type de rapport à générer" style="-fx-font-size: 14px; -fx-text-fill: #666; -fx-padding: 20 0 0 0;"/>
+</VBox> 

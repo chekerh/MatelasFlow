@@ -7,16 +7,14 @@
     <Label text="Gestion des transactions" style="-fx-font-size: 20px; -fx-font-weight: bold;" />
     <TableView fx:id="transactionTable" prefHeight="400" prefWidth="900">
         <columns>
-            <TableColumn fx:id="idColumn" text="ID" prefWidth="50" />
             <TableColumn fx:id="dateColumn" text="Date" prefWidth="120" />
-            <TableColumn fx:id="mattressIdColumn" text="ID Matelas" prefWidth="80" />
+            <TableColumn fx:id="mattressNameColumn" text="Matelas" prefWidth="120"/>
             <TableColumn fx:id="quantityColumn" text="Quantité" prefWidth="80" />
             <TableColumn fx:id="typeColumn" text="Type" prefWidth="100" />
-            <TableColumn fx:id="storeOwnerIdColumn" text="ID Propriétaire" prefWidth="100" />
-            <TableColumn fx:id="userIdColumn" text="ID Employé" prefWidth="100" />
-            <TableColumn fx:id="notesColumn" text="Notes" prefWidth="150" />
-            <TableColumn fx:id="mattressNameColumn" text="Matelas" prefWidth="120"/>
+            <TableColumn fx:id="prixColumn" text="Prix (€)" prefWidth="100" />
             <TableColumn fx:id="storeOwnerNameColumn" text="Propriétaire" prefWidth="120"/>
+            <TableColumn fx:id="notesColumn" text="Notes" prefWidth="150" />
+            <TableColumn fx:id="expectedReturnDateColumn" text="Date Retour" prefWidth="120" />
         </columns>
     </TableView>
     <HBox spacing="14" alignment="CENTER">

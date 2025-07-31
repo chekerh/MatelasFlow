@@ -59,4 +59,33 @@ public class TransactionDAO {
             return false;
         }
     }
+
+    public static boolean updateTransaction(Transaction transaction) {
+        String sql = "UPDATE transaction SET date=?, mattress_id=?, quantity=?, type=?, store_owner_id=?, user_id=?, prix=?, notes=?, expected_return_date=? WHERE id=?";
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setTimestamp(1, Timestamp.valueOf(transaction.getDate()));
+            stmt.setInt(2, transaction.getMattressId());
+            stmt.setInt(3, transaction.getQuantity());
+            stmt.setString(4, transaction.getType());
+            if (transaction.getStoreOwnerId() != null) {
+                stmt.setInt(5, transaction.getStoreOwnerId());
+            } else {
+                stmt.setNull(5, Types.INTEGER);
+            }
+            stmt.setInt(6, transaction.getUserId());
+            stmt.setDouble(7, transaction.getPrix());
+            stmt.setString(8, transaction.getNotes());
+            if (transaction.getExpectedReturnDate() != null) {
+                stmt.setDate(9, java.sql.Date.valueOf(transaction.getExpectedReturnDate()));
+            } else {
+                stmt.setNull(9, Types.DATE);
+            }
+            stmt.setInt(10, transaction.getId());
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 } 

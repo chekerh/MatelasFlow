@@ -35,8 +35,11 @@ public class StatisticsController {
 
     @FXML
     public void initialize() {
+        // Set up type combo box
         typeComboBox.setItems(FXCollections.observableArrayList("Tous", "Vente", "Transfert", "Prêt", "retour"));
         typeComboBox.setValue("Tous");
+        
+        // Set up table columns
         idColumn.setCellValueFactory(cellData -> new javafx.beans.property.SimpleIntegerProperty(cellData.getValue().getId()).asObject());
         dateColumn.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(cellData.getValue().getDate().toLocalDate().toString()));
         typeColumn.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(cellData.getValue().getType()));
@@ -44,38 +47,67 @@ public class StatisticsController {
         quantityColumn.setCellValueFactory(cellData -> new javafx.beans.property.SimpleIntegerProperty(cellData.getValue().getQuantity()).asObject());
         storeOwnerIdColumn.setCellValueFactory(cellData -> cellData.getValue().getStoreOwnerId() == null ? null : new javafx.beans.property.SimpleIntegerProperty(cellData.getValue().getStoreOwnerId()).asObject());
         notesColumn.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(cellData.getValue().getNotes()));
+        
         transactionTable.setItems(transactionList);
+        
+        // Set up button actions
         filterButton.setOnAction(e -> applyFilter());
         resetButton.setOnAction(e -> resetFilter());
+        
+        // Load initial data
         loadStatistics();
     }
 
     private void loadStatistics() {
-        List<Transaction> all = TransactionDAO.getAllTransactions();
-        transactionList.setAll(all);
-        int stock = MattressDAO.getAllMattresses().stream().mapToInt(Mattress::getQuantity).sum();
-        long sales = all.stream().filter(t -> "Vente".equals(t.getType())).count();
-        long returns = all.stream().filter(t -> "retour".equals(t.getType())).count();
-        long lends = all.stream().filter(t -> "Prêt".equals(t.getType())).count();
-        stockLabel.setText("Stock: " + stock);
-        salesLabel.setText("Total ventes: " + sales);
-        returnsLabel.setText("Total retours: " + returns);
-        lendsLabel.setText("Total prêts: " + lends);
-        errorLabel.setText("");
+        try {
+            List<Transaction> all = TransactionDAO.getAllTransactions();
+            transactionList.setAll(all);
+            
+            // Calculate statistics
+            int stock = MattressDAO.getAllMattresses().stream().mapToInt(Mattress::getQuantity).sum();
+            long sales = all.stream().filter(t -> "Vente".equals(t.getType())).count();
+            long returns = all.stream().filter(t -> "retour".equals(t.getType())).count();
+            long lends = all.stream().filter(t -> "Prêt".equals(t.getType())).count();
+            
+            // Update labels
+            stockLabel.setText("Stock: " + stock);
+            salesLabel.setText("Ventes: " + sales);
+            returnsLabel.setText("Retours: " + returns);
+            lendsLabel.setText("Prêts: " + lends);
+            
+            errorLabel.setText("");
+        } catch (Exception e) {
+            e.printStackTrace();
+            errorLabel.setText("Erreur lors du chargement des statistiques: " + e.getMessage());
+        }
     }
 
     private void applyFilter() {
-        List<Transaction> all = TransactionDAO.getAllTransactions();
-        LocalDate date = filterDatePicker.getValue();
-        String type = typeComboBox.getValue();
-        List<Transaction> filtered = all;
-        if (date != null) {
-            filtered = filtered.stream().filter(t -> t.getDate().toLocalDate().equals(date)).collect(Collectors.toList());
+        try {
+            List<Transaction> all = TransactionDAO.getAllTransactions();
+            LocalDate date = filterDatePicker.getValue();
+            String type = typeComboBox.getValue();
+            
+            List<Transaction> filtered = all;
+            
+            if (date != null) {
+                filtered = filtered.stream()
+                    .filter(t -> t.getDate().toLocalDate().equals(date))
+                    .collect(Collectors.toList());
+            }
+            
+            if (!"Tous".equals(type)) {
+                filtered = filtered.stream()
+                    .filter(t -> t.getType().equals(type))
+                    .collect(Collectors.toList());
+            }
+            
+            transactionList.setAll(filtered);
+            errorLabel.setText("Filtre appliqué: " + filtered.size() + " transactions trouvées");
+        } catch (Exception e) {
+            e.printStackTrace();
+            errorLabel.setText("Erreur lors de l'application du filtre: " + e.getMessage());
         }
-        if (!"Tous".equals(type)) {
-            filtered = filtered.stream().filter(t -> t.getType().equals(type)).collect(Collectors.toList());
-        }
-        transactionList.setAll(filtered);
     }
 
     private void resetFilter() {

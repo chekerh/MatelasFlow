@@ -7,6 +7,7 @@ import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import com.warehouse.model.User;
 import com.warehouse.model.UserDAO;
+import com.warehouse.util.ActivityLogger;
 import org.mindrot.jbcrypt.BCrypt;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -61,6 +62,10 @@ public class LoginController {
         System.out.println("DB hash: " + (user != null ? user.getPasswordHash() : "null"));
         System.out.println("Input password: " + password);
         if (user != null && org.mindrot.jbcrypt.BCrypt.checkpw(password, user.getPasswordHash())) {
+            // Login successful
+            ActivityLogger.logActivity(user, ActivityLogger.ActivityType.LOGIN_SUCCESS, 
+                "Connexion depuis " + System.getProperty("user.name") + "@" + System.getProperty("os.name"));
+            
             errorLabel.setText("");
             try {
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/DashboardView.fxml"));
@@ -74,6 +79,9 @@ public class LoginController {
                 e.printStackTrace();
             }
         } else {
+            // Login failed
+            ActivityLogger.logActivity(new User(0, username, "", "employé"), 
+                ActivityLogger.ActivityType.LOGIN_FAILED, "Tentative échouée");
             errorLabel.setText("Invalid username or password");
         }
     }

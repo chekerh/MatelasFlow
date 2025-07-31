@@ -24,6 +24,11 @@ public class StoreOwnersController {
     @FXML private Label errorLabel;
 
     private ObservableList<StoreOwner> storeOwnerList = FXCollections.observableArrayList();
+    private DashboardController dashboardController;
+
+    public void setDashboardController(DashboardController dashboardController) {
+        this.dashboardController = dashboardController;
+    }
 
     @FXML
     public void initialize() {
@@ -35,23 +40,57 @@ public class StoreOwnersController {
     }
 
     @FXML
-    private void loadStoreOwners() {
+    public void loadStoreOwners() {
         storeOwnerList.setAll(StoreOwnerDAO.getAllStoreOwners());
         errorLabel.setText("");
     }
 
     @FXML
     private void handleAdd() {
-        showStoreOwnerDialog(null);
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/StoreOwnerOverlay.fxml"));
+            Parent overlayRoot = loader.load();
+            StoreOwnerOverlayController controller = loader.getController();
+            
+            // Set up the controller
+            controller.setDashboardController(dashboardController);
+            controller.setStoreOwnersController(this);
+            controller.setStoreOwner(null); // Add mode
+            
+            // Show the overlay
+            if (dashboardController != null) {
+                dashboardController.showOverlay(overlayRoot);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            errorLabel.setText("Erreur lors de l'ouverture du dialogue d'ajout.");
+        }
     }
 
     @FXML
     private void handleEdit() {
         StoreOwner selected = storeOwnerTable.getSelectionModel().getSelectedItem();
-        if (selected != null) {
-            showStoreOwnerDialog(selected);
-        } else {
-            errorLabel.setText("No store owner selected.");
+        if (selected == null) {
+            errorLabel.setText("Aucun propriétaire sélectionné.");
+            return;
+        }
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/StoreOwnerOverlay.fxml"));
+            Parent overlayRoot = loader.load();
+            StoreOwnerOverlayController controller = loader.getController();
+            
+            // Set up the controller
+            controller.setDashboardController(dashboardController);
+            controller.setStoreOwnersController(this);
+            controller.setStoreOwner(selected); // Edit mode
+            
+            // Show the overlay
+            if (dashboardController != null) {
+                dashboardController.showOverlay(overlayRoot);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            errorLabel.setText("Erreur lors de l'ouverture du dialogue de modification.");
         }
     }
 
@@ -62,41 +101,15 @@ public class StoreOwnersController {
             if (StoreOwnerDAO.deleteStoreOwner(selected.getId())) {
                 loadStoreOwners();
             } else {
-                errorLabel.setText("Failed to delete store owner.");
+                errorLabel.setText("Échec de la suppression du propriétaire.");
             }
         } else {
-            errorLabel.setText("No store owner selected.");
+            errorLabel.setText("Aucun propriétaire sélectionné.");
         }
     }
 
     @FXML
     private void handleRefresh() {
         loadStoreOwners();
-    }
-
-    private void showStoreOwnerDialog(StoreOwner owner) {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/StoreOwnerDialog.fxml"));
-            Parent dialogRoot = loader.load();
-            StoreOwnerDialogController controller = loader.getController();
-            if (owner != null) controller.setStoreOwner(owner);
-            Stage dialogStage = new Stage();
-            dialogStage.setTitle(owner == null ? "Add Store Owner" : "Edit Store Owner");
-            dialogStage.initModality(Modality.WINDOW_MODAL);
-            dialogStage.setScene(new Scene(dialogRoot));
-            dialogStage.showAndWait();
-            if (controller.isOkClicked()) {
-                StoreOwner edited = controller.getStoreOwner();
-                boolean success = owner == null ? StoreOwnerDAO.addStoreOwner(edited) : StoreOwnerDAO.updateStoreOwner(edited);
-                if (success) {
-                    loadStoreOwners();
-                } else {
-                    errorLabel.setText("Failed to save store owner.");
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            errorLabel.setText("Error opening dialog.");
-        }
     }
 } 

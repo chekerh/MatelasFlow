@@ -1,91 +1,200 @@
 package com.warehouse.controller;
 
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.layout.StackPane;
-import javafx.event.ActionEvent;
-import javafx.scene.image.Image;
+import javafx.geometry.Pos;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.Background;
-import javafx.scene.layout.BackgroundImage;
-import javafx.scene.layout.BackgroundPosition;
-import javafx.scene.layout.BackgroundRepeat;
-import javafx.scene.layout.BackgroundSize;
-import javafx.scene.layout.BorderPane;
-import javafx.stage.Stage;
-import javafx.scene.layout.VBox;
-import javafx.application.Platform;
+import javafx.scene.image.Image;
+import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.stage.Stage;
+import javafx.scene.Node;
+import javafx.event.ActionEvent;
+import javafx.application.Platform;
+import javafx.animation.PauseTransition;
+import javafx.util.Duration;
+import com.warehouse.model.User;
+import com.warehouse.model.UserDAO;
+import com.warehouse.util.ActivityLogger;
+import org.mindrot.jbcrypt.BCrypt;
 
 public class DashboardController {
-    @FXML private Label welcomeLabel;
-    @FXML private Button logoutButton;
-    @FXML private Button userManagementButton;
-    @FXML private StackPane contentPane;
-    @FXML private StackPane overlayPane;
     @FXML private ImageView logoImage;
-    @FXML private BorderPane root;
+    @FXML private Label welcomeLabel;
+    @FXML private Label userInfoLabel;
+    @FXML private Button logoutButton;
+    @FXML private Button darkModeButton;
     @FXML private VBox navBox;
-
-    private String username;
-    private String role;
-    private boolean navAnimated = false;
+    @FXML private VBox contentPane;
+    @FXML private StackPane overlayPane;
+    @FXML private VBox notificationArea;
+    @FXML private Label notificationLabel;
+    @FXML private Button userManagementButton;
+    @FXML private Button adminLogsButton;
+    
+    private String currentUser;
+    private String currentRole;
+    private boolean isDarkMode = false;
 
     @FXML
     public void initialize() {
-        // Add dashboard class to root
-        root.getStyleClass().add("dashboard");
-        
-        // Set the logo image
+        // Set logo
         try {
-            Image logo = new Image(getClass().getResource("/images/white-logo.PNG").toExternalForm());
+            Image logo = new Image(getClass().getResource("/images/black-logo.PNG").toExternalForm());
             logoImage.setImage(logo);
         } catch (Exception e) {
-            System.out.println("Logo image not found: " + e.getMessage());
+            System.out.println("Logo not found: " + e.getMessage());
+            // Try white logo as fallback
+            try {
+                Image logo = new Image(getClass().getResource("/images/white-logo.PNG").toExternalForm());
+                logoImage.setImage(logo);
+            } catch (Exception e2) {
+                System.out.println("White logo also not found: " + e2.getMessage());
+            }
         }
-        // Set the background image
-        try {
-            Image bg = new Image(getClass().getResource("/images/background.JPG").toExternalForm());
-            BackgroundImage bgi = new BackgroundImage(bg, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.CENTER, new BackgroundSize(1.0, 1.0, true, true, false, false));
-            root.setBackground(new Background(bgi));
-        } catch (Exception e) {
-            System.out.println("Background image not set: " + e.getMessage());
-        }
-        // Set true fullscreen on load (after scene is shown)
-        Platform.runLater(() -> {
-            Stage stage = (Stage) root.getScene().getWindow();
-            stage.setFullScreen(true);
-        });
+        
+        // Set up notification area
+        notificationArea.setVisible(false);
+        notificationArea.setManaged(false);
+        
+        // Apply dark mode if needed
+        applyDarkModeToChildren(contentPane, isDarkMode);
     }
 
     public void setUser(String username, String role) {
-        this.username = username;
-        this.role = role;
-        welcomeLabel.setText("Bienvenue, " + username + " (" + ("admin".equals(role) ? "Administrateur" : "Employé") + ")");
+        this.currentUser = username;
+        this.currentRole = role;
+        
+        // Update welcome message
+        String roleDisplay = "admin".equals(role) ? "Administrateur" : "Employé";
+        welcomeLabel.setText("Bienvenue, " + username + "!");
+        userInfoLabel.setText("Utilisateur: " + username + " (" + roleDisplay + ")");
+        
+        // Show/hide admin buttons based on role
         boolean isAdmin = "admin".equals(role);
         userManagementButton.setVisible(isAdmin);
         userManagementButton.setManaged(isAdmin);
-        // Reset navBox to centered on login
-        if (navBox != null) {
-            navBox.getStyleClass().remove("left");
-            if (!navBox.getStyleClass().contains("centered")) navBox.getStyleClass().add("centered");
-        }
-        navAnimated = false;
-        // Set fullscreen and maximized for best compatibility
+        adminLogsButton.setVisible(isAdmin);
+        adminLogsButton.setManaged(isAdmin);
+        
+        // Set fullscreen
         Platform.runLater(() -> {
-            Stage stage = (Stage) root.getScene().getWindow();
-            stage.setMaximized(true);
-            stage.setFullScreen(true);
+            Stage stage = (Stage) welcomeLabel.getScene().getWindow();
+            if (stage != null) {
+                stage.setMaximized(true);
+                stage.setFullScreen(true);
+            }
         });
     }
+    
+    public String getCurrentUser() {
+        return currentUser;
+    }
+    
+    public String getCurrentRole() {
+        return currentRole;
+    }
 
-    // Overlay management methods
+    @FXML
+    private void handleLogout(ActionEvent event) {
+        try {
+            // Log logout activity
+            User currentUserObj = UserDAO.findByUsername(currentUser);
+            if (currentUserObj != null) {
+                ActivityLogger.logActivity(currentUserObj, ActivityLogger.ActivityType.LOGOUT, 
+                    "Déconnexion depuis le dashboard");
+            }
+            
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/LoginView.fxml"));
+            Parent loginRoot = loader.load();
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+            stage.setScene(new Scene(loginRoot));
+            stage.setMaximized(false);
+            stage.setFullScreen(false);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @FXML
+    private void toggleDarkMode(ActionEvent event) {
+        isDarkMode = !isDarkMode;
+        darkModeButton.setText(isDarkMode ? "☀️ Mode Clair" : "🌙 Mode Sombre");
+        
+        // Apply dark mode to all main containers
+        applyDarkModeToChildren(contentPane, isDarkMode);
+        applyDarkModeToChildren(navBox, isDarkMode);
+        applyDarkModeToChildren(notificationArea, isDarkMode);
+        
+        // Apply dark mode to the root scene
+        Scene scene = contentPane.getScene();
+        if (scene != null) {
+            scene.getRoot().getStyleClass().removeAll("dark-mode");
+            if (isDarkMode) {
+                scene.getRoot().getStyleClass().add("dark-mode");
+            }
+        }
+        
+        // Update logo for dark mode
+        try {
+            if (isDarkMode) {
+                Image logo = new Image(getClass().getResource("/images/white-logo.PNG").toExternalForm());
+                logoImage.setImage(logo);
+            } else {
+                Image logo = new Image(getClass().getResource("/images/black-logo.PNG").toExternalForm());
+                logoImage.setImage(logo);
+            }
+        } catch (Exception e) {
+            System.out.println("Logo not found for dark mode: " + e.getMessage());
+        }
+    }
+
+    private void applyDarkModeToChildren(javafx.scene.Node node, boolean darkMode) {
+        if (darkMode) {
+            node.getStyleClass().add("dark-mode");
+        } else {
+            node.getStyleClass().remove("dark-mode");
+        }
+        if (node instanceof javafx.scene.Parent) {
+            for (javafx.scene.Node child : ((javafx.scene.Parent) node).getChildrenUnmodifiable()) {
+                applyDarkModeToChildren(child, darkMode);
+            }
+        }
+    }
+
+    // Notification system
+    public void showNotification(String message, boolean isError) {
+        notificationLabel.setText(message);
+        notificationArea.getStyleClass().clear();
+        notificationArea.getStyleClass().add("notification-area");
+        if (isError) {
+            notificationArea.getStyleClass().add("error");
+        }
+        
+        notificationArea.setVisible(true);
+        notificationArea.setManaged(true);
+        
+        // Auto-hide after 3 seconds
+        PauseTransition pause = new PauseTransition(Duration.seconds(3));
+        pause.setOnFinished(e -> {
+            notificationArea.setVisible(false);
+            notificationArea.setManaged(false);
+        });
+        pause.play();
+    }
+
+    // Overlay management
     public void showOverlay(Parent overlayContent) {
         overlayPane.getChildren().clear();
         overlayPane.getChildren().add(overlayContent);
         overlayPane.setVisible(true);
         overlayPane.setManaged(true);
+        
+        if (isDarkMode) {
+            applyDarkModeToChildren(overlayContent, true);
+        }
     }
 
     public void hideOverlay() {
@@ -94,36 +203,20 @@ public class DashboardController {
         overlayPane.getChildren().clear();
     }
 
-    @FXML
-    private void handleLogout(ActionEvent event) {
-        try {
-            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/fxml/LoginView.fxml"));
-            javafx.scene.Parent loginRoot = loader.load();
-            javafx.stage.Stage stage = (javafx.stage.Stage) ((javafx.scene.Node) event.getSource()).getScene().getWindow();
-            stage.setScene(new javafx.scene.Scene(loginRoot, 800, 600));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void animateNavBox() {
-        if (!navAnimated && navBox != null) {
-            navBox.getStyleClass().remove("centered");
-            navBox.getStyleClass().add("left");
-            navBox.setTranslateX(0); // Ensure no negative offset
-            navAnimated = true;
-        }
-    }
-
+    // Navigation methods
     @FXML
     private void showInventory(ActionEvent event) {
-        animateNavBox();
         try {
-            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/fxml/InventoryView.fxml"));
-            javafx.scene.Parent inventoryRoot = loader.load();
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/InventoryView.fxml"));
+            Parent inventoryRoot = loader.load();
             InventoryController inventoryController = loader.getController();
             inventoryController.setDashboardController(this);
             contentPane.getChildren().setAll(inventoryRoot);
+            
+            // Apply dark mode to new content if needed
+            if (isDarkMode) {
+                applyDarkModeToChildren(inventoryRoot, true);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -131,11 +224,17 @@ public class DashboardController {
 
     @FXML
     private void showTransactions(ActionEvent event) {
-        animateNavBox();
         try {
-            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/fxml/TransactionsView.fxml"));
-            javafx.scene.Parent transactionsRoot = loader.load();
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/TransactionsView.fxml"));
+            Parent transactionsRoot = loader.load();
+            TransactionsController transactionsController = loader.getController();
+            transactionsController.setDashboardController(this);
             contentPane.getChildren().setAll(transactionsRoot);
+            
+            // Apply dark mode to new content if needed
+            if (isDarkMode) {
+                applyDarkModeToChildren(transactionsRoot, true);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -143,29 +242,17 @@ public class DashboardController {
 
     @FXML
     private void showStoreOwners(ActionEvent event) {
-        animateNavBox();
         try {
-            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/fxml/StoreOwnersView.fxml"));
-            javafx.scene.Parent ownersRoot = loader.load();
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/StoreOwnersView.fxml"));
+            Parent ownersRoot = loader.load();
+            StoreOwnersController storeOwnersController = loader.getController();
+            storeOwnersController.setDashboardController(this);
             contentPane.getChildren().setAll(ownersRoot);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    @FXML
-    private void showReports(ActionEvent event) {
-        animateNavBox();
-        // TODO: Load reports view into contentPane
-    }
-
-    @FXML
-    private void showStatistics(ActionEvent event) {
-        animateNavBox();
-        try {
-            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/fxml/StatisticsView.fxml"));
-            javafx.scene.Parent statsRoot = loader.load();
-            contentPane.getChildren().setAll(statsRoot);
+            
+            // Apply dark mode to new content if needed
+            if (isDarkMode) {
+                applyDarkModeToChildren(ownersRoot, true);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -173,11 +260,65 @@ public class DashboardController {
 
     @FXML
     private void showUserManagement(ActionEvent event) {
-        animateNavBox();
         try {
-            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/fxml/UserManagementView.fxml"));
-            javafx.scene.Parent userRoot = loader.load();
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/UserManagementView.fxml"));
+            Parent userRoot = loader.load();
+            UserManagementController userManagementController = loader.getController();
+            userManagementController.setDashboardController(this);
             contentPane.getChildren().setAll(userRoot);
+            
+            // Apply dark mode to new content if needed
+            if (isDarkMode) {
+                applyDarkModeToChildren(userRoot, true);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @FXML
+    private void showStatistics(ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/StatisticsView.fxml"));
+            Parent statsRoot = loader.load();
+            contentPane.getChildren().setAll(statsRoot);
+            
+            // Apply dark mode to new content if needed
+            if (isDarkMode) {
+                applyDarkModeToChildren(statsRoot, true);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @FXML
+    private void showReports(ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/ReportsView.fxml"));
+            Parent reportsRoot = loader.load();
+            contentPane.getChildren().setAll(reportsRoot);
+            
+            // Apply dark mode to new content if needed
+            if (isDarkMode) {
+                applyDarkModeToChildren(reportsRoot, true);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    
+    @FXML
+    private void showAdminLogs(ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/AdminLogsView.fxml"));
+            Parent adminLogsRoot = loader.load();
+            contentPane.getChildren().setAll(adminLogsRoot);
+            
+            // Apply dark mode to new content if needed
+            if (isDarkMode) {
+                applyDarkModeToChildren(adminLogsRoot, true);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }

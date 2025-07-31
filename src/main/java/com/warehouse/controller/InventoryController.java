@@ -2,6 +2,9 @@ package com.warehouse.controller;
 
 import com.warehouse.model.Mattress;
 import com.warehouse.model.MattressDAO;
+import com.warehouse.model.User;
+import com.warehouse.model.UserDAO;
+import com.warehouse.util.ActivityLogger;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -14,7 +17,6 @@ import javafx.stage.Stage;
 
 public class InventoryController {
     @FXML private TableView<Mattress> mattressTable;
-    @FXML private TableColumn<Mattress, Integer> idColumn;
     @FXML private TableColumn<Mattress, String> typeColumn;
     @FXML private TableColumn<Mattress, String> sizeColumn;
     @FXML private TableColumn<Mattress, String> brandColumn;
@@ -34,7 +36,6 @@ public class InventoryController {
 
     @FXML
     public void initialize() {
-        idColumn.setCellValueFactory(cellData -> new javafx.beans.property.SimpleIntegerProperty(cellData.getValue().getId()).asObject());
         typeColumn.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(cellData.getValue().getType()));
         sizeColumn.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(cellData.getValue().getSize()));
         brandColumn.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(cellData.getValue().getBrand()));
@@ -52,6 +53,15 @@ public class InventoryController {
     @FXML
     private void handleAdd() {
         try {
+            // Log activity
+            if (dashboardController != null) {
+                User currentUser = UserDAO.findByUsername(dashboardController.getCurrentUser());
+                if (currentUser != null) {
+                    ActivityLogger.logActivity(currentUser, ActivityLogger.ActivityType.ADD_MATTRESS, 
+                        "Ouverture de l'interface d'ajout de matelas");
+                }
+            }
+            
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/MattressOverlay.fxml"));
             Parent overlayRoot = loader.load();
             MattressOverlayController controller = loader.getController();

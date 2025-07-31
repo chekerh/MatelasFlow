@@ -5,11 +5,11 @@
     <Label text="Gestion des matelas" style="-fx-font-size: 20px; -fx-font-weight: bold;" />
     <TableView fx:id="mattressTable" prefHeight="400" prefWidth="800">
         <columns>
-            <TableColumn fx:id="idColumn" text="ID" prefWidth="50" />
             <TableColumn fx:id="typeColumn" text="Type" prefWidth="150" />
             <TableColumn fx:id="sizeColumn" text="Taille" prefWidth="100" />
             <TableColumn fx:id="brandColumn" text="Marque" prefWidth="150" />
             <TableColumn fx:id="quantityColumn" text="Quantité" prefWidth="100" />
+            <TableColumn fx:id="prixColumn" text="Prix (€)" prefWidth="100" />
         </columns>
     </TableView>
     <HBox spacing="14" alignment="CENTER">

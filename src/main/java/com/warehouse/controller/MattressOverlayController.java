@@ -103,16 +103,25 @@ public class MattressOverlayController {
                     dashboardController.hideOverlay();
                 }
                 
-                showAlert("Succès", 
-                    isEditMode ? "Matelas modifié avec succès!" : "Matelas ajouté avec succès!", 
-                    AlertType.INFORMATION);
+                // Show success notification
+                if (dashboardController != null) {
+                    dashboardController.showNotification(
+                        isEditMode ? "Matelas modifié avec succès!" : "Matelas ajouté avec succès!", 
+                        false
+                    );
+                }
             } else {
-                showAlert("Erreur", "Échec de l'opération. Veuillez réessayer.", AlertType.ERROR);
+                // Show error notification
+                if (dashboardController != null) {
+                    dashboardController.showNotification("Échec de l'opération. Veuillez réessayer.", true);
+                }
             }
             
         } catch (Exception e) {
             e.printStackTrace();
-            showAlert("Erreur", "Une erreur inattendue s'est produite: " + e.getMessage(), AlertType.ERROR);
+            if (dashboardController != null) {
+                dashboardController.showNotification("Une erreur inattendue s'est produite: " + e.getMessage(), true);
+            }
         }
     }
     

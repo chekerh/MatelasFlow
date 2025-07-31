@@ -24,6 +24,11 @@ public class UserManagementController {
     @FXML private Label errorLabel;
 
     private ObservableList<User> userList = FXCollections.observableArrayList();
+    private DashboardController dashboardController;
+
+    public void setDashboardController(DashboardController dashboardController) {
+        this.dashboardController = dashboardController;
+    }
 
     @FXML
     public void initialize() {
@@ -35,23 +40,57 @@ public class UserManagementController {
     }
 
     @FXML
-    private void loadUsers() {
+    public void loadUsers() {
         userList.setAll(UserDAO.getAllUsers());
         errorLabel.setText("");
     }
 
     @FXML
     private void handleAdd() {
-        showUserDialog(null);
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/UserOverlay.fxml"));
+            Parent overlayRoot = loader.load();
+            UserOverlayController controller = loader.getController();
+            
+            // Set up the controller
+            controller.setDashboardController(dashboardController);
+            controller.setUserManagementController(this);
+            controller.setUser(null); // Add mode
+            
+            // Show the overlay
+            if (dashboardController != null) {
+                dashboardController.showOverlay(overlayRoot);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            errorLabel.setText("Erreur lors de l'ouverture du dialogue d'ajout.");
+        }
     }
 
     @FXML
     private void handleEdit() {
         User selected = userTable.getSelectionModel().getSelectedItem();
-        if (selected != null) {
-            showUserDialog(selected);
-        } else {
-            errorLabel.setText("No user selected.");
+        if (selected == null) {
+            errorLabel.setText("Aucun utilisateur sélectionné.");
+            return;
+        }
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/UserOverlay.fxml"));
+            Parent overlayRoot = loader.load();
+            UserOverlayController controller = loader.getController();
+            
+            // Set up the controller
+            controller.setDashboardController(dashboardController);
+            controller.setUserManagementController(this);
+            controller.setUser(selected); // Edit mode
+            
+            // Show the overlay
+            if (dashboardController != null) {
+                dashboardController.showOverlay(overlayRoot);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            errorLabel.setText("Erreur lors de l'ouverture du dialogue de modification.");
         }
     }
 
@@ -62,41 +101,15 @@ public class UserManagementController {
             if (UserDAO.deleteUser(selected.getId())) {
                 loadUsers();
             } else {
-                errorLabel.setText("Failed to delete user.");
+                errorLabel.setText("Échec de la suppression de l'utilisateur.");
             }
         } else {
-            errorLabel.setText("No user selected.");
+            errorLabel.setText("Aucun utilisateur sélectionné.");
         }
     }
 
     @FXML
     private void handleRefresh() {
         loadUsers();
-    }
-
-    private void showUserDialog(User user) {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/UserDialog.fxml"));
-            Parent dialogRoot = loader.load();
-            UserDialogController controller = loader.getController();
-            if (user != null) controller.setUser(user);
-            Stage dialogStage = new Stage();
-            dialogStage.setTitle(user == null ? "Add User" : "Edit User");
-            dialogStage.initModality(Modality.WINDOW_MODAL);
-            dialogStage.setScene(new Scene(dialogRoot));
-            dialogStage.showAndWait();
-            if (controller.isOkClicked()) {
-                User edited = controller.getUser();
-                boolean success = user == null ? UserDAO.addUser(edited) : UserDAO.updateUser(edited);
-                if (success) {
-                    loadUsers();
-                } else {
-                    errorLabel.setText("Failed to save user.");
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            errorLabel.setText("Error opening dialog.");
-        }
     }
 } 

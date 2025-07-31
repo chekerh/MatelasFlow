@@ -13,6 +13,10 @@ public class User {
         this.role = role;
     }
 
+    public User(String username, String passwordHash, String role) {
+        this(0, username, passwordHash, role);
+    }
+
     public int getId() { return id; }
     public String getUsername() { return username; }
     public String getPasswordHash() { return passwordHash; }

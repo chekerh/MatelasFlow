@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox xmlns:fx="http://javafx.com/fxml" fx:controller="com.warehouse.controller.StoreOwnerOverlayController" styleClass="overlay-dialog" spacing="16">
+    <!-- Header -->
+    <HBox spacing="12" alignment="CENTER_LEFT" style="-fx-padding: 0 0 16 0;">
+        <Label text="🏪" style="-fx-font-size: 24px;"/>
+        <Label fx:id="dialogTitle" text="Ajouter un propriétaire" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
+    </HBox>
+    
+    <!-- Form Content -->
+    <VBox spacing="12">
+        <GridPane hgap="12" vgap="12">
+            <Label text="🏪 Nom du magasin:" GridPane.columnIndex="0" GridPane.rowIndex="0" style="-fx-font-weight: bold;"/>
+            <TextField fx:id="nameField" promptText="Ex: Magasin Central" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+            
+            <Label text="📞 Contact:" GridPane.columnIndex="0" GridPane.rowIndex="1" style="-fx-font-weight: bold;"/>
+            <TextField fx:id="contactField" promptText="Ex: contact@magasin.com" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+        </GridPane>
+    </VBox>
+    
+    <!-- Buttons -->
+    <HBox spacing="12" alignment="CENTER_RIGHT" style="-fx-padding: 16 0 0 0;">
+        <Button text="✖ Annuler" onAction="#handleCancel" styleClass="button-accent-orange"/>
+        <Button text="✔ Valider" onAction="#handleOk" styleClass="button-accent-green"/>
+    </HBox>
+</VBox> 

@@ -1,49 +1,71 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<BorderPane xmlns:fx="http://javafx.com/fxml" fx:id="root" fx:controller="com.warehouse.controller.DashboardController" stylesheets="/css/modern.css" styleClass="root,dashboard">
-    <top>
-        <VBox alignment="CENTER" spacing="8" style="-fx-padding: 0 0 10 0;" styleClass="dashboard-top">
-            <ImageView fx:id="logoImage" fitHeight="60" fitWidth="60" pickOnBounds="true" preserveRatio="true" styleClass="logoImage"/>
-            <Label text="Tableau de bord - Gestion d'entrepôt" style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;" />
-            <HBox spacing="10" alignment="CENTER_LEFT" style="-fx-padding: 10;">
-                <Label fx:id="welcomeLabel" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
-                <Button text="Déconnexion" fx:id="logoutButton" onAction="#handleLogout"/>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.geometry.Insets?>
+
+<StackPane xmlns:fx="http://javafx.com/fxml" fx:controller="com.warehouse.controller.DashboardController" 
+           stylesheets="/css/modern.css" styleClass="root">
+    
+    <!-- Main Dashboard Content -->
+    <BorderPane styleClass="dashboard-content">
+        <!-- Top Section -->
+        <top>
+            <HBox styleClass="dashboard-top" alignment="CENTER_LEFT" spacing="20" style="-fx-padding: 15 30;">
+                <!-- Logo and App Name -->
+                <HBox spacing="12" alignment="CENTER_LEFT">
+                    <ImageView fx:id="logoImage" fitHeight="40" fitWidth="40" pickOnBounds="true" preserveRatio="true"/>
+                    <VBox spacing="2">
+                        <Label text="MatelasPro" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
+                        <Label text="Gestion d'Entrepôt" style="-fx-font-size: 12px; -fx-text-fill: #7f8c8d;"/>
+                    </VBox>
+                </HBox>
+                
+                <Region HBox.hgrow="ALWAYS"/>
+                
+                <!-- Welcome Message -->
+                <Label fx:id="welcomeLabel" text="Bienvenue!" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
+                
+                <Region HBox.hgrow="ALWAYS"/>
+                
+                <!-- User Info Section -->
+                <HBox alignment="CENTER_RIGHT" spacing="15">
+                    <Label fx:id="userInfoLabel" text="Utilisateur: Admin" style="-fx-font-size: 14px; -fx-text-fill: #7f8c8d;"/>
+                    <Button fx:id="darkModeButton" text="🌙 Mode Sombre" onAction="#toggleDarkMode" styleClass="dashboard-button"/>
+                    <Button fx:id="logoutButton" text="🚪 Déconnexion" onAction="#handleLogout" styleClass="dashboard-button"/>
+                </HBox>
             </HBox>
-        </VBox>
-    </top>
-    <left>
-        <VBox fx:id="navBox" styleClass="centered" spacing="14" style="-fx-padding: 30;">
-            <Button text="🛏  Matelas" fx:id="inventoryButton" onAction="#showInventory">
-                <tooltip><Tooltip text="Gérer les matelas"/></tooltip>
-            </Button>
-            <Button text="💶 Transactions" fx:id="transactionsButton" onAction="#showTransactions">
-                <tooltip><Tooltip text="Voir les ventes, prêts, retours"/></tooltip>
-            </Button>
-            <Button text="🏪 Propriétaires de magasin" fx:id="storeOwnersButton" onAction="#showStoreOwners">
-                <tooltip><Tooltip text="Gérer les propriétaires"/></tooltip>
-            </Button>
-            <Button text="📄 Rapports" fx:id="reportsButton" onAction="#showReports">
-                <tooltip><Tooltip text="Voir les rapports"/></tooltip>
-            </Button>
-            <Button text="📊 Statistiques" fx:id="statisticsButton" onAction="#showStatistics">
-                <tooltip><Tooltip text="Voir les statistiques"/></tooltip>
-            </Button>
-            <Button text="👤 Utilisateurs" fx:id="userManagementButton" onAction="#showUserManagement" visible="false" managed="false">
-                <tooltip><Tooltip text="Gérer les utilisateurs"/></tooltip>
-            </Button>
-        </VBox>
-    </left>
-    <center>
-        <StackPane>
-            <!-- Lively background shape -->
-            <Pane style="-fx-background-radius: 80 0 80 0; -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, #fbc2eb88 0%, #a6c1ee88 100%); -fx-pref-width: 900; -fx-pref-height: 600; -fx-translate-x: 120; -fx-translate-y: 80;"/>
-            <StackPane fx:id="contentPane" style="-fx-padding: 30;"/>
-            <!-- Overlay for dialogs -->
-            <StackPane fx:id="overlayPane" visible="false" managed="false" style="-fx-background-color: rgba(0,0,0,0.35); -fx-alignment: center;">
-                <!-- Dialog content will be injected here -->
-            </StackPane>
-        </StackPane>
-    </center>
-</BorderPane> 
+        </top>
+        
+        <!-- Main Content -->
+        <center>
+            <HBox spacing="0">
+                <!-- Navigation Panel -->
+                <VBox fx:id="navBox" styleClass="nav-panel" alignment="TOP_CENTER" spacing="15" style="-fx-padding: 30 20;">
+                    <Button text="📦 Inventaire" onAction="#showInventory" styleClass="nav-button"/>
+                    <Button text="💶 Transactions" onAction="#showTransactions" styleClass="nav-button"/>
+                    <Button text="🏪 Propriétaires" onAction="#showStoreOwners" styleClass="nav-button"/>
+                    <Button text="👤 Utilisateurs" onAction="#showUserManagement" styleClass="nav-button" fx:id="userManagementButton"/>
+                                    <Button text="📊 Statistiques" onAction="#showStatistics" styleClass="nav-button"/>
+                <Button text="📄 Rapports" onAction="#showReports" styleClass="nav-button"/>
+                <Button text="🔍 Surveillance" onAction="#showAdminLogs" styleClass="nav-button" fx:id="adminLogsButton"/>
+                </VBox>
+                
+                <!-- Content Area -->
+                <VBox fx:id="contentPane" styleClass="content-area" HBox.hgrow="ALWAYS">
+                    <!-- Notification Area -->
+                    <VBox fx:id="notificationArea" styleClass="notification-area" visible="false" managed="false" style="-fx-padding: 10;">
+                        <Label fx:id="notificationLabel" styleClass="notification-label" style="-fx-font-size: 14px; -fx-font-weight: bold;"/>
+                    </VBox>
+                    
+                    <!-- Main Content -->
+                    <Region VBox.vgrow="ALWAYS"/>
+                </VBox>
+            </HBox>
+        </center>
+    </BorderPane>
+    
+    <!-- Overlay for dialogs -->
+    <StackPane fx:id="overlayPane" visible="false" managed="false" styleClass="overlay-pane" alignment="CENTER"/>
+    
+</StackPane> 
