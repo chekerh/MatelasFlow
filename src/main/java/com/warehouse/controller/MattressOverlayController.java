@@ -81,15 +81,19 @@ public class MattressOverlayController {
             
             boolean success;
             if (isEditMode) {
+                System.out.println("DEBUG: Modification matelas ID: " + mattress.getId());
                 mattress.setType(type);
                 mattress.setSize(size);
                 mattress.setBrand(brand);
                 mattress.setQuantity(quantity);
                 mattress.setPrix(prix);
                 success = MattressDAO.updateMattress(mattress);
+                System.out.println("DEBUG: Modification " + (success ? "réussie" : "échouée"));
             } else {
+                System.out.println("DEBUG: Ajout matelas - Type: " + type + ", Taille: " + size + ", Quantité: " + quantity);
                 Mattress newMattress = new Mattress(type, size, brand, quantity, prix);
                 success = MattressDAO.addMattress(newMattress);
+                System.out.println("DEBUG: Ajout " + (success ? "réussi" : "échoué"));
             }
             
             if (success) {

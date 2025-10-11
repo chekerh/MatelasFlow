@@ -36,8 +36,11 @@ public class MattressDAO {
             stmt.setString(3, mattress.getBrand());
             stmt.setInt(4, mattress.getQuantity());
             stmt.setDouble(5, mattress.getPrix());
-            return stmt.executeUpdate() > 0;
+            int rowsAffected = stmt.executeUpdate();
+            System.out.println("DEBUG DAO: Matelas ajouté, lignes affectées: " + rowsAffected);
+            return rowsAffected > 0;
         } catch (SQLException e) {
+            System.err.println("ERREUR DAO addMattress: " + e.getMessage());
             e.printStackTrace();
             return false;
         }

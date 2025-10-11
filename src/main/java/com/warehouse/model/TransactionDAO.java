@@ -53,8 +53,11 @@ public class TransactionDAO {
             } else {
                 stmt.setNull(9, Types.DATE);
             }
-            return stmt.executeUpdate() > 0;
+            int rowsAffected = stmt.executeUpdate();
+            System.out.println("DEBUG DAO: Transaction ajoutée, lignes affectées: " + rowsAffected);
+            return rowsAffected > 0;
         } catch (SQLException e) {
+            System.err.println("ERREUR DAO addTransaction: " + e.getMessage());
             e.printStackTrace();
             return false;
         }

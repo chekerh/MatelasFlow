@@ -48,14 +48,24 @@ public class TransactionOverlayController {
         this.transactionsController = transactionsController;
     }
     
+    @FXML
+    public void initialize() {
+        initializeComboBoxes();
+
+        typeComboBox.valueProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null) {
+                updateFieldsForType();
+            }
+        });
+    }
+
     public void setTransaction(Transaction transaction) {
         this.transaction = transaction;
         this.isEditMode = (transaction != null);
-        
+
         if (isEditMode) {
             dialogTitle.setText("Modifier la transaction");
-            
-            // Convert type to display format with icon
+
             String displayType = transaction.getType();
             if ("Vente".equals(displayType)) {
                 displayType = "💰 Vente";
@@ -68,23 +78,18 @@ public class TransactionOverlayController {
             } else if ("Réception".equals(displayType)) {
                 displayType = "📥 Réception";
             }
-            
-            // Initialize combo boxes first
-            initializeComboBoxes();
-            
-            // Then set values
+
             typeComboBox.setValue(displayType);
-            
-            // Set mattress value by finding the matching string
+
             Mattress mattress = MattressDAO.getMattressById(transaction.getMattressId());
             if (mattress != null) {
                 String mattressString = "🛏️ " + mattress.getType() + " (" + mattress.getSize() + ")";
                 mattressComboBox.setValue(mattressString);
             }
-            
+
             quantityField.setText(String.valueOf(transaction.getQuantity()));
             prixField.setText(String.valueOf(transaction.getPrix()));
-            
+
             if (transaction.getStoreOwnerId() != null) {
                 StoreOwner storeOwner = StoreOwnerDAO.getStoreOwnerById(transaction.getStoreOwnerId());
                 if (storeOwner != null) {
@@ -92,18 +97,14 @@ public class TransactionOverlayController {
                     storeOwnerComboBox.setValue(storeOwnerString);
                 }
             }
-            
+
             notesField.setText(transaction.getNotes());
             if (transaction.getExpectedReturnDate() != null) {
                 expectedReturnDatePicker.setValue(transaction.getExpectedReturnDate());
             }
         } else {
             dialogTitle.setText("Ajouter une transaction");
-            
-            // Initialize combo boxes first
-            initializeComboBoxes();
-            
-            // Then set default values
+
             typeComboBox.setValue("💰 Vente");
             quantityField.clear();
             prixField.clear();
@@ -111,7 +112,7 @@ public class TransactionOverlayController {
             expectedReturnDatePicker.setValue(null);
             destinationField.clear();
         }
-        
+
         updateFieldsForType();
     }
     
@@ -149,43 +150,56 @@ public class TransactionOverlayController {
     
     private void updateFieldsForType() {
         String selectedType = typeComboBox.getValue();
-        
-        // Show/hide lending fields
+        if (selectedType == null) return;
+
         lendingFieldsBox.setVisible("📦 Prêt".equals(selectedType));
-        
-        // Show/hide destination fields
+        lendingFieldsBox.setManaged("📦 Prêt".equals(selectedType));
+
         destinationBox.setVisible("🚚 Transfert".equals(selectedType));
-        
-        // Show/hide return fields
+        destinationBox.setManaged("🚚 Transfert".equals(selectedType));
+
         returnFieldsBox.setVisible("🔄 retour".equals(selectedType));
-        
-        // Enable/disable store owner based on transaction type
+        returnFieldsBox.setManaged("🔄 retour".equals(selectedType));
+
         if ("📦 Prêt".equals(selectedType) || "🚚 Transfert".equals(selectedType)) {
             storeOwnerComboBox.setDisable(false);
             storeOwnerComboBox.setPromptText("Sélectionner un propriétaire");
         } else if ("💰 Vente".equals(selectedType)) {
             storeOwnerComboBox.setDisable(true);
+            storeOwnerComboBox.setValue(null);
             storeOwnerComboBox.setPromptText("Non applicable pour les ventes");
         } else if ("🔄 retour".equals(selectedType)) {
             storeOwnerComboBox.setDisable(true);
+            storeOwnerComboBox.setValue(null);
             storeOwnerComboBox.setPromptText("Non applicable pour les retours");
         } else if ("📥 Réception".equals(selectedType)) {
             storeOwnerComboBox.setDisable(true);
+            storeOwnerComboBox.setValue(null);
             storeOwnerComboBox.setPromptText("Non applicable pour les réceptions");
         }
-        
-        // Set price field behavior
-        if ("🔄 retour".equals(selectedType)) {
-            prixField.setText("0");
-            prixField.setDisable(true);
-            prixField.setPromptText("Prix automatiquement mis à zéro");
-        } else if ("📥 Réception".equals(selectedType)) {
+
+        if ("🔄 retour".equals(selectedType) || "📥 Réception".equals(selectedType)) {
             prixField.setText("0");
             prixField.setDisable(true);
             prixField.setPromptText("Prix automatiquement mis à zéro");
         } else {
             prixField.setDisable(false);
+            if (prixField.getText().equals("0") && !isEditMode) {
+                prixField.clear();
+            }
             prixField.setPromptText("Prix de vente");
+        }
+
+        if (!"📦 Prêt".equals(selectedType)) {
+            expectedReturnDatePicker.setValue(null);
+        }
+
+        if (!"🚚 Transfert".equals(selectedType)) {
+            destinationField.clear();
+        }
+
+        if (!"🔄 retour".equals(selectedType)) {
+            returnFromComboBox.setValue(null);
         }
     }
     
@@ -193,8 +207,12 @@ public class TransactionOverlayController {
     private void handleOk() {
         try {
             String type = typeComboBox.getValue();
-            
-            // Extract type without icon for database storage
+
+            if (type == null) {
+                showAlert("Erreur", "Veuillez sélectionner un type de transaction.", AlertType.ERROR);
+                return;
+            }
+
             String typeForDB = type;
             if (type.startsWith("💰 ")) {
                 typeForDB = "Vente";
@@ -208,29 +226,48 @@ public class TransactionOverlayController {
                 typeForDB = "Réception";
             }
             
-            // Extract mattress from string with icon
             String mattressString = mattressComboBox.getValue();
             Mattress selectedMattress = null;
             if (mattressString != null && mattressString.startsWith("🛏️ ")) {
-                String mattressInfo = mattressString.substring(2); // Remove icon
-                String mattressType = mattressInfo.substring(0, mattressInfo.indexOf(" ("));
-                List<Mattress> allMattresses = MattressDAO.getAllMattresses();
-                for (Mattress mattress : allMattresses) {
-                    if (mattress.getType().equals(mattressType)) {
-                        selectedMattress = mattress;
-                        break;
+                String mattressInfo = mattressString.substring(2).trim();
+                int openParen = mattressInfo.indexOf(" (");
+                int closeParen = mattressInfo.indexOf(")");
+
+                if (openParen > 0 && closeParen > openParen) {
+                    String mattressType = mattressInfo.substring(0, openParen).trim();
+                    String mattressSize = mattressInfo.substring(openParen + 2, closeParen).trim();
+
+                    List<Mattress> allMattresses = MattressDAO.getAllMattresses();
+                    for (Mattress mattress : allMattresses) {
+                        if (mattress.getType().equals(mattressType) && mattress.getSize().equals(mattressSize)) {
+                            selectedMattress = mattress;
+                            break;
+                        }
                     }
                 }
             }
             
+            if (selectedMattress == null) {
+                showAlert("Erreur", "Veuillez sélectionner un matelas.", AlertType.ERROR);
+                return;
+            }
+
             String quantityStr = quantityField.getText().trim();
+            if (quantityStr.isEmpty()) {
+                showAlert("Erreur", "La quantité est obligatoire.", AlertType.ERROR);
+                return;
+            }
+
             String prixStr = prixField.getText().trim();
-            
-            // Extract store owner from string with icon
+            if (prixStr.isEmpty()) {
+                showAlert("Erreur", "Le prix est obligatoire.", AlertType.ERROR);
+                return;
+            }
+
             String storeOwnerString = storeOwnerComboBox.getValue();
             StoreOwner selectedStoreOwner = null;
             if (storeOwnerString != null && storeOwnerString.startsWith("🏪 ")) {
-                String ownerName = storeOwnerString.substring(2); // Remove icon
+                String ownerName = storeOwnerString.substring(2);
                 List<StoreOwner> allStoreOwners = StoreOwnerDAO.getAllStoreOwners();
                 for (StoreOwner owner : allStoreOwners) {
                     if (owner.getName().equals(ownerName)) {
@@ -239,30 +276,10 @@ public class TransactionOverlayController {
                     }
                 }
             }
+
             String notes = notesField.getText().trim();
             LocalDate expectedReturnDate = expectedReturnDatePicker.getValue();
             String destination = destinationField.getText().trim();
-            
-            // Validation
-            if (type == null) {
-                showAlert("Erreur", "Veuillez sélectionner un type de transaction.", AlertType.ERROR);
-                return;
-            }
-            
-            if (selectedMattress == null) {
-                showAlert("Erreur", "Veuillez sélectionner un matelas.", AlertType.ERROR);
-                return;
-            }
-            
-            if (quantityStr.isEmpty()) {
-                showAlert("Erreur", "La quantité est obligatoire.", AlertType.ERROR);
-                return;
-            }
-            
-            if (prixStr.isEmpty()) {
-                showAlert("Erreur", "Le prix est obligatoire.", AlertType.ERROR);
-                return;
-            }
             
             int quantity;
             double prix;
@@ -428,7 +445,6 @@ public class TransactionOverlayController {
                     }
                 }
             } else {
-                // Create new transaction
                 Transaction newTransaction = new Transaction(
                     LocalDateTime.now(),
                     selectedMattress.getId(),
@@ -440,15 +456,23 @@ public class TransactionOverlayController {
                     finalNotes,
                     expectedReturnDate
                 );
+
+                System.out.println("DEBUG: Ajout transaction - Type: " + typeForDB + ", Matelas ID: " + selectedMattress.getId() + ", Quantité: " + quantity);
+
                 success = TransactionDAO.addTransaction(newTransaction);
-                
-                // Update mattress quantity
+
                 if (success) {
+                    System.out.println("DEBUG: Transaction ajoutée avec succès, mise à jour du stock...");
+
                     if ("Vente".equals(typeForDB) || "Prêt".equals(typeForDB) || "Transfert".equals(typeForDB)) {
-                        MattressDAO.decreaseQuantity(selectedMattress.getId(), quantity);
+                        boolean stockUpdated = MattressDAO.decreaseQuantity(selectedMattress.getId(), quantity);
+                        System.out.println("DEBUG: Diminution du stock: " + (stockUpdated ? "réussie" : "échouée"));
                     } else if ("retour".equals(typeForDB) || "Réception".equals(typeForDB)) {
-                        MattressDAO.increaseQuantity(selectedMattress.getId(), quantity);
+                        boolean stockUpdated = MattressDAO.increaseQuantity(selectedMattress.getId(), quantity);
+                        System.out.println("DEBUG: Augmentation du stock: " + (stockUpdated ? "réussie" : "échouée"));
                     }
+                } else {
+                    System.err.println("ERREUR: Échec de l'ajout de la transaction");
                 }
             }
             
