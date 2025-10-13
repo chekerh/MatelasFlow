@@ -33,9 +33,11 @@ public class ReportsController {
             String filename = "rapport_quotidien_" + selectedDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + ".pdf";
             boolean success = PdfReportUtil.generateDailyTransactionsReport(selectedDate, filename);
             
+            String desktopPath = System.getProperty("user.home") + java.io.File.separator + "Desktop" + java.io.File.separator + "Rapports_MatelasPro";
+            
             if (success) {
-                statusLabel.setText("✅ Rapport quotidien généré avec succès: " + filename);
-                showAlert("Succès", "Rapport quotidien généré avec succès: " + filename, AlertType.INFORMATION);
+                statusLabel.setText("✅ Rapport quotidien généré avec succès");
+                showAlert("Succès", "Rapport quotidien généré avec succès!\n\nFichier: " + filename + "\nEmplacement: " + desktopPath, AlertType.INFORMATION);
             } else {
                 statusLabel.setText("❌ Échec de la génération du rapport quotidien");
                 showAlert("Erreur", "Échec de la génération du rapport quotidien.", AlertType.ERROR);
@@ -59,9 +61,11 @@ public class ReportsController {
             String filename = "rapport_mensuel_" + selectedDate.format(DateTimeFormatter.ofPattern("yyyy-MM")) + ".pdf";
             boolean success = PdfReportUtil.generateMonthlyTransactionsReport(selectedDate, filename);
             
+            String desktopPath = System.getProperty("user.home") + java.io.File.separator + "Desktop" + java.io.File.separator + "Rapports_MatelasPro";
+            
             if (success) {
-                statusLabel.setText("✅ Rapport mensuel généré avec succès: " + filename);
-                showAlert("Succès", "Rapport mensuel généré avec succès: " + filename, AlertType.INFORMATION);
+                statusLabel.setText("✅ Rapport mensuel généré avec succès");
+                showAlert("Succès", "Rapport mensuel généré avec succès!\n\nFichier: " + filename + "\nEmplacement: " + desktopPath, AlertType.INFORMATION);
             } else {
                 statusLabel.setText("❌ Échec de la génération du rapport mensuel");
                 showAlert("Erreur", "Échec de la génération du rapport mensuel.", AlertType.ERROR);
@@ -79,9 +83,11 @@ public class ReportsController {
             String filename = "rapport_stock_" + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + ".pdf";
             boolean success = PdfReportUtil.generateStockReport(filename);
             
+            String desktopPath = System.getProperty("user.home") + java.io.File.separator + "Desktop" + java.io.File.separator + "Rapports_MatelasPro";
+            
             if (success) {
-                statusLabel.setText("✅ Rapport de stock généré avec succès: " + filename);
-                showAlert("Succès", "Rapport de stock généré avec succès: " + filename, AlertType.INFORMATION);
+                statusLabel.setText("✅ Rapport de stock généré avec succès");
+                showAlert("Succès", "Rapport de stock généré avec succès!\n\nFichier: " + filename + "\nEmplacement: " + desktopPath, AlertType.INFORMATION);
             } else {
                 statusLabel.setText("❌ Échec de la génération du rapport de stock");
                 showAlert("Erreur", "Échec de la génération du rapport de stock.", AlertType.ERROR);
@@ -99,9 +105,11 @@ public class ReportsController {
             String filename = "rapport_transactions_" + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + ".pdf";
             boolean success = PdfReportUtil.generateTransactionReport(filename);
             
+            String desktopPath = System.getProperty("user.home") + java.io.File.separator + "Desktop" + java.io.File.separator + "Rapports_MatelasPro";
+            
             if (success) {
-                statusLabel.setText("✅ Rapport de transactions généré avec succès: " + filename);
-                showAlert("Succès", "Rapport de transactions généré avec succès: " + filename, AlertType.INFORMATION);
+                statusLabel.setText("✅ Rapport de transactions généré avec succès");
+                showAlert("Succès", "Rapport de transactions généré avec succès!\n\nFichier: " + filename + "\nEmplacement: " + desktopPath, AlertType.INFORMATION);
             } else {
                 statusLabel.setText("❌ Échec de la génération du rapport de transactions");
                 showAlert("Erreur", "Échec de la génération du rapport de transactions.", AlertType.ERROR);

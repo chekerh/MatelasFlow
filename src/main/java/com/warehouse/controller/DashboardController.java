@@ -14,16 +14,19 @@ import javafx.scene.Node;
 import javafx.event.ActionEvent;
 import javafx.application.Platform;
 import javafx.animation.PauseTransition;
+import javafx.animation.FadeTransition;
 import javafx.util.Duration;
 import com.warehouse.model.User;
 import com.warehouse.model.UserDAO;
 import com.warehouse.util.ActivityLogger;
 import org.mindrot.jbcrypt.BCrypt;
+import java.util.*;
 
 public class DashboardController {
     @FXML private ImageView logoImage;
     @FXML private Label welcomeLabel;
     @FXML private Label userInfoLabel;
+    @FXML private Label duaaLabel;
     @FXML private Button logoutButton;
     @FXML private Button darkModeButton;
     @FXML private VBox navBox;
@@ -38,18 +41,32 @@ public class DashboardController {
     private String currentUser;
     private String currentRole;
     private boolean isDarkMode = false;
+    
+    // Dynamic Duaa rotation
+    private final List<String> duaas = Arrays.asList(
+        "اللهم بارك لنا في يومنا هذا",
+        "اللهم وفقنا لما تحب وترضى",
+        "ربنا آتنا في الدنيا حسنة وفي الآخرة حسنة",
+        "اللهم اجعل عملنا خالصا لوجهك الكريم",
+        "اللهم إنا نسألك العفو والعافية",
+        "اللهم اهدنا فيمن هديت",
+        "سبحان الله وبحمده سبحان الله العظيم",
+        "الحمد لله رب العالمين"
+    );
+    private int currentDuaaIndex = 0;
+    private Timer duaaRotationTimer;
 
     @FXML
     public void initialize() {
         // Set logo
         try {
-            Image logo = new Image(getClass().getResource("/images/black-logo.PNG").toExternalForm());
+            Image logo = new Image(getClass().getResource("/images/dark-logo.png").toExternalForm());
             logoImage.setImage(logo);
         } catch (Exception e) {
             System.out.println("Logo not found: " + e.getMessage());
             // Try white logo as fallback
             try {
-                Image logo = new Image(getClass().getResource("/images/white-logo.PNG").toExternalForm());
+                Image logo = new Image(getClass().getResource("/images/white-logo.png").toExternalForm());
                 logoImage.setImage(logo);
             } catch (Exception e2) {
                 System.out.println("White logo also not found: " + e2.getMessage());
@@ -62,6 +79,55 @@ public class DashboardController {
         
         // Apply dark mode if needed
         applyDarkModeToChildren(contentPane, isDarkMode);
+        
+        // Start dynamic duaa rotation
+        startDuaaRotation();
+    }
+    
+    /**
+     * Start the dynamic duaa rotation with fade animation
+     * Changes duaa every 10 seconds
+     */
+    private void startDuaaRotation() {
+        if (duaaLabel != null && !duaas.isEmpty()) {
+            // Set initial duaa
+            duaaLabel.setText(duaas.get(0));
+            
+            // Schedule periodic rotation
+            duaaRotationTimer = new Timer(true);
+            duaaRotationTimer.scheduleAtFixedRate(new TimerTask() {
+                @Override
+                public void run() {
+                    Platform.runLater(() -> rotateDuaa());
+                }
+            }, 10000, 10000); // Every 10 seconds
+        }
+    }
+    
+    /**
+     * Rotate to next duaa with smooth fade transition
+     */
+    private void rotateDuaa() {
+        if (duaaLabel == null) return;
+        
+        // Fade out
+        FadeTransition fadeOut = new FadeTransition(Duration.seconds(1), duaaLabel);
+        fadeOut.setFromValue(1.0);
+        fadeOut.setToValue(0.0);
+        
+        fadeOut.setOnFinished(e -> {
+            // Change text
+            currentDuaaIndex = (currentDuaaIndex + 1) % duaas.size();
+            duaaLabel.setText(duaas.get(currentDuaaIndex));
+            
+            // Fade in
+            FadeTransition fadeIn = new FadeTransition(Duration.seconds(1), duaaLabel);
+            fadeIn.setFromValue(0.0);
+            fadeIn.setToValue(1.0);
+            fadeIn.play();
+        });
+        
+        fadeOut.play();
     }
 
     public void setUser(String username, String role) {
@@ -143,10 +209,10 @@ public class DashboardController {
         // Update logo for dark mode
         try {
             if (isDarkMode) {
-                Image logo = new Image(getClass().getResource("/images/white-logo.PNG").toExternalForm());
+                Image logo = new Image(getClass().getResource("/images/white-logo.png").toExternalForm());
                 logoImage.setImage(logo);
             } else {
-                Image logo = new Image(getClass().getResource("/images/black-logo.PNG").toExternalForm());
+                Image logo = new Image(getClass().getResource("/images/dark-logo.png").toExternalForm());
                 logoImage.setImage(logo);
             }
         } catch (Exception e) {

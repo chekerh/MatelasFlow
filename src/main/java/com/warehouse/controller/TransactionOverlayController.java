@@ -39,6 +39,7 @@ public class TransactionOverlayController {
     private boolean isEditMode = false;
     private DashboardController dashboardController;
     private TransactionsController transactionsController;
+    private InventoryController inventoryController;
     
     public void setDashboardController(DashboardController dashboardController) {
         this.dashboardController = dashboardController;
@@ -46,6 +47,21 @@ public class TransactionOverlayController {
     
     public void setTransactionsController(TransactionsController transactionsController) {
         this.transactionsController = transactionsController;
+    }
+    
+    public void setInventoryController(InventoryController inventoryController) {
+        this.inventoryController = inventoryController;
+    }
+    
+    @FXML
+    public void initialize() {
+        // Initialize ComboBoxes when FXML loads
+        initializeComboBoxes();
+        
+        // Add listener to type ComboBox to update fields dynamically
+        typeComboBox.valueProperty().addListener((obs, oldVal, newVal) -> {
+            updateFieldsForType();
+        });
     }
     
     public void setTransaction(Transaction transaction) {
@@ -126,6 +142,31 @@ public class TransactionOverlayController {
         );
         typeComboBox.setItems(transactionTypes);
         
+        // CRITICAL FIX: Force text display with cell factories
+        typeComboBox.setCellFactory(lv -> new ListCell<String>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? null : item);
+                setGraphic(null);
+            }
+        });
+        
+        typeComboBox.setButtonCell(new ListCell<String>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText("");
+                    setGraphic(null);
+                } else {
+                    setText(item);
+                    setGraphic(null);
+                }
+                setStyle("-fx-text-fill: #2c3e50; -fx-font-size: 14px;");
+            }
+        });
+        
         // Initialize mattress combo box
         List<Mattress> mattresses = MattressDAO.getAllMattresses();
         ObservableList<String> mattressNames = FXCollections.observableArrayList();
@@ -191,8 +232,16 @@ public class TransactionOverlayController {
     
     @FXML
     private void handleOk() {
+        System.out.println("========================");
+        System.out.println("DEBUG: handleOk() CALLED");
+        System.out.println("========================");
         try {
+            // Validation 1: Check type selected
             String type = typeComboBox.getValue();
+            if (type == null || type.trim().isEmpty()) {
+                showAlert("Erreur", "Veuillez sélectionner un type de transaction.", AlertType.ERROR);
+                return;
+            }
             
             // Extract type without icon for database storage
             String typeForDB = type;
@@ -208,19 +257,48 @@ public class TransactionOverlayController {
                 typeForDB = "Réception";
             }
             
-            // Extract mattress from string with icon
+            // Validation 2: Check mattress selected
             String mattressString = mattressComboBox.getValue();
+            System.out.println("DEBUG: Mattress ComboBox Value = '" + mattressString + "'"); // Debug
+            
             Mattress selectedMattress = null;
-            if (mattressString != null && mattressString.startsWith("🛏️ ")) {
-                String mattressInfo = mattressString.substring(2); // Remove icon
-                String mattressType = mattressInfo.substring(0, mattressInfo.indexOf(" ("));
+            if (mattressString == null || mattressString.trim().isEmpty()) {
+                showAlert("Erreur", "Veuillez sélectionner un matelas.", AlertType.ERROR);
+                return;
+            }
+            
+            // Extract mattress from string with icon - ROBUST emoji handling
+            String mattressInfo = mattressString.trim();
+            
+            // Remove emoji by finding the first space after emoji
+            if (mattressInfo.contains(" ")) {
+                int firstSpace = mattressInfo.indexOf(" ");
+                mattressInfo = mattressInfo.substring(firstSpace + 1).trim();
+            }
+            
+            System.out.println("DEBUG: After emoji removal = '" + mattressInfo + "'"); // Debug
+            
+            // Extract type (before opening parenthesis)
+            int openParen = mattressInfo.indexOf(" (");
+            if (openParen > 0) {
+                String mattressType = mattressInfo.substring(0, openParen).trim();
+                System.out.println("DEBUG: Looking for mattress type = '" + mattressType + "'"); // Debug
+                
                 List<Mattress> allMattresses = MattressDAO.getAllMattresses();
                 for (Mattress mattress : allMattresses) {
-                    if (mattress.getType().equals(mattressType)) {
+                    System.out.println("DEBUG: Comparing '" + mattressType + "' with '" + mattress.getType() + "'"); // Debug
+                    // Case-insensitive comparison
+                    if (mattress.getType().equalsIgnoreCase(mattressType)) {
                         selectedMattress = mattress;
+                        System.out.println("DEBUG: MATCH FOUND! ID=" + mattress.getId());
                         break;
                     }
                 }
+            }
+            
+            if (selectedMattress == null) {
+                showAlert("Erreur", "Matelas non trouvé. Veuillez réessayer la sélection.", AlertType.ERROR);
+                return;
             }
             
             String quantityStr = quantityField.getText().trim();
@@ -307,7 +385,7 @@ public class TransactionOverlayController {
                     // Check if selling price is reasonable (not too low compared to original price)
                     double originalPrice = selectedMattress.getPrix();
                     if (prix < originalPrice * 0.5) {
-                        showAlert("Attention", "Le prix de vente est très bas par rapport au prix original (" + originalPrice + "€). Continuer ?", AlertType.WARNING);
+                        showAlert("Attention", "Le prix de vente est très bas par rapport au prix original (" + String.format("%.2f", originalPrice) + " DT). Voulez-vous continuer ?", AlertType.WARNING);
                         // Note: In a real application, you might want to add a confirmation dialog here
                     }
                 }
@@ -389,7 +467,7 @@ public class TransactionOverlayController {
             } else if ("Prêt".equals(typeForDB) && selectedStoreOwner != null && expectedReturnDate != null) {
                 finalNotes = "Prêt à: " + selectedStoreOwner.getName() + " - Retour prévu: " + expectedReturnDate.toString();
             } else if ("Vente".equals(typeForDB)) {
-                finalNotes = "Vente directe - Prix: " + String.format("%.2f", prix) + "€";
+                finalNotes = "Vente directe - Prix: " + String.format("%.2f", prix) + " DT";
             } else if ("Réception".equals(typeForDB)) {
                 finalNotes = "Réception de " + quantity + " matelas";
             }
@@ -416,7 +494,7 @@ public class TransactionOverlayController {
                     // Revert old transaction's stock effect
                     if ("Vente".equals(oldType) || "Prêt".equals(oldType) || "Transfert".equals(oldType)) {
                         MattressDAO.increaseQuantity(oldMattressId, oldQuantity);
-                    } else if ("retour".equals(oldType)) {
+                    } else if ("retour".equals(oldType) || "Réception".equals(oldType)) {
                         MattressDAO.decreaseQuantity(oldMattressId, oldQuantity);
                     }
                     
@@ -445,9 +523,13 @@ public class TransactionOverlayController {
                 // Update mattress quantity
                 if (success) {
                     if ("Vente".equals(typeForDB) || "Prêt".equals(typeForDB) || "Transfert".equals(typeForDB)) {
-                        MattressDAO.decreaseQuantity(selectedMattress.getId(), quantity);
+                        System.out.println("DEBUG: DECREASING quantity for mattress ID=" + selectedMattress.getId() + " by " + quantity);
+                        boolean decreaseSuccess = MattressDAO.decreaseQuantity(selectedMattress.getId(), quantity);
+                        System.out.println("DEBUG: Decrease result = " + decreaseSuccess);
                     } else if ("retour".equals(typeForDB) || "Réception".equals(typeForDB)) {
-                        MattressDAO.increaseQuantity(selectedMattress.getId(), quantity);
+                        System.out.println("DEBUG: INCREASING quantity for mattress ID=" + selectedMattress.getId() + " by " + quantity);
+                        boolean increaseSuccess = MattressDAO.increaseQuantity(selectedMattress.getId(), quantity);
+                        System.out.println("DEBUG: Increase result = " + increaseSuccess);
                     }
                 }
             }
@@ -456,6 +538,11 @@ public class TransactionOverlayController {
                 // Refresh the transactions table
                 if (transactionsController != null) {
                     transactionsController.loadTransactions();
+                }
+                
+                // CRITICAL: Refresh inventory to show updated quantities
+                if (inventoryController != null) {
+                    inventoryController.loadMattresses();
                 }
                 
                 // Hide the overlay

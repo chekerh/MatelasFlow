@@ -1,6 +1,39 @@
-# 🏪 Système de Gestion d'Entrepôt de Matelas
+# 🏪 Système de Gestion d'Entrepôt de Matelas - MatelasPro
 
 Un système de gestion d'entrepôt moderne et intuitif développé en JavaFX pour la gestion des matelas, transactions, et utilisateurs.
+
+## 🚀 Démarrage Rapide
+
+### **Pour les Clients (Installation Simplifiée)**
+
+1. **Double-cliquez sur `MatelasPro-Launcher.vbs`** ou le raccourci bureau
+2. L'application démarrera automatiquement XAMPP et MatelasPro
+3. Connectez-vous avec `admin` / `admin123`
+
+📖 **Guide complet**: [docs/INSTALLATION_CLIENT.md](docs/INSTALLATION_CLIENT.md)
+
+### **Pour les Développeurs**
+
+```bash
+# Cloner et compiler
+git clone [repository-url]
+cd matress
+mvn clean package
+
+# Lancer l'application
+mvn javafx:run
+
+# Ou utiliser le JAR
+java -jar target/warehouse-mattress-app-1.0-SNAPSHOT.jar
+```
+
+## 📚 Documentation
+
+Toute la documentation est disponible dans le dossier [`docs/`](docs/):
+- 📋 [INDEX.md](docs/INDEX.md) - Index de toute la documentation
+- 🚀 [INSTALLATION_CLIENT.md](docs/INSTALLATION_CLIENT.md) - Guide d'installation complet
+- ✅ [QUICK_TEST_GUIDE.md](docs/QUICK_TEST_GUIDE.md) - Guide de test rapide
+- 🔧 [CREATE_EXE_GUIDE.md](docs/CREATE_EXE_GUIDE.md) - Créer un fichier EXE
 
 ## ✨ Fonctionnalités
 
@@ -68,7 +101,7 @@ Un système de gestion d'entrepôt moderne et intuitif développé en JavaFX pou
 
 #### B. Créer la Base de Données
 1. Ouvrir **phpMyAdmin** (http://localhost/phpmyadmin)
-2. Créer une nouvelle base de données : `warehouse_mattress`
+2. Créer une nouvelle base de données : `warehouse_db`
 3. Importer le fichier : `src/main/resources/mysql_schema.sql`
 
 #### C. Créer l'Utilisateur Admin

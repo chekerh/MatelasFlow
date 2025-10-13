@@ -6,6 +6,7 @@ import com.warehouse.model.Transaction;
 import com.warehouse.model.Mattress;
 import com.warehouse.model.MattressDAO;
 import com.warehouse.model.TransactionDAO;
+import java.io.File;
 import java.io.FileOutputStream;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -13,11 +14,37 @@ import java.util.List;
 
 public class PdfReportUtil {
     
+    /**
+     * Get the reports folder path on Desktop
+     * Creates the folder if it doesn't exist
+     */
+    private static String getReportsFolderPath() {
+        String userHome = System.getProperty("user.home");
+        String desktopPath = userHome + File.separator + "Desktop";
+        String reportsFolderPath = desktopPath + File.separator + "Rapports_MatelasPro";
+        
+        // Create directory if it doesn't exist
+        File reportsFolder = new File(reportsFolderPath);
+        if (!reportsFolder.exists()) {
+            reportsFolder.mkdirs();
+            System.out.println("Created reports folder: " + reportsFolderPath);
+        }
+        
+        return reportsFolderPath;
+    }
+    
+    /**
+     * Get full path for a report file
+     */
+    private static String getReportFilePath(String filename) {
+        return getReportsFolderPath() + File.separator + filename;
+    }
+    
     public static boolean generateDailyTransactionsReport(LocalDate date, String filename) {
         try {
             List<Transaction> transactions = TransactionDAO.getAllTransactions();
             Document document = new Document();
-            PdfWriter.getInstance(document, new FileOutputStream(filename));
+            PdfWriter.getInstance(document, new FileOutputStream(getReportFilePath(filename)));
             document.open();
             Font titleFont = new Font(Font.FontFamily.HELVETICA, 18, Font.BOLD);
             Font headerFont = new Font(Font.FontFamily.HELVETICA, 12, Font.BOLD);
@@ -88,7 +115,7 @@ public class PdfReportUtil {
         try {
             List<Transaction> transactions = TransactionDAO.getAllTransactions();
             Document document = new Document();
-            PdfWriter.getInstance(document, new FileOutputStream(filename));
+            PdfWriter.getInstance(document, new FileOutputStream(getReportFilePath(filename)));
             document.open();
             Font titleFont = new Font(Font.FontFamily.HELVETICA, 18, Font.BOLD);
             Font headerFont = new Font(Font.FontFamily.HELVETICA, 12, Font.BOLD);
@@ -129,7 +156,7 @@ public class PdfReportUtil {
         try {
             List<Mattress> mattresses = MattressDAO.getAllMattresses();
             Document document = new Document();
-            PdfWriter.getInstance(document, new FileOutputStream(filename));
+            PdfWriter.getInstance(document, new FileOutputStream(getReportFilePath(filename)));
             document.open();
             Font titleFont = new Font(Font.FontFamily.HELVETICA, 18, Font.BOLD);
             Font headerFont = new Font(Font.FontFamily.HELVETICA, 12, Font.BOLD);
@@ -164,7 +191,7 @@ public class PdfReportUtil {
         try {
             List<Transaction> transactions = TransactionDAO.getAllTransactions();
             Document document = new Document();
-            PdfWriter.getInstance(document, new FileOutputStream(filename));
+            PdfWriter.getInstance(document, new FileOutputStream(getReportFilePath(filename)));
             document.open();
             Font titleFont = new Font(Font.FontFamily.HELVETICA, 18, Font.BOLD);
             Font headerFont = new Font(Font.FontFamily.HELVETICA, 12, Font.BOLD);

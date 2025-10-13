@@ -25,7 +25,7 @@
             <Label text="📦 Quantité:" GridPane.columnIndex="0" GridPane.rowIndex="3" style="-fx-font-weight: bold;"/>
             <TextField fx:id="quantityField" promptText="Nombre de matelas" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
             
-            <Label text="💰 Prix (€):" GridPane.columnIndex="0" GridPane.rowIndex="4" style="-fx-font-weight: bold;"/>
+            <Label text="💰 Prix (DT):" GridPane.columnIndex="0" GridPane.rowIndex="4" style="-fx-font-weight: bold;"/>
             <TextField fx:id="prixField" promptText="Prix unitaire" GridPane.columnIndex="1" GridPane.rowIndex="4"/>
         </GridPane>
     </VBox>

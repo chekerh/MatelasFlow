@@ -1,0 +1,22 @@
+# MatelasPro Configuration File Template
+# Copy this file to config.properties and fill in your values
+
+# Database Configuration
+db.url=jdbc:mysql://localhost:3306/matelaspro
+db.user=root
+db.password=
+
+# Firebase Configuration
+firebase.url=https://matelaspro-default-rtdb.europe-west1.firebasedatabase.app/
+firebase.key=resources/firebase-key.json
+
+# Backup Configuration
+backup.interval=daily
+backup.time=02:00
+backup.retention.days=30
+
+# Application Settings
+app.name=MatelasPro
+app.version=1.0.0
+app.language=fr
+app.currency=DT

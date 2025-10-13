@@ -49,6 +49,20 @@ public class TransactionsController {
         quantityColumn.setCellValueFactory(cellData -> new javafx.beans.property.SimpleIntegerProperty(cellData.getValue().getQuantity()).asObject());
         typeColumn.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(cellData.getValue().getType()));
         prixColumn.setCellValueFactory(cellData -> new javafx.beans.property.SimpleDoubleProperty(cellData.getValue().getPrix()).asObject());
+        
+        // Format prix column to show 2 decimals with DT currency
+        prixColumn.setCellFactory(column -> new TableCell<Transaction, Double>() {
+            @Override
+            protected void updateItem(Double item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                } else {
+                    setText(String.format("%.2f DT", item));
+                }
+            }
+        });
+        
         storeOwnerNameColumn.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(
             cellData.getValue().getStoreOwnerId() == null ? "" : com.warehouse.model.StoreOwnerDAO.getStoreOwnerById(cellData.getValue().getStoreOwnerId()).getName()
         ));

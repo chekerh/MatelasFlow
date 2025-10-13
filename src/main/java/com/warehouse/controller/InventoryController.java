@@ -21,6 +21,7 @@ public class InventoryController {
     @FXML private TableColumn<Mattress, String> sizeColumn;
     @FXML private TableColumn<Mattress, String> brandColumn;
     @FXML private TableColumn<Mattress, Integer> quantityColumn;
+    @FXML private TableColumn<Mattress, Double> prixColumn;
     @FXML private Button addButton;
     @FXML private Button editButton;
     @FXML private Button deleteButton;
@@ -40,6 +41,20 @@ public class InventoryController {
         sizeColumn.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(cellData.getValue().getSize()));
         brandColumn.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(cellData.getValue().getBrand()));
         quantityColumn.setCellValueFactory(cellData -> new javafx.beans.property.SimpleIntegerProperty(cellData.getValue().getQuantity()).asObject());
+        prixColumn.setCellValueFactory(cellData -> new javafx.beans.property.SimpleDoubleProperty(cellData.getValue().getPrix()).asObject());
+        
+        // Format prix column to show 2 decimals with DT currency
+        prixColumn.setCellFactory(column -> new TableCell<Mattress, Double>() {
+            @Override
+            protected void updateItem(Double item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                } else {
+                    setText(String.format("%.2f DT", item));
+                }
+            }
+        });
         mattressTable.setItems(mattressList);
         loadMattresses();
     }

@@ -1,9 +1,10 @@
 package com.warehouse.util;
 
+import com.warehouse.model.*;
 import java.io.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Properties;
+import java.util.*;
 
 public class BackupManager {
     private static final String BACKUP_DIR = "backups/";
@@ -162,5 +163,89 @@ public class BackupManager {
         if (isBackupNeeded()) {
             NotificationSystem.showBackupReminder();
         }
+    }
+    
+    /**
+     * Collect all database data for Firebase backup
+     * @return Map containing all tables data
+     */
+    public static Map<String, Object> collectDatabaseData() {
+        Map<String, Object> data = new HashMap<>();
+        
+        try {
+            // Collect mattresses
+            List<Mattress> mattresses = MattressDAO.getAllMattresses();
+            List<Map<String, Object>> mattressList = new ArrayList<>();
+            for (Mattress m : mattresses) {
+                Map<String, Object> mattressMap = new HashMap<>();
+                mattressMap.put("id", m.getId());
+                mattressMap.put("type", m.getType());
+                mattressMap.put("size", m.getSize());
+                mattressMap.put("brand", m.getBrand());
+                mattressMap.put("quantity", m.getQuantity());
+                mattressMap.put("prix", m.getPrix());
+                mattressList.add(mattressMap);
+            }
+            data.put("mattresses", mattressList);
+            
+            // Collect transactions
+            List<Transaction> transactions = TransactionDAO.getAllTransactions();
+            List<Map<String, Object>> transactionsList = new ArrayList<>();
+            for (Transaction t : transactions) {
+                Map<String, Object> transactionMap = new HashMap<>();
+                transactionMap.put("id", t.getId());
+                transactionMap.put("mattressId", t.getMattressId());
+                transactionMap.put("quantity", t.getQuantity());
+                transactionMap.put("type", t.getType());
+                transactionMap.put("date", t.getDate().toString());
+                transactionMap.put("storeOwnerId", t.getStoreOwnerId());
+                transactionMap.put("userId", t.getUserId());
+                transactionMap.put("prix", t.getPrix());
+                transactionMap.put("notes", t.getNotes());
+                if (t.getExpectedReturnDate() != null) {
+                    transactionMap.put("expectedReturnDate", t.getExpectedReturnDate().toString());
+                }
+                transactionsList.add(transactionMap);
+            }
+            data.put("transactions", transactionsList);
+            
+            // Collect store owners
+            List<StoreOwner> owners = StoreOwnerDAO.getAllStoreOwners();
+            List<Map<String, Object>> ownersList = new ArrayList<>();
+            for (StoreOwner o : owners) {
+                Map<String, Object> ownerMap = new HashMap<>();
+                ownerMap.put("id", o.getId());
+                ownerMap.put("name", o.getName());
+                ownerMap.put("contact", o.getContact());
+                ownersList.add(ownerMap);
+            }
+            data.put("storeOwners", ownersList);
+            
+            // Collect users
+            List<User> users = UserDAO.getAllUsers();
+            List<Map<String, Object>> usersList = new ArrayList<>();
+            for (User u : users) {
+                Map<String, Object> userMap = new HashMap<>();
+                userMap.put("id", u.getId());
+                userMap.put("username", u.getUsername());
+                userMap.put("role", u.getRole());
+                // Don't backup passwords for security
+                usersList.add(userMap);
+            }
+            data.put("users", usersList);
+            
+            // Add metadata
+            Map<String, Object> metadata = new HashMap<>();
+            metadata.put("backupDate", LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME));
+            metadata.put("version", "1.0.0");
+            metadata.put("application", "MatelasPro");
+            data.put("metadata", metadata);
+            
+        } catch (Exception e) {
+            System.err.println("Error collecting database data: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return data;
     }
 } 

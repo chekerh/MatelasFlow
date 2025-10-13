@@ -36,7 +36,7 @@ public class LoginController {
     public void initialize() {
         // Set the logo image (use the white logo for the login screen)
         try {
-            Image logo = new Image(getClass().getResource("/images/white-logo.PNG").toExternalForm());
+            Image logo = new Image(getClass().getResource("/images/SuperMousse.png").toExternalForm());
             logoImage.setImage(logo);
         } catch (Exception e) {
             System.out.println("Logo image not found: " + e.getMessage());
@@ -44,7 +44,7 @@ public class LoginController {
         // Set the background image for the root pane
         try {
             VBox root = (VBox) logoImage.getScene().getRoot();
-            Image bg = new Image(getClass().getResource("/images/background.JPG").toExternalForm());
+            Image bg = new Image(getClass().getResource("/images/background.jpg").toExternalForm());
             BackgroundImage bgi = new BackgroundImage(bg, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.CENTER, new BackgroundSize(1.0, 1.0, true, true, false, false));
             root.setBackground(new Background(bgi));
         } catch (Exception e) {
@@ -59,8 +59,6 @@ public class LoginController {
         String username = usernameField.getText();
         String password = passwordField.getText();
         User user = UserDAO.findByUsername(username);
-        System.out.println("DB hash: " + (user != null ? user.getPasswordHash() : "null"));
-        System.out.println("Input password: " + password);
         if (user != null && org.mindrot.jbcrypt.BCrypt.checkpw(password, user.getPasswordHash())) {
             // Login successful
             ActivityLogger.logActivity(user, ActivityLogger.ActivityType.LOGIN_SUCCESS, 
@@ -73,7 +71,28 @@ public class LoginController {
                 DashboardController dashboardController = loader.getController();
                 dashboardController.setUser(user.getUsername(), user.getRole());
                 Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-                stage.setScene(new Scene(dashboardRoot, 900, 650));
+                Scene scene = new Scene(dashboardRoot);
+                stage.setScene(scene);
+                stage.setMaximized(true);
+                stage.setFullScreen(true);
+                stage.setFullScreenExitHint("");
+                
+                // Prevent ESC from breaking the layout
+                scene.setOnKeyPressed(keyEvent -> {
+                    if (keyEvent.getCode() == javafx.scene.input.KeyCode.ESCAPE) {
+                        keyEvent.consume(); // Block ESC key
+                    }
+                });
+                
+                // Listen for fullscreen changes and restore
+                stage.fullScreenProperty().addListener((obs, wasFullScreen, isNowFullScreen) -> {
+                    if (!isNowFullScreen) {
+                        javafx.application.Platform.runLater(() -> {
+                            stage.setMaximized(true);
+                            stage.setFullScreen(true);
+                        });
+                    }
+                });
             } catch (Exception e) {
                 errorLabel.setText("Failed to load dashboard: " + e.getMessage());
                 e.printStackTrace();

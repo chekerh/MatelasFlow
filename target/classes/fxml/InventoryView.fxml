@@ -9,7 +9,7 @@
             <TableColumn fx:id="sizeColumn" text="Taille" prefWidth="100" />
             <TableColumn fx:id="brandColumn" text="Marque" prefWidth="150" />
             <TableColumn fx:id="quantityColumn" text="Quantité" prefWidth="100" />
-            <TableColumn fx:id="prixColumn" text="Prix (€)" prefWidth="100" />
+            <TableColumn fx:id="prixColumn" text="Prix (DT)" prefWidth="100" />
         </columns>
     </TableView>
     <HBox spacing="14" alignment="CENTER">
