@@ -1,0 +1,71 @@
+# Maven
+target/
+dependency-reduced-pom.xml
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+out/
+
+# VS Code
+.vscode/
+
+# Eclipse
+.project
+.classpath
+.settings/
+
+# Logs
+logs/
+activity_log.txt
+*.log
+
+# Database
+*.db
+*.sqlite
+
+# Firebase & Security
+src/main/resources/firebase-key.json
+firebase-key.json
+config.properties
+*.key
+*.pem
+
+# PDF Reports
+*.pdf
+!docs/*.pdf
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~
+
+# OS Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Build artifacts
+*.jar
+*.war
+*.ear
+*.class
+
+# Java
+*.class
+*.log
+*.ctxt
+.mtj.tmp/
+hs_err_pid*
+
+# Windows
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.lnk

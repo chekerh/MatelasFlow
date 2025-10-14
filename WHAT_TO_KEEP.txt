@@ -1,0 +1,92 @@
+================================================
+  WHAT FILES TO KEEP FOR GITHUB
+================================================
+
+Based on your screenshot, here's what to do:
+
+✅ KEEP - Your friend needs these:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📄 .gitignore                      - Git configuration
+📄 COMPLETE_SCHEMA.sql             - Database (ESSENTIAL!)
+📄 DEPLOYMENT_GUIDE.md             - How to deploy
+📄 INSTALLATION_GUIDE.md           - Installation steps
+📄 README.md                       - Project info
+📄 pom.xml                         - Maven config
+📄 build-installer.bat             - Build Windows .exe
+📄 start-matelasflow.bat           - Launch script
+📄 install-mysql-service.bat       - MySQL auto-start
+📁 src/                            - All source code
+📁 docs/ (only key files)          - Important docs
+
+
+❌ DELETE - Unnecessary files:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+❌ activity_log.txt                - Runtime log (regenerated)
+❌ build.bat                       - Duplicate script
+❌ build.sh                        - Linux (not needed)
+❌ cleanup-project.bat             - Internal cleanup
+❌ create-database.bat             - Already in guide
+❌ create-desktop-shortcut.bat     - Not needed
+❌ create-exe.bat                  - Duplicate
+❌ DEPLOYMENT_CHECKLIST.md         - Internal checklist
+❌ FILES_TO_SEND.md                - Internal doc
+❌ FIX_INTELLIJ_JDK.md             - Dev issue
+❌ launch.bat                      - Duplicate
+❌ launch.sh                       - Linux (not needed)
+❌ launch4j-config.xml             - Old config
+❌ MatelasPro-Launcher.vbs         - Not needed
+
+
+🎯 ACTION REQUIRED:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Simply run this script:
+   DELETE_UNNECESSARY_FILES.bat
+
+It will automatically delete all unnecessary files!
+
+
+AFTER CLEANUP, YOUR PROJECT WILL HAVE:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+matress/
+├── src/                          ← Source code
+├── docs/                         ← Key docs only
+├── .gitignore                    ← Git config
+├── pom.xml                       ← Maven
+├── COMPLETE_SCHEMA.sql           ← Database (IMPORTANT!)
+├── README.md                     ← Overview
+├── DEPLOYMENT_GUIDE.md           ← Deploy guide
+├── INSTALLATION_GUIDE.md         ← Install guide
+├── build-installer.bat           ← Build .exe
+├── start-matelasflow.bat         ← Launch
+└── install-mysql-service.bat     ← MySQL setup
+
+TOTAL: ~10 files + src/ + docs/ = CLEAN! ✅
+
+
+WHAT YOUR FRIEND WILL DO:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. git clone [your-repo]
+2. Open README.md
+3. Follow INSTALLATION_GUIDE.md
+4. Run: build-installer.bat
+5. Done!
+
+Simple and clean! 🎉
+
+
+RUN THIS NOW:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Double-click: DELETE_UNNECESSARY_FILES.bat
+2. Wait for cleanup to finish
+3. Check the files are gone
+4. Run: git add .
+5. Run: git commit -m "Clean project"
+6. Run: git push origin main
+
+DONE! Your friend can now pull a clean project! ✅
+
+================================================

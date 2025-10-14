@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<ScrollPane xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.warehouse.controller.StoreOwnersController" fitToWidth="true" stylesheets="/css/modern.css" style="-fx-background-color: transparent; -fx-background: transparent;">
+    <VBox spacing="16" alignment="TOP_CENTER" style="-fx-padding: 20;">
+        <Label text="Gestion des propriétaires de magasin" style="-fx-font-size: 20px; -fx-font-weight: bold;" />
+        <TableView fx:id="storeOwnerTable" prefHeight="400" prefWidth="700">
+            <columns>
+                <TableColumn fx:id="nameColumn" text="Nom" prefWidth="200" />
+                <TableColumn fx:id="contactColumn" text="Contact" prefWidth="200" />
+            </columns>
+        </TableView>
+        <HBox spacing="14" alignment="CENTER">
+            <Button fx:id="addButton" text="Ajouter" onAction="#handleAdd">
+                <tooltip><Tooltip text="Ajouter un propriétaire"/></tooltip>
+            </Button>
+            <Button fx:id="editButton" text="Modifier" onAction="#handleEdit">
+                <tooltip><Tooltip text="Modifier le propriétaire sélectionné"/></tooltip>
+            </Button>
+            <Button fx:id="deleteButton" text="Supprimer" onAction="#handleDelete">
+                <tooltip><Tooltip text="Supprimer le propriétaire sélectionné"/></tooltip>
+            </Button>
+            <Button fx:id="refreshButton" text="Rafraîchir" onAction="#handleRefresh">
+                <tooltip><Tooltip text="Rafraîchir la liste"/></tooltip>
+            </Button>
+        </HBox>
+        <Label fx:id="errorLabel" styleClass="errorLabel" />
+    </VBox>
+</ScrollPane>

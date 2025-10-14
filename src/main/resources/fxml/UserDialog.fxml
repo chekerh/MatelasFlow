@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<GridPane xmlns:fx="http://javafx.com/fxml" fx:controller="com.warehouse.controller.UserDialogController" hgap="14" vgap="14" alignment="CENTER" style="-fx-padding: 28; -fx-background-radius: 16; -fx-background-color: #fff;">
+    <Label text="Nom d'utilisateur:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+    <TextField fx:id="usernameField" promptText="Entrez le nom d'utilisateur" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+    <Label text="Mot de passe:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+    <PasswordField fx:id="passwordField" promptText="Entrez le mot de passe" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+    <Label text="Rôle:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+    <ComboBox fx:id="roleComboBox" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+    <HBox spacing="18" alignment="CENTER" GridPane.rowIndex="3" GridPane.columnIndex="0" GridPane.columnSpan="2">
+        <Button fx:id="okButton" text="OK">
+            <tooltip><Tooltip text="Valider"/></tooltip>
+        </Button>
+        <Button fx:id="cancelButton" text="Annuler">
+            <tooltip><Tooltip text="Annuler"/></tooltip>
+        </Button>
+    </HBox>
+    <Label fx:id="errorLabel" styleClass="errorLabel" GridPane.rowIndex="4" GridPane.columnIndex="0" GridPane.columnSpan="2"/>
+</GridPane> 

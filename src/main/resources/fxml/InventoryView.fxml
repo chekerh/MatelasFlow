@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<ScrollPane xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.warehouse.controller.InventoryController" fitToWidth="true" stylesheets="/css/modern.css" style="-fx-background-color: transparent; -fx-background: transparent;">
+    <VBox spacing="16" alignment="TOP_CENTER" style="-fx-padding: 20;">
+        <Label text="Gestion des matelas" style="-fx-font-size: 20px; -fx-font-weight: bold;" />
+        <TableView fx:id="mattressTable" prefHeight="400" prefWidth="800">
+            <columns>
+                <TableColumn fx:id="typeColumn" text="Type" prefWidth="150" />
+                <TableColumn fx:id="sizeColumn" text="Taille" prefWidth="100" />
+                <TableColumn fx:id="brandColumn" text="Marque" prefWidth="150" />
+                <TableColumn fx:id="quantityColumn" text="Quantité" prefWidth="100" />
+                <TableColumn fx:id="prixColumn" text="Prix (DT)" prefWidth="100" />
+            </columns>
+        </TableView>
+        <HBox spacing="14" alignment="CENTER">
+            <Button fx:id="addButton" text="Ajouter" onAction="#handleAdd">
+                <tooltip><Tooltip text="Ajouter un matelas"/></tooltip>
+            </Button>
+            <Button fx:id="editButton" text="Modifier" onAction="#handleEdit">
+                <tooltip><Tooltip text="Modifier le matelas sélectionné"/></tooltip>
+            </Button>
+            <Button fx:id="deleteButton" text="Supprimer" onAction="#handleDelete">
+                <tooltip><Tooltip text="Supprimer le matelas sélectionné"/></tooltip>
+            </Button>
+            <Button fx:id="refreshButton" text="Rafraîchir" onAction="#handleRefresh">
+                <tooltip><Tooltip text="Rafraîchir la liste"/></tooltip>
+            </Button>
+        </HBox>
+        <Label fx:id="errorLabel" styleClass="errorLabel" />
+    </VBox>
+</ScrollPane>
