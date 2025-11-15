@@ -15,9 +15,10 @@ CREATE TABLE IF NOT EXISTS mattress (
     id INT AUTO_INCREMENT PRIMARY KEY,
     type VARCHAR(100) NOT NULL,
     size VARCHAR(50) NOT NULL,
-    brand VARCHAR(100),
+    reference VARCHAR(100),
     quantity INT NOT NULL DEFAULT 0,
-    prix DECIMAL(10,2) NOT NULL -- Prix fixe du matelas
+    unit_price DECIMAL(10,2) NOT NULL DEFAULT 0,
+    prix DECIMAL(10,2) NOT NULL -- Prix de vente du matelas
 );
 
 -- Table des propriétaires de magasin

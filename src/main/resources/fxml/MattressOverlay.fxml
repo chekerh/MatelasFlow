@@ -14,19 +14,25 @@
     <VBox spacing="12">
         <GridPane hgap="12" vgap="12">
             <Label text="🛏️ Type de matelas:" GridPane.columnIndex="0" GridPane.rowIndex="0" style="-fx-font-weight: bold;"/>
-            <TextField fx:id="typeField" promptText="Ex: Mousse, Ressort, Latex..." GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+            <VBox spacing="6" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                <ComboBox fx:id="typeComboBox" promptText="Choisir un type" prefWidth="400"/>
+                <TextField fx:id="customTypeField" promptText="Précisez le type" visible="false" managed="false"/>
+            </VBox>
             
             <Label text="📏 Taille:" GridPane.columnIndex="0" GridPane.rowIndex="1" style="-fx-font-weight: bold;"/>
             <TextField fx:id="sizeField" promptText="Ex: 90x200, 140x190..." GridPane.columnIndex="1" GridPane.rowIndex="1"/>
             
-            <Label text="🏷️ Marque:" GridPane.columnIndex="0" GridPane.rowIndex="2" style="-fx-font-weight: bold;"/>
-            <TextField fx:id="brandField" promptText="Ex: Simmons, Ikea..." GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+            <Label text="🔖 Référence:" GridPane.columnIndex="0" GridPane.rowIndex="2" style="-fx-font-weight: bold;"/>
+            <TextField fx:id="referenceField" promptText="Ex: Simmons, REF-2024..." GridPane.columnIndex="1" GridPane.rowIndex="2"/>
             
             <Label text="📦 Quantité:" GridPane.columnIndex="0" GridPane.rowIndex="3" style="-fx-font-weight: bold;"/>
             <TextField fx:id="quantityField" promptText="Nombre de matelas" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
             
-            <Label text="💰 Prix (DT):" GridPane.columnIndex="0" GridPane.rowIndex="4" style="-fx-font-weight: bold;"/>
-            <TextField fx:id="prixField" promptText="Prix unitaire" GridPane.columnIndex="1" GridPane.rowIndex="4"/>
+            <Label text="💰 Prix unitaire (DT):" GridPane.columnIndex="0" GridPane.rowIndex="4" style="-fx-font-weight: bold;"/>
+            <TextField fx:id="unitPriceField" promptText="Coût d'achat" GridPane.columnIndex="1" GridPane.rowIndex="4"/>
+
+            <Label text="💵 Prix de vente (DT):" GridPane.columnIndex="0" GridPane.rowIndex="5" style="-fx-font-weight: bold;"/>
+            <TextField fx:id="salePriceField" promptText="Prix de vente" GridPane.columnIndex="1" GridPane.rowIndex="5"/>
         </GridPane>
     </VBox>
     

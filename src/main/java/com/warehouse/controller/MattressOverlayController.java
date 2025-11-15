@@ -2,6 +2,7 @@ package com.warehouse.controller;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.TextField;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
@@ -9,11 +10,13 @@ import com.warehouse.model.Mattress;
 import com.warehouse.model.MattressDAO;
 
 public class MattressOverlayController {
-    @FXML private TextField typeField;
+    @FXML private ComboBox<String> typeComboBox;
+    @FXML private TextField customTypeField;
     @FXML private TextField sizeField;
-    @FXML private TextField brandField;
+    @FXML private TextField referenceField;
     @FXML private TextField quantityField;
-    @FXML private TextField prixField;
+    @FXML private TextField unitPriceField;
+    @FXML private TextField salePriceField;
     @FXML private Label dialogTitle;
     
     private Mattress mattress;
@@ -29,53 +32,89 @@ public class MattressOverlayController {
         this.inventoryController = inventoryController;
     }
     
+    @FXML
+    private void initialize() {
+        typeComboBox.getItems().setAll(
+            "Mousse",
+            "Ressort",
+            "Latex",
+            "Oreiller",
+            "Autre..."
+        );
+        typeComboBox.valueProperty().addListener((obs, oldVal, newVal) -> {
+            boolean isOther = "Autre...".equals(newVal);
+            customTypeField.setManaged(isOther);
+            customTypeField.setVisible(isOther);
+            if (!isOther) {
+                customTypeField.clear();
+            }
+        });
+    }
+
     public void setMattress(Mattress mattress) {
         this.mattress = mattress;
         this.isEditMode = (mattress != null);
         
         if (isEditMode) {
             dialogTitle.setText("Modifier le matelas");
-            typeField.setText(mattress.getType());
+            String type = mattress.getType();
+            if (typeComboBox.getItems().contains(type)) {
+                typeComboBox.setValue(type);
+            } else {
+                typeComboBox.setValue("Autre...");
+                customTypeField.setManaged(true);
+                customTypeField.setVisible(true);
+                customTypeField.setText(type);
+            }
             sizeField.setText(mattress.getSize());
-            brandField.setText(mattress.getBrand());
+            referenceField.setText(mattress.getReference());
             quantityField.setText(String.valueOf(mattress.getQuantity()));
-            prixField.setText(String.valueOf(mattress.getPrix()));
+            unitPriceField.setText(String.valueOf(mattress.getUnitPrice()));
+            salePriceField.setText(String.valueOf(mattress.getSalePrice()));
         } else {
             dialogTitle.setText("Ajouter un matelas");
-            typeField.clear();
+            typeComboBox.setValue("Mousse");
+            customTypeField.clear();
+            customTypeField.setVisible(false);
+            customTypeField.setManaged(false);
             sizeField.clear();
-            brandField.clear();
+            referenceField.clear();
             quantityField.clear();
-            prixField.clear();
+            unitPriceField.clear();
+            salePriceField.clear();
         }
     }
     
     @FXML
     private void handleOk() {
         try {
-            String type = typeField.getText().trim();
+            String selectedType = typeComboBox.getValue();
+            String type = "Autre...".equals(selectedType) ? customTypeField.getText().trim() : selectedType;
             String size = sizeField.getText().trim();
-            String brand = brandField.getText().trim();
+            String reference = referenceField.getText().trim();
             String quantityStr = quantityField.getText().trim();
-            String prixStr = prixField.getText().trim();
+            String unitPriceStr = unitPriceField.getText().trim();
+            String salePriceStr = salePriceField.getText().trim();
             
             // Validation
-            if (type.isEmpty() || size.isEmpty() || quantityStr.isEmpty() || prixStr.isEmpty()) {
+            if (type == null || type.isEmpty() || size.isEmpty() || quantityStr.isEmpty() || unitPriceStr.isEmpty() || salePriceStr.isEmpty()) {
                 showAlert("Erreur", "Tous les champs obligatoires doivent être remplis.", AlertType.ERROR);
                 return;
             }
             
             int quantity;
-            double prix;
+            double unitPrice;
+            double salePrice;
             try {
                 quantity = Integer.parseInt(quantityStr);
-                prix = Double.parseDouble(prixStr);
-                if (quantity < 0 || prix < 0) {
-                    showAlert("Erreur", "La quantité et le prix doivent être positifs.", AlertType.ERROR);
+                unitPrice = Double.parseDouble(unitPriceStr);
+                salePrice = Double.parseDouble(salePriceStr);
+                if (quantity < 0 || unitPrice < 0 || salePrice < 0) {
+                    showAlert("Erreur", "La quantité et les prix doivent être positifs.", AlertType.ERROR);
                     return;
                 }
             } catch (NumberFormatException e) {
-                showAlert("Erreur", "La quantité et le prix doivent être des nombres valides.", AlertType.ERROR);
+                showAlert("Erreur", "La quantité et les prix doivent être des nombres valides.", AlertType.ERROR);
                 return;
             }
             
@@ -83,12 +122,13 @@ public class MattressOverlayController {
             if (isEditMode) {
                 mattress.setType(type);
                 mattress.setSize(size);
-                mattress.setBrand(brand);
+                mattress.setReference(reference);
                 mattress.setQuantity(quantity);
-                mattress.setPrix(prix);
+                mattress.setUnitPrice(unitPrice);
+                mattress.setSalePrice(salePrice);
                 success = MattressDAO.updateMattress(mattress);
             } else {
-                Mattress newMattress = new Mattress(type, size, brand, quantity, prix);
+                Mattress newMattress = new Mattress(type, size, reference, quantity, unitPrice, salePrice);
                 success = MattressDAO.addMattress(newMattress);
             }
             

@@ -5,7 +5,6 @@ import com.warehouse.model.TransactionDAO;
 import com.warehouse.model.Mattress;
 import com.warehouse.model.MattressDAO;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -202,8 +201,8 @@ public class DemandPredictor {
         }
         
         // Analyser la marque
-        if (mattress.getBrand() != null && mattress.getBrand().contains("Premium")) {
-            factors.add("Marque premium - clientèle haut de gamme");
+        if (mattress.getReference() != null && mattress.getReference().contains("Premium")) {
+            factors.add("Référence premium - clientèle haut de gamme");
         }
         
         return factors;

@@ -1,7 +1,6 @@
 package com.warehouse.controller;
 
 import javafx.fxml.FXML;
-import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.image.ImageView;
@@ -16,16 +15,28 @@ import javafx.application.Platform;
 import javafx.animation.PauseTransition;
 import javafx.animation.FadeTransition;
 import javafx.util.Duration;
+import javafx.geometry.NodeOrientation;
+import javafx.geometry.Pos;
+import javafx.scene.paint.Color;
+import javafx.scene.text.TextAlignment;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import com.warehouse.model.User;
 import com.warehouse.model.UserDAO;
 import com.warehouse.util.ActivityLogger;
-import org.mindrot.jbcrypt.BCrypt;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public class DashboardController {
     @FXML private ImageView logoImage;
     @FXML private Label welcomeLabel;
     @FXML private Label userInfoLabel;
+    @FXML private Label duaaHeadingLabel;
     @FXML private Label duaaLabel;
     @FXML private Button logoutButton;
     @FXML private Button darkModeButton;
@@ -43,36 +54,44 @@ public class DashboardController {
     private boolean isDarkMode = false;
     
     // Dynamic Duaa rotation
-    private final List<String> duaas = Arrays.asList(
-        "اللهم بارك لنا في يومنا هذا",
-        "اللهم وفقنا لما تحب وترضى",
-        "ربنا آتنا في الدنيا حسنة وفي الآخرة حسنة",
-        "اللهم اجعل عملنا خالصا لوجهك الكريم",
-        "اللهم إنا نسألك العفو والعافية",
-        "اللهم اهدنا فيمن هديت",
-        "سبحان الله وبحمده سبحان الله العظيم",
-        "الحمد لله رب العالمين"
+    private static final String DUAA_RESOURCE = "/text/duaas.txt";
+    private static final String DEFAULT_DUAA_HEADING = "\u0628\u0650\u0633\u0652\u0645\u0650 \u0627\u0644\u0644\u0647\u0650 \u0627\u0644\u0631\u0651\u064e\u062d\u0652\u0645\u064e\u0646\u0650 \u0627\u0644\u0631\u0651\u064e\u062d\u0650\u064a\u0645\u0650";
+    private static final List<String> DEFAULT_DUAAS = Arrays.asList(
+        "\u0627\u0644\u0644\u0647\u064f\u0645\u064e \u0628\u0627\u0631\u0650\u0643\u0652 \u0644\u064e\u0646\u0627 \u0641\u0650\u064a \u064a\u064e\u0648\u0652\u0645\u0650\u0646\u064e\u0627 \u0647\u064e\u0630\u0627",
+        "\u0627\u0644\u0644\u0647\u064f\u0645\u064e \u0648\u064e\u0641\u0651\u0650\u0642\u0652\u0646\u064e\u0627 \u0644\u0650\u0645\u064e\u0627 \u062a\u064f\u062d\u0650\u0628\u0651\u064f \u0648\u064e\u062a\u064e\u0631\u0636\u0649\u0649",
+        "\u0631\u064e\u0628\u0651\u064e\u0646\u064e\u0627 \u0622\u062a\u0650\u0646\u064e\u0627 \u0641\u0650\u064a \u0627\u0644\u062f\u0651\u064f\u0646\u0652\u064a\u064e\u0627 \u062d\u064e\u0633\u064e\u0646\u064e\u0629\u064b \u0648\u064e\u0641\u0650\u064a \u0627\u0644\u0622\u062e\u0650\u0631\u064e\u0629\u0650 \u062d\u064e\u0633\u064e\u0646\u064e\u0629\u064b",
+        "\u0627\u0644\u0644\u0647\u064f\u0645\u064e \u0627\u062c\u0652\u0639\u064e\u0644\u0652 \u0639\u064e\u0645\u064e\u0644\u064e\u0646\u064e\u0627 \u062e\u0627\u0644\u0650\u0635\u064b\u0627 \u0644\u0650\u0648\u064e\u062c\u0652\u0647\u0650\u0643\u064e \u0627\u0644\u0643\u064e\u0631\u0650\u064a\u0645",
+        "\u0627\u0644\u0644\u0647\u064f\u0645\u064e \u0625\u0650\u0646\u0651\u064e\u0627 \u0646\u064e\u0633\u0652\u0623\u064e\u0644\u064f\u0643\u064e \u0627\u0644\u0639\u064e\u0641\u0652\u0648\u064e \u0648\u064e\u0627\u0644\u0639\u064e\u0627\u0641\u0650\u064a\u064e\u0629",
+        "\u0627\u0644\u0644\u0647\u064f\u0645\u064e \u0627\u0647\u0652\u062f\u0650\u0646\u064e\u0627 \u0641\u0650\u064a\u0645\u064e\u0646\u0652 \u0647\u064e\u062f\u064e\u064a\u0652\u062a",
+        "\u0633\u064f\u0628\u0652\u062d\u064e\u0627\u0646\u064e \u0627\u0644\u0644\u0647\u0650 \u0648\u064e\u0628\u0650\u062d\u064e\u0645\u0652\u062f\u0650\u0647\u0650 \u0633\u064f\u0628\u0652\u062d\u064e\u0627\u0646\u064e \u0627\u0644\u0644\u0647\u0650 \u0627\u0644\u0639\u064e\u0638\u0650\u064a\u0645",
+        "\u0627\u0644\u062d\u064e\u0645\u0652\u062f\u064f \u0644\u0650\u0644\u0647\u0650 \u0631\u064e\u0628\u0651\u0650 \u0627\u0644\u0639\u064e\u0627\u0644\u064e\u0645\u0650\u064a\u0646"
     );
+    private String duaaHeading = DEFAULT_DUAA_HEADING;
+    private List<String> duaas = new ArrayList<>(DEFAULT_DUAAS);
     private int currentDuaaIndex = 0;
     private Timer duaaRotationTimer;
 
     @FXML
     public void initialize() {
+        loadDuaasFromResource();
         // Set logo
         try {
-            Image logo = new Image(getClass().getResource("/images/dark-logo.png").toExternalForm());
+            Image logo = new Image(getClass().getResource("/images/SuperMousse.jpg").toExternalForm());
             logoImage.setImage(logo);
         } catch (Exception e) {
             System.out.println("Logo not found: " + e.getMessage());
             // Try white logo as fallback
             try {
-                Image logo = new Image(getClass().getResource("/images/white-logo.png").toExternalForm());
+                Image logo = new Image(getClass().getResource("/images/SuperMousse.jpg").toExternalForm());
                 logoImage.setImage(logo);
             } catch (Exception e2) {
                 System.out.println("White logo also not found: " + e2.getMessage());
             }
         }
         
+        // Configure duaa banner for RTL display
+        configureDuaaBanner();
+
         // Set up notification area
         notificationArea.setVisible(false);
         notificationArea.setManaged(false);
@@ -130,6 +149,79 @@ public class DashboardController {
         fadeOut.play();
     }
 
+    private void loadDuaasFromResource() {
+        List<String> lines = new ArrayList<>();
+        try (InputStream is = getClass().getResourceAsStream(DUAA_RESOURCE)) {
+            if (is != null) {
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        line = line.trim();
+                        if (!line.isEmpty()) {
+                            lines.add(line);
+                        }
+                    }
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("Impossible de charger le fichier des invocations: " + e.getMessage());
+        }
+
+        if (lines.size() > 1) {
+            duaaHeading = lines.get(0);
+            duaas = new ArrayList<>(lines.subList(1, lines.size()));
+        } else {
+            duaaHeading = DEFAULT_DUAA_HEADING;
+            duaas = new ArrayList<>(DEFAULT_DUAAS);
+        }
+    }
+
+    private void configureDuaaBanner() {
+        Font headingFont = resolveArabicFont(24);
+        Font textFont = resolveArabicFont(22);
+
+        if (duaaHeadingLabel != null) {
+            duaaHeadingLabel.setWrapText(true);
+            duaaHeadingLabel.setNodeOrientation(NodeOrientation.RIGHT_TO_LEFT);
+            duaaHeadingLabel.setTextAlignment(TextAlignment.RIGHT);
+            duaaHeadingLabel.setAlignment(Pos.CENTER_RIGHT);
+            duaaHeadingLabel.setMaxWidth(Double.MAX_VALUE);
+            duaaHeadingLabel.setPrefWidth(420);
+            duaaHeadingLabel.setFont(headingFont);
+            duaaHeadingLabel.setTextFill(Color.web("#27ae60"));
+            duaaHeadingLabel.setText(duaaHeading);
+        }
+
+        if (duaaLabel != null) {
+            duaaLabel.setWrapText(true);
+            duaaLabel.setNodeOrientation(NodeOrientation.RIGHT_TO_LEFT);
+            duaaLabel.setTextAlignment(TextAlignment.RIGHT);
+            duaaLabel.setAlignment(Pos.CENTER_RIGHT);
+            duaaLabel.setMaxWidth(Double.MAX_VALUE);
+            duaaLabel.setPrefWidth(420);
+            duaaLabel.setFont(textFont);
+            duaaLabel.setTextFill(Color.web("#2980b9"));
+            duaaLabel.setText(duaas.get(0));
+        }
+    }
+
+    private Font resolveArabicFont(int size) {
+        String[] candidates = {
+            "Geeza Pro",
+            "PingFang ARABIC",
+            "Arial Unicode MS",
+            "Tahoma",
+            "Arial"
+        };
+        for (String family : candidates) {
+            Font font = Font.font(family, FontWeight.BOLD, size);
+            if (font != null && family.equalsIgnoreCase(font.getFamily())) {
+                return font;
+            }
+        }
+        return Font.font("Arial", FontWeight.BOLD, size);
+    }
+
     public void setUser(String username, String role) {
         this.currentUser = username;
         this.currentRole = role;
@@ -148,14 +240,7 @@ public class DashboardController {
         advancedFeaturesButton.setVisible(isAdmin);
         advancedFeaturesButton.setManaged(isAdmin);
         
-        // Set fullscreen
-        Platform.runLater(() -> {
-            Stage stage = (Stage) welcomeLabel.getScene().getWindow();
-            if (stage != null) {
-                stage.setMaximized(true);
-                stage.setFullScreen(true);
-            }
-        });
+        // Leave window sizing to user to avoid macOS fullscreen crashes
     }
     
     public String getCurrentUser() {
@@ -180,8 +265,6 @@ public class DashboardController {
             Parent loginRoot = loader.load();
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             stage.setScene(new Scene(loginRoot));
-            stage.setMaximized(false);
-            stage.setFullScreen(false);
         } catch (Exception e) {
             e.printStackTrace();
         }

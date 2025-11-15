@@ -24,9 +24,13 @@
                 <Region HBox.hgrow="ALWAYS"/>
                 
                 <!-- Dynamic Duaa Display (Center) -->
-                <VBox alignment="CENTER" spacing="5">
-                    <Label text="بسم الله الرحمن الرحيم" style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #27ae60; -fx-font-family: 'Traditional Arabic', 'Arabic Typesetting', 'Arial';"/>
-                    <Label fx:id="duaaLabel" text="اللهم بارك لنا في يومنا هذا" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #2980b9; -fx-font-family: 'Traditional Arabic', 'Arabic Typesetting', 'Arial'; -fx-opacity: 1.0;"/>
+                <VBox alignment="CENTER_RIGHT" spacing="5" prefWidth="420" maxWidth="420">
+                    <Label fx:id="duaaHeadingLabel"
+                           styleClass="duaa-heading"
+                           wrapText="true"/>
+                    <Label fx:id="duaaLabel"
+                           styleClass="duaa-text"
+                           wrapText="true"/>
                 </VBox>
                 
                 <Region HBox.hgrow="ALWAYS"/>
@@ -49,7 +53,7 @@
         <center>
             <HBox spacing="0">
                 <!-- Navigation Panel -->
-                <VBox fx:id="navBox" styleClass="nav-panel" alignment="TOP_CENTER" spacing="15" style="-fx-padding: 30 20;">
+                <VBox fx:id="navBox" styleClass="nav-panel" alignment="TOP_CENTER" spacing="14" style="-fx-padding: 28 16;">
                     <Button text="📦 Inventaire" onAction="#showInventory" styleClass="nav-button"/>
                     <Button text="💶 Transactions" onAction="#showTransactions" styleClass="nav-button"/>
                     <Button text="🏪 Propriétaires" onAction="#showStoreOwners" styleClass="nav-button"/>

@@ -2,20 +2,19 @@ package com.warehouse.controller;
 
 import com.warehouse.model.Transaction;
 import com.warehouse.model.TransactionDAO;
-import com.warehouse.model.User;
-import com.warehouse.model.UserDAO;
+import com.warehouse.model.MattressDAO;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.stage.Modality;
-import javafx.stage.Stage;
+import javafx.scene.input.ClipboardContent;
+import javafx.scene.input.DragEvent;
+import javafx.scene.input.Dragboard;
+import javafx.scene.input.TransferMode;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
 
 public class TransactionsController {
     @FXML private TableView<Transaction> transactionTable;
@@ -27,14 +26,18 @@ public class TransactionsController {
     @FXML private TableColumn<Transaction, String> storeOwnerNameColumn;
     @FXML private TableColumn<Transaction, String> notesColumn;
     @FXML private TableColumn<Transaction, String> expectedReturnDateColumn;
+    @FXML private TableColumn<Transaction, String> totalPriceColumn;
+    @FXML private TableColumn<Transaction, Void> addMattressColumn;
     @FXML private Button addButton;
     @FXML private Button refreshButton;
     @FXML private Button pdfReportButton;
+    @FXML private Button deleteButton;
     @FXML private Label errorLabel;
     @FXML private DatePicker reportDatePicker;
 
     private ObservableList<Transaction> transactionList = FXCollections.observableArrayList();
     private DashboardController dashboardController;
+    private Transaction draggedTransaction;
 
     public void setDashboardController(DashboardController dashboardController) {
         this.dashboardController = dashboardController;
@@ -42,9 +45,10 @@ public class TransactionsController {
 
     @FXML
     public void initialize() {
+        transactionTable.setFixedCellSize(56);
         dateColumn.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(cellData.getValue().getDate().toString()));
         mattressNameColumn.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(
-            com.warehouse.model.MattressDAO.getMattressById(cellData.getValue().getMattressId()).getType()
+            cellData.getValue().getMattressName() != null ? cellData.getValue().getMattressName() : "Inconnu"
         ));
         quantityColumn.setCellValueFactory(cellData -> new javafx.beans.property.SimpleIntegerProperty(cellData.getValue().getQuantity()).asObject());
         typeColumn.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(cellData.getValue().getType()));
@@ -64,28 +68,44 @@ public class TransactionsController {
         });
         
         storeOwnerNameColumn.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(
-            cellData.getValue().getStoreOwnerId() == null ? "" : com.warehouse.model.StoreOwnerDAO.getStoreOwnerById(cellData.getValue().getStoreOwnerId()).getName()
+            cellData.getValue().getStoreOwnerName() == null ? "" : cellData.getValue().getStoreOwnerName()
         ));
         notesColumn.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(cellData.getValue().getNotes()));
         expectedReturnDateColumn.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(
             cellData.getValue().getExpectedReturnDate() == null ? "" : cellData.getValue().getExpectedReturnDate().toString()
         ));
+        totalPriceColumn.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(
+            String.format("%.2f DT", cellData.getValue().getPrix() * cellData.getValue().getQuantity())
+        ));
+        dateColumn.setStyle("-fx-alignment: CENTER;");
+        mattressNameColumn.setStyle("-fx-alignment: CENTER-LEFT;");
+        quantityColumn.setStyle("-fx-alignment: CENTER;");
+        typeColumn.setStyle("-fx-alignment: CENTER;");
+        prixColumn.setStyle("-fx-alignment: CENTER;");
+        totalPriceColumn.setStyle("-fx-alignment: CENTER;");
+        storeOwnerNameColumn.setStyle("-fx-alignment: CENTER-LEFT;");
+        notesColumn.setStyle("-fx-alignment: CENTER-LEFT;");
+        expectedReturnDateColumn.setStyle("-fx-alignment: CENTER;");
+        totalPriceColumn.setStyle("-fx-alignment: CENTER;");
+
+        transactionTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        bindColumnWidths();
+        transactionTable.setPlaceholder(new Label("Aucune transaction enregistrée."));
         transactionTable.setItems(transactionList);
+        setupAddMatressColumn();
+        if (TransactionDAO.isSortOrderSupported()) {
+            enableRowReordering();
+        } else {
+            System.out.println("[TransactionsController] L'ordre manuel est désactivé tant que la colonne sort_order n'est pas disponible.");
+        }
         loadTransactions();
     }
 
     @FXML
     public void loadTransactions() {
         transactionList.setAll(TransactionDAO.getAllTransactions());
+        System.out.println("[TransactionsController] Transactions chargées: " + transactionList.size());
         errorLabel.setText("");
-    }
-
-    private int getDefaultUserId() {
-        List<User> users = UserDAO.getAllUsers();
-        if (!users.isEmpty()) {
-            return users.get(0).getId();
-        }
-        return -1;
     }
 
     @FXML
@@ -134,5 +154,180 @@ public class TransactionsController {
             e.printStackTrace();
             errorLabel.setText("Erreur lors de la génération du rapport PDF.");
         }
+    }
+
+    private void setupAddMatressColumn() {
+        if (addMattressColumn == null) {
+            return;
+        }
+        addMattressColumn.setCellFactory(col -> new AddButtonCell());
+    }
+
+    private class AddButtonCell extends TableCell<Transaction, Void> {
+        private final Button addButton = new Button("➕");
+
+        AddButtonCell() {
+            addButton.getStyleClass().add("ghost-button");
+            addButton.setMaxWidth(Double.MAX_VALUE);
+            addButton.setTooltip(new Tooltip("Ajouter un matelas (+1)"));
+            addButton.setOnAction(event -> {
+                Transaction transaction = getTableView().getItems().get(getIndex());
+                increaseTransactionQuantity(transaction);
+            });
+        }
+
+        @Override
+        protected void updateItem(Void item, boolean empty) {
+            super.updateItem(item, empty);
+            if (empty || getTableRow() == null || getTableRow().getItem() == null) {
+                setGraphic(null);
+            } else {
+                setGraphic(addButton);
+            }
+        }
+    }
+
+    private void confirmAndDelete(Transaction transaction) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Supprimer la transaction");
+        alert.setHeaderText("Voulez-vous vraiment supprimer cette transaction ?");
+        alert.setContentText("Cette action est irréversible.");
+        alert.initOwner(transactionTable.getScene().getWindow());
+
+        alert.showAndWait().ifPresent(result -> {
+            if (result == ButtonType.OK) {
+                if (TransactionDAO.deleteTransaction(transaction.getId())) {
+                    loadTransactions();
+                } else {
+                    errorLabel.setText("Impossible de supprimer la transaction.");
+                }
+            }
+        });
+    }
+
+    @FXML
+    private void handleDelete() {
+        Transaction selected = transactionTable.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            errorLabel.setText("Sélectionnez une transaction à supprimer.");
+            return;
+        }
+        confirmAndDelete(selected);
+    }
+
+    private void increaseTransactionQuantity(Transaction transaction) {
+        if (transaction == null) {
+            return;
+        }
+        try {
+            transaction.setQuantity(transaction.getQuantity() + 1);
+            boolean success = TransactionDAO.updateTransaction(transaction);
+            if (success) {
+                adjustInventoryForQuickAdd(transaction);
+                loadTransactions();
+                errorLabel.setText("Quantité augmentée.");
+            } else {
+                errorLabel.setText("Impossible d'ajouter le matelas.");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            errorLabel.setText("Erreur lors de l'ajout.");
+        }
+    }
+
+    private void adjustInventoryForQuickAdd(Transaction transaction) {
+        String type = transaction.getType();
+        if ("Vente".equalsIgnoreCase(type) || "Prêt".equalsIgnoreCase(type) || "Transfert".equalsIgnoreCase(type)) {
+            MattressDAO.decreaseQuantity(transaction.getMattressId(), 1);
+        } else if ("retour".equalsIgnoreCase(type) || "Réception".equalsIgnoreCase(type)) {
+            MattressDAO.increaseQuantity(transaction.getMattressId(), 1);
+        }
+    }
+
+    private void enableRowReordering() {
+        transactionTable.setRowFactory(tv -> {
+            TableRow<Transaction> row = new TableRow<>();
+
+            row.setOnDragDetected(event -> {
+                if (!row.isEmpty()) {
+                    draggedTransaction = row.getItem();
+                    Dragboard db = row.startDragAndDrop(TransferMode.MOVE);
+                    ClipboardContent content = new ClipboardContent();
+                    content.putString(draggedTransaction.getNotes());
+                    db.setContent(content);
+                    event.consume();
+                }
+            });
+
+            row.setOnDragOver(event -> {
+                if (draggedTransaction != null && row.getItem() != null && draggedTransaction != row.getItem()) {
+                    event.acceptTransferModes(TransferMode.MOVE);
+                    event.consume();
+                }
+            });
+
+            row.setOnDragDropped(event -> handleTransactionDrop(row, event));
+            row.setOnDragDone(event -> draggedTransaction = null);
+            return row;
+        });
+
+        transactionTable.setOnDragOver(event -> {
+            if (draggedTransaction != null) {
+                event.acceptTransferModes(TransferMode.MOVE);
+            }
+            event.consume();
+        });
+
+        transactionTable.setOnDragDropped(event -> {
+            if (draggedTransaction != null) {
+                transactionList.remove(draggedTransaction);
+                transactionList.add(draggedTransaction);
+                persistTransactionOrder();
+                draggedTransaction = null;
+                event.setDropCompleted(true);
+                event.consume();
+            }
+        });
+    }
+
+    private void handleTransactionDrop(TableRow<Transaction> row, DragEvent event) {
+        if (draggedTransaction == null) {
+            return;
+        }
+        int dropIndex = row.isEmpty() ? transactionList.size() : row.getIndex();
+        transactionList.remove(draggedTransaction);
+        if (dropIndex > transactionList.size()) {
+            dropIndex = transactionList.size();
+        }
+        transactionList.add(dropIndex, draggedTransaction);
+        transactionTable.getSelectionModel().select(draggedTransaction);
+        persistTransactionOrder();
+        draggedTransaction = null;
+        event.setDropCompleted(true);
+        event.consume();
+    }
+
+    private void persistTransactionOrder() {
+        if (TransactionDAO.isSortOrderSupported()) {
+            TransactionDAO.updateSortOrder(transactionTable.getItems());
+        }
+    }
+
+    private void bindColumnWidths() {
+        bindColumn(dateColumn, 0.12);
+        bindColumn(mattressNameColumn, 0.20);
+        bindColumn(quantityColumn, 0.08);
+        bindColumn(typeColumn, 0.10);
+        bindColumn(prixColumn, 0.10);
+        bindColumn(totalPriceColumn, 0.10);
+        bindColumn(storeOwnerNameColumn, 0.08);
+        bindColumn(notesColumn, 0.12);
+        bindColumn(expectedReturnDateColumn, 0.08);
+        bindColumn(addMattressColumn, 0.10);
+    }
+
+    private void bindColumn(TableColumn<?, ?> column, double percentage) {
+        if (column == null) return;
+        column.prefWidthProperty().bind(transactionTable.widthProperty().multiply(percentage));
     }
 } 

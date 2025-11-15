@@ -1,61 +1,68 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?import javafx.scene.image.ImageView?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.*?>
 
-<VBox xmlns:fx="http://javafx.com/fxml" fx:controller="com.warehouse.controller.LoginController" 
-      alignment="CENTER" spacing="24" stylesheets="/css/modern.css" styleClass="root">
-    
-    <!-- Main Container -->
-    <VBox styleClass="login-container" alignment="CENTER" spacing="24" style="-fx-padding: 40;">
-        
-        <!-- Header Section -->
-        <VBox alignment="CENTER" spacing="16">
-            <ImageView fx:id="logoImage" fitHeight="100" fitWidth="100" pickOnBounds="true" preserveRatio="true"/>
-            <VBox alignment="CENTER" spacing="8">
-                <Label text="MatelasPro" style="-fx-font-size: 32px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
-                <Label text="Système de Gestion d'Entrepôt" style="-fx-font-size: 16px; -fx-text-fill: #7f8c8d;"/>
+<StackPane xmlns:fx="http://javafx.com/fxml"
+           fx:controller="com.warehouse.controller.LoginController"
+           fx:id="rootContainer"
+           stylesheets="/css/modern.css"
+           styleClass="root login-background">
+
+    <VBox alignment="CENTER" spacing="24" StackPane.alignment="CENTER">
+
+        <VBox alignment="CENTER" spacing="20" styleClass="login-card">
+
+            <VBox alignment="CENTER" spacing="12" styleClass="login-header">
+                <ImageView fx:id="logoImage"
+                           fitHeight="88"
+                           fitWidth="88"
+                           preserveRatio="true"
+                           pickOnBounds="true"/>
+                <Label text="MatelasPro" styleClass="login-title"/>
+                <Label text="Gestion d'entrepôt, simplifiée."
+                       styleClass="login-subtitle"/>
+            </VBox>
+
+            <VBox alignment="CENTER" spacing="16" fx:id="loginPane" styleClass="login-form">
+
+                <VBox spacing="8" styleClass="login-field">
+                    <Label text="Nom d'utilisateur" styleClass="field-label"/>
+                    <TextField fx:id="usernameField"
+                               promptText="Entrer votre identifiant"
+                               styleClass="login-text-field"/>
+                </VBox>
+
+                <VBox spacing="8" styleClass="login-field">
+                    <Label text="Mot de passe" styleClass="field-label"/>
+                    <PasswordField fx:id="passwordField"
+                                   promptText="Entrer votre mot de passe"
+                                   styleClass="login-password-field"/>
+                </VBox>
+
+                <Label fx:id="errorLabel"
+                       styleClass="login-error-label"/>
+
+                <Button fx:id="loginButton"
+                        text="Se connecter"
+                        onAction="#handleLogin"
+                        styleClass="login-button"/>
+
+                <Button text="Créer un compte"
+                        onAction="#handleSignUp"
+                        styleClass="signup-button"/>
+            </VBox>
+
+            <Separator styleClass="login-separator"/>
+
+            <VBox alignment="CENTER" spacing="4" styleClass="login-footer">
+                <Label text="🔐 Système Sécurisé" styleClass="login-footer-title"/>
+                <Label text="© 2024 MatelasPro - Tous droits réservés" styleClass="login-footer-caption"/>
             </VBox>
         </VBox>
-        
-        <!-- Welcome Message -->
-        <VBox alignment="CENTER" spacing="8">
-            <Label text="👋 Bienvenue!" style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #3498db;"/>
-            <Label text="Connectez-vous pour accéder au système" style="-fx-font-size: 14px; -fx-text-fill: #7f8c8d;"/>
-        </VBox>
-        
-        <!-- Login Form -->
-        <VBox fx:id="loginPane" alignment="CENTER" spacing="16">
-            
-            <!-- Username Section -->
-            <VBox spacing="8">
-                <Label text="👤 Nom d'utilisateur" style="-fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
-                <TextField fx:id="usernameField" promptText="Entrez votre nom d'utilisateur" 
-                          styleClass="login-text-field"/>
-            </VBox>
-            
-            <!-- Password Section -->
-            <VBox spacing="8">
-                <Label text="🔒 Mot de passe" style="-fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
-                <PasswordField fx:id="passwordField" promptText="Entrez votre mot de passe" 
-                              styleClass="login-password-field"/>
-            </VBox>
-            
-            <!-- Login Button -->
-            <Button fx:id="loginButton" text="🚀 Se Connecter" onAction="#handleLogin" 
-                    styleClass="login-button"/>
-            
-            <!-- Error Label -->
-            <Label fx:id="errorLabel" styleClass="login-error-label"/>
-            
-        </VBox>
-        
-        <!-- Footer -->
-        <VBox alignment="CENTER" spacing="4">
-            <Label text="🔐 Système Sécurisé" style="-fx-font-size: 12px; -fx-text-fill: #95a5a6;"/>
-            <Label text="© 2024 MatelasPro - Tous droits réservés" style="-fx-font-size: 10px; -fx-text-fill: #bdc3c7;"/>
-        </VBox>
-        
+
+        <Label text="Astuce : utilisez le bouton vert de macOS pour agrandir la fenêtre."
+               styleClass="login-hint"/>
     </VBox>
-</VBox> 
+</StackPane>

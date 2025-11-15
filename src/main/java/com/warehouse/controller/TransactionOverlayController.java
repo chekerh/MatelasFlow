@@ -18,13 +18,14 @@ import com.warehouse.model.UserDAO;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.ArrayList;
 
 public class TransactionOverlayController {
     @FXML private ComboBox<String> typeComboBox;
     @FXML private ComboBox<String> mattressComboBox;
     @FXML private TextField quantityField;
-    @FXML private TextField prixField;
+    @FXML private TextField unitPriceField;
+    @FXML private TextField salePriceField;
+    @FXML private TextField totalPriceField;
     @FXML private ComboBox<String> storeOwnerComboBox;
     @FXML private TextField notesField;
     @FXML private DatePicker expectedReturnDatePicker;
@@ -62,6 +63,12 @@ public class TransactionOverlayController {
         typeComboBox.valueProperty().addListener((obs, oldVal, newVal) -> {
             updateFieldsForType();
         });
+
+        quantityField.textProperty().addListener((obs, oldVal, newVal) -> updateTotalPrice());
+        salePriceField.textProperty().addListener((obs, oldVal, newVal) -> updateTotalPrice());
+        mattressComboBox.valueProperty().addListener((obs, oldVal, newVal) -> populatePricesForSelection(newVal));
+        unitPriceField.setEditable(false);
+        totalPriceField.setEditable(false);
     }
     
     public void setTransaction(Transaction transaction) {
@@ -94,12 +101,19 @@ public class TransactionOverlayController {
             // Set mattress value by finding the matching string
             Mattress mattress = MattressDAO.getMattressById(transaction.getMattressId());
             if (mattress != null) {
-                String mattressString = "🛏️ " + mattress.getType() + " (" + mattress.getSize() + ")";
+                String reference = (mattress.getReference() == null || mattress.getReference().isBlank())
+                    ? "Réf inconnue"
+                    : mattress.getReference();
+                String mattressString = "🛏️ " + mattress.getType() + " - " + reference;
                 mattressComboBox.setValue(mattressString);
+                populatePricesForSelection(mattressString);
+            } else {
+                unitPriceField.clear();
             }
             
             quantityField.setText(String.valueOf(transaction.getQuantity()));
-            prixField.setText(String.valueOf(transaction.getPrix()));
+            salePriceField.setText(String.valueOf(transaction.getPrix()));
+            updateTotalPrice();
             
             if (transaction.getStoreOwnerId() != null) {
                 StoreOwner storeOwner = StoreOwnerDAO.getStoreOwnerById(transaction.getStoreOwnerId());
@@ -122,7 +136,9 @@ public class TransactionOverlayController {
             // Then set default values
             typeComboBox.setValue("💰 Vente");
             quantityField.clear();
-            prixField.clear();
+            unitPriceField.clear();
+            salePriceField.clear();
+            totalPriceField.clear();
             notesField.clear();
             expectedReturnDatePicker.setValue(null);
             destinationField.clear();
@@ -171,7 +187,10 @@ public class TransactionOverlayController {
         List<Mattress> mattresses = MattressDAO.getAllMattresses();
         ObservableList<String> mattressNames = FXCollections.observableArrayList();
         for (Mattress mattress : mattresses) {
-            mattressNames.add("🛏️ " + mattress.getType() + " (" + mattress.getSize() + ")");
+            String reference = (mattress.getReference() == null || mattress.getReference().isBlank())
+                ? "Réf inconnue"
+                : mattress.getReference();
+            mattressNames.add("🛏️ " + mattress.getType() + " - " + reference);
         }
         mattressComboBox.setItems(mattressNames);
         
@@ -216,18 +235,15 @@ public class TransactionOverlayController {
         }
         
         // Set price field behavior
-        if ("🔄 retour".equals(selectedType)) {
-            prixField.setText("0");
-            prixField.setDisable(true);
-            prixField.setPromptText("Prix automatiquement mis à zéro");
-        } else if ("📥 Réception".equals(selectedType)) {
-            prixField.setText("0");
-            prixField.setDisable(true);
-            prixField.setPromptText("Prix automatiquement mis à zéro");
+        if ("🔄 retour".equals(selectedType) || "📥 Réception".equals(selectedType)) {
+            salePriceField.setText("0");
+            salePriceField.setDisable(true);
+            salePriceField.setPromptText("Prix automatiquement mis à zéro");
         } else {
-            prixField.setDisable(false);
-            prixField.setPromptText("Prix de vente");
+            salePriceField.setDisable(false);
+            salePriceField.setPromptText("Prix de vente");
         }
+        populatePricesForSelection(mattressComboBox.getValue());
     }
     
     @FXML
@@ -257,52 +273,15 @@ public class TransactionOverlayController {
                 typeForDB = "Réception";
             }
             
-            // Validation 2: Check mattress selected
             String mattressString = mattressComboBox.getValue();
-            System.out.println("DEBUG: Mattress ComboBox Value = '" + mattressString + "'"); // Debug
-            
-            Mattress selectedMattress = null;
-            if (mattressString == null || mattressString.trim().isEmpty()) {
-                showAlert("Erreur", "Veuillez sélectionner un matelas.", AlertType.ERROR);
-                return;
-            }
-            
-            // Extract mattress from string with icon - ROBUST emoji handling
-            String mattressInfo = mattressString.trim();
-            
-            // Remove emoji by finding the first space after emoji
-            if (mattressInfo.contains(" ")) {
-                int firstSpace = mattressInfo.indexOf(" ");
-                mattressInfo = mattressInfo.substring(firstSpace + 1).trim();
-            }
-            
-            System.out.println("DEBUG: After emoji removal = '" + mattressInfo + "'"); // Debug
-            
-            // Extract type (before opening parenthesis)
-            int openParen = mattressInfo.indexOf(" (");
-            if (openParen > 0) {
-                String mattressType = mattressInfo.substring(0, openParen).trim();
-                System.out.println("DEBUG: Looking for mattress type = '" + mattressType + "'"); // Debug
-                
-                List<Mattress> allMattresses = MattressDAO.getAllMattresses();
-                for (Mattress mattress : allMattresses) {
-                    System.out.println("DEBUG: Comparing '" + mattressType + "' with '" + mattress.getType() + "'"); // Debug
-                    // Case-insensitive comparison
-                    if (mattress.getType().equalsIgnoreCase(mattressType)) {
-                        selectedMattress = mattress;
-                        System.out.println("DEBUG: MATCH FOUND! ID=" + mattress.getId());
-                        break;
-                    }
-                }
-            }
-            
+            Mattress selectedMattress = resolveMattressFromDisplay(mattressString);
             if (selectedMattress == null) {
                 showAlert("Erreur", "Matelas non trouvé. Veuillez réessayer la sélection.", AlertType.ERROR);
                 return;
             }
             
             String quantityStr = quantityField.getText().trim();
-            String prixStr = prixField.getText().trim();
+            String salePriceStr = salePriceField.getText().trim();
             
             // Extract store owner from string with icon
             String storeOwnerString = storeOwnerComboBox.getValue();
@@ -321,24 +300,8 @@ public class TransactionOverlayController {
             LocalDate expectedReturnDate = expectedReturnDatePicker.getValue();
             String destination = destinationField.getText().trim();
             
-            // Validation
-            if (type == null) {
-                showAlert("Erreur", "Veuillez sélectionner un type de transaction.", AlertType.ERROR);
-                return;
-            }
-            
-            if (selectedMattress == null) {
-                showAlert("Erreur", "Veuillez sélectionner un matelas.", AlertType.ERROR);
-                return;
-            }
-            
-            if (quantityStr.isEmpty()) {
-                showAlert("Erreur", "La quantité est obligatoire.", AlertType.ERROR);
-                return;
-            }
-            
-            if (prixStr.isEmpty()) {
-                showAlert("Erreur", "Le prix est obligatoire.", AlertType.ERROR);
+            if (quantityStr.isEmpty() || salePriceStr.isEmpty()) {
+                showAlert("Erreur", "La quantité et le prix sont obligatoires.", AlertType.ERROR);
                 return;
             }
             
@@ -346,7 +309,7 @@ public class TransactionOverlayController {
             double prix;
             try {
                 quantity = Integer.parseInt(quantityStr);
-                prix = Double.parseDouble(prixStr);
+                prix = Double.parseDouble(salePriceStr);
                 if (quantity <= 0) {
                     showAlert("Erreur", "La quantité doit être positive.", AlertType.ERROR);
                     return;
@@ -483,7 +446,7 @@ public class TransactionOverlayController {
                 transaction.setType(typeForDB);
                 transaction.setMattressId(selectedMattress.getId());
                 transaction.setQuantity(quantity);
-                transaction.setPrix(prix);
+            transaction.setPrix(prix);
                 transaction.setStoreOwnerId(selectedStoreOwner != null ? selectedStoreOwner.getId() : null);
                 transaction.setNotes(finalNotes);
                 transaction.setExpectedReturnDate(expectedReturnDate);
@@ -585,5 +548,56 @@ public class TransactionOverlayController {
         alert.setHeaderText(null);
         alert.setContentText(content);
         alert.showAndWait();
+    }
+
+    private void populatePricesForSelection(String displayValue) {
+        Mattress mattress = resolveMattressFromDisplay(displayValue);
+        if (mattress != null) {
+            unitPriceField.setText(String.format("%.2f", mattress.getUnitPrice()));
+            if (!salePriceField.isDisabled()) {
+                salePriceField.setText(String.format("%.2f", mattress.getSalePrice()));
+            }
+        } else {
+            unitPriceField.clear();
+            if (!salePriceField.isDisabled()) {
+                salePriceField.clear();
+            }
+        }
+        updateTotalPrice();
+    }
+
+    private void updateTotalPrice() {
+        try {
+            double salePrice = Double.parseDouble(salePriceField.getText().trim());
+            int quantity = Integer.parseInt(quantityField.getText().trim());
+            totalPriceField.setText(String.format("%.2f", salePrice * quantity));
+        } catch (NumberFormatException e) {
+            totalPriceField.setText("");
+        }
+    }
+
+    private Mattress resolveMattressFromDisplay(String mattressString) {
+        if (mattressString == null || mattressString.trim().isEmpty()) {
+            return null;
+        }
+        String mattressInfo = mattressString.trim();
+        if (mattressInfo.contains(" ")) {
+            int firstSpace = mattressInfo.indexOf(" ");
+            mattressInfo = mattressInfo.substring(firstSpace + 1).trim();
+        }
+        String[] parts = mattressInfo.split(" - ");
+        String mattressType = parts[0].trim();
+        String referencePart = parts.length > 1 ? parts[1].trim() : "";
+
+        List<Mattress> allMattresses = MattressDAO.getAllMattresses();
+        for (Mattress mattress : allMattresses) {
+            String reference = mattress.getReference() == null ? "" : mattress.getReference().trim();
+            if (mattress.getType().equalsIgnoreCase(mattressType) &&
+                (referencePart.isEmpty() || reference.equalsIgnoreCase(referencePart) ||
+                 ("Réf inconnue".equals(referencePart) && reference.isEmpty()))) {
+                return mattress;
+            }
+        }
+        return null;
     }
 } 

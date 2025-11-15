@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS mattress (
     id INT AUTO_INCREMENT PRIMARY KEY,
     type VARCHAR(100) NOT NULL,
     size VARCHAR(50) NOT NULL,
-    brand VARCHAR(100) DEFAULT NULL,
+    reference VARCHAR(100) DEFAULT NULL,
     quantity INT NOT NULL DEFAULT 0,
     prix DECIMAL(10,2) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -48,12 +48,12 @@ CREATE TABLE IF NOT EXISTS mattress (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Insert sample mattresses
-INSERT INTO mattress (type, size, brand, quantity, prix) VALUES
-('Mousse', '90x190', 'SuperMousse', 50, 1500.00),
-('Ressort', '140x190', 'SuperMousse', 30, 2500.00),
-('Latex', '160x200', 'SuperMousse', 20, 3500.00),
-('Mousse', '120x190', 'SuperMousse', 40, 1800.00),
-('Ressort', '180x200', 'SuperMousse', 15, 4000.00)
+INSERT INTO mattress (type, size, reference, quantity, unit_price, prix) VALUES
+('Mousse', '90x190', 'SuperMousse', 50, 1200.00, 1500.00),
+('Ressort', '140x190', 'SuperMousse', 30, 2000.00, 2500.00),
+('Latex', '160x200', 'SuperMousse', 20, 3000.00, 3500.00),
+('Mousse', '120x190', 'SuperMousse', 40, 1500.00, 1800.00),
+('Ressort', '180x200', 'SuperMousse', 15, 3200.00, 4000.00)
 ON DUPLICATE KEY UPDATE id=id;
 
 -- ============================================================================
@@ -134,7 +134,7 @@ SELECT
     t.type,
     m.type AS mattress_type,
     m.size AS mattress_size,
-    m.brand AS mattress_brand,
+    m.reference AS mattress_reference,
     t.quantity,
     t.prix,
     t.prix * t.quantity AS total,
@@ -153,7 +153,7 @@ SELECT
     m.id,
     m.type,
     m.size,
-    m.brand,
+    m.reference,
     m.quantity AS current_stock,
     m.prix AS unit_price,
     m.quantity * m.prix AS total_value,
@@ -177,7 +177,7 @@ BEGIN
         id,
         type,
         size,
-        brand,
+        reference,
         quantity,
         prix
     FROM mattress

@@ -8,7 +8,8 @@ import javafx.stage.Stage;
 public class MattressDialogController {
     @FXML private TextField typeField;
     @FXML private TextField sizeField;
-    @FXML private TextField brandField;
+    @FXML private TextField referenceField;
+    @FXML private TextField unitPriceField;
     @FXML private TextField quantityField;
     @FXML private TextField prixField;
     @FXML private Button okButton;
@@ -32,9 +33,10 @@ public class MattressDialogController {
         if (mattress != null) {
             typeField.setText(mattress.getType());
             sizeField.setText(mattress.getSize());
-            brandField.setText(mattress.getBrand());
+            referenceField.setText(mattress.getReference());
+            unitPriceField.setText(String.valueOf(mattress.getUnitPrice()));
             quantityField.setText(String.valueOf(mattress.getQuantity()));
-            prixField.setText(String.valueOf(mattress.getPrix()));
+            prixField.setText(String.valueOf(mattress.getSalePrice()));
         }
     }
 
@@ -49,16 +51,19 @@ public class MattressDialogController {
     private void handleOk() {
         String type = typeField.getText();
         String size = sizeField.getText();
-        String brand = brandField.getText();
+        String reference = referenceField.getText();
+        String unitPriceStr = unitPriceField.getText();
         String quantityStr = quantityField.getText();
         String prixStr = prixField.getText();
-        if (type.isEmpty() || size.isEmpty() || brand.isEmpty() || quantityStr.isEmpty() || prixStr.isEmpty()) {
+        if (type.isEmpty() || size.isEmpty() || reference.isEmpty() || unitPriceStr.isEmpty() || quantityStr.isEmpty() || prixStr.isEmpty()) {
             errorLabel.setText("Tous les champs sont obligatoires.");
             return;
         }
         int quantity;
         double prix;
+        double unitPrice;
         try {
+            unitPrice = Double.parseDouble(unitPriceStr);
             quantity = Integer.parseInt(quantityStr);
             prix = Double.parseDouble(prixStr);
         } catch (NumberFormatException e) {
@@ -66,13 +71,14 @@ public class MattressDialogController {
             return;
         }
         if (mattress == null) {
-            mattress = new Mattress(type, size, brand, quantity, prix);
+            mattress = new Mattress(type, size, reference, quantity, unitPrice, prix);
         } else {
             mattress.setType(type);
             mattress.setSize(size);
-            mattress.setBrand(brand);
+            mattress.setReference(reference);
+            mattress.setUnitPrice(unitPrice);
             mattress.setQuantity(quantity);
-            mattress.setPrix(prix);
+            mattress.setSalePrice(prix);
         }
         okClicked = true;
         ((Stage) okButton.getScene().getWindow()).close();

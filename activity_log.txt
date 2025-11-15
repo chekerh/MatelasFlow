@@ -64,3 +64,105 @@
 [2025-10-13 20:47:56] cheker (admin) - Connexion r�ussie: Connexion depuis Dell@Windows 11
 [2025-10-13 22:03:15] cheker (admin) - Connexion r�ussie: Connexion depuis Dell@Windows 11
 [2025-10-13 22:06:00] cheker (admin) - D�connexion: D�connexion depuis le dashboard
+[2025-11-14 00:35:53]  (employé) - Tentative de connexion échouée: Tentative échouée
+[2025-11-14 00:48:54] admin (employé) - Tentative de connexion échouée: Tentative échouée
+[2025-11-14 00:48:55] admin (employé) - Tentative de connexion échouée: Tentative échouée
+[2025-11-14 00:49:39] admin (employé) - Tentative de connexion échouée: Tentative échouée
+[2025-11-14 00:49:43] admin (employé) - Tentative de connexion échouée: Tentative échouée
+[2025-11-14 00:49:43] admin (employé) - Tentative de connexion échouée: Tentative échouée
+[2025-11-14 00:49:43] admin (employé) - Tentative de connexion échouée: Tentative échouée
+[2025-11-14 00:49:44] admin (employé) - Tentative de connexion échouée: Tentative échouée
+[2025-11-14 00:51:09] admin (employé) - Tentative de connexion échouée: Tentative échouée
+[2025-11-14 00:51:22] admin (employé) - Tentative de connexion échouée: Tentative échouée
+[2025-11-14 00:51:29] admin (employé) - Tentative de connexion échouée: Tentative échouée
+[2025-11-14 00:56:13] admin (employé) - Tentative de connexion échouée: Tentative échouée
+[2025-11-14 00:56:14] admin (employé) - Tentative de connexion échouée: Tentative échouée
+[2025-11-14 00:56:14] admin (employé) - Tentative de connexion échouée: Tentative échouée
+[2025-11-14 00:56:14] ⚠️ ACTIVITÉ SUSPECTE - admin (employé) - Raison: Trop de tentatives de connexion échouées - Détails: Échecs: 6 (max: 5)
+[2025-11-14 00:56:18] admin (employé) - Tentative de connexion échouée: Tentative échouée
+[2025-11-14 00:56:18] ⚠️ ACTIVITÉ SUSPECTE - admin (employé) - Raison: Trop de tentatives de connexion échouées - Détails: Échecs: 7 (max: 5)
+[2025-11-14 00:56:57] admin (employé) - Tentative de connexion échouée: Tentative échouée
+[2025-11-14 00:57:28] admin (employé) - Tentative de connexion échouée: Tentative échouée
+[2025-11-14 00:57:34] admin (employé) - Tentative de connexion échouée: Tentative échouée
+[2025-11-14 00:57:35] admin (employé) - Tentative de connexion échouée: Tentative échouée
+[2025-11-14 00:57:36] admin (employé) - Tentative de connexion échouée: Tentative échouée
+[2025-11-14 00:57:36] admin (employé) - Tentative de connexion échouée: Tentative échouée
+[2025-11-14 00:57:36] ⚠️ ACTIVITÉ SUSPECTE - admin (employé) - Raison: Trop de tentatives de connexion échouées - Détails: Échecs: 6 (max: 5)
+[2025-11-14 00:57:36] admin (employé) - Tentative de connexion échouée: Tentative échouée
+[2025-11-14 00:57:36] ⚠️ ACTIVITÉ SUSPECTE - admin (employé) - Raison: Trop de tentatives de connexion échouées - Détails: Échecs: 7 (max: 5)
+[2025-11-14 00:57:36] admin (employé) - Tentative de connexion échouée: Tentative échouée
+[2025-11-14 00:57:36] ⚠️ ACTIVITÉ SUSPECTE - admin (employé) - Raison: Trop de tentatives de connexion échouées - Détails: Échecs: 8 (max: 5)
+[2025-11-14 00:57:36] admin (employé) - Tentative de connexion échouée: Tentative échouée
+[2025-11-14 00:57:36] ⚠️ ACTIVITÉ SUSPECTE - admin (employé) - Raison: Trop de tentatives de connexion échouées - Détails: Échecs: 9 (max: 5)
+[2025-11-14 00:57:36] admin (employé) - Tentative de connexion échouée: Tentative échouée
+[2025-11-14 00:57:36] ⚠️ ACTIVITÉ SUSPECTE - admin (employé) - Raison: Trop de tentatives de connexion échouées - Détails: Échecs: 10 (max: 5)
+[2025-11-14 01:04:09] admin (employé) - Tentative de connexion échouée: Tentative échouée
+[2025-11-14 01:08:17] admin (employé) - Tentative de connexion échouée: Tentative échouée
+[2025-11-14 01:08:21] admin (employé) - Tentative de connexion échouée: Tentative échouée
+[2025-11-14 01:10:08] admin (employé) - Tentative de connexion échouée: Tentative échouée
+[2025-11-14 01:13:45] admin (employé) - Tentative de connexion échouée: Tentative échouée
+[2025-11-14 01:13:56] admin (employé) - Tentative de connexion échouée: Tentative échouée
+[2025-11-14 01:13:56] admin (employé) - Tentative de connexion échouée: Tentative échouée
+[2025-11-14 01:13:57] admin (employé) - Tentative de connexion échouée: Tentative échouée
+[2025-11-14 01:18:57] cheker (employé) - Tentative de connexion échouée: Tentative échouée
+[2025-11-14 01:19:04] admin (employé) - Tentative de connexion échouée: Tentative échouée
+[2025-11-14 01:19:05] admin (employé) - Tentative de connexion échouée: Tentative échouée
+[2025-11-14 01:22:01] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
+[2025-11-14 01:29:32] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
+[2025-11-14 01:33:16] cheker (admin) - Déconnexion: Déconnexion depuis le dashboard
+[2025-11-14 01:33:52] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
+[2025-11-14 01:34:41] cheker (admin) - Ajout de matelas: Ouverture de l'interface d'ajout de matelas
+[2025-11-14 01:35:14] cheker (admin) - Ajout de matelas: Ouverture de l'interface d'ajout de matelas
+[2025-11-14 01:36:41] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
+[2025-11-14 01:37:17] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
+[2025-11-14 01:38:30] cheker (admin) - Déconnexion: Déconnexion depuis le dashboard
+[2025-11-14 01:41:09] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
+[2025-11-14 01:41:15] cheker (admin) - Déconnexion: Déconnexion depuis le dashboard
+[2025-11-14 01:41:53] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
+[2025-11-14 01:48:01] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
+[2025-11-14 11:30:42] cheker (employé) - Tentative de connexion échouée: Tentative échouée
+[2025-11-14 11:31:39] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
+[2025-11-14 11:35:21] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
+[2025-11-14 11:47:27] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
+[2025-11-14 11:47:56] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
+[2025-11-14 11:48:17] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
+[2025-11-14 12:11:44] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
+[2025-11-14 12:11:52] cheker (admin) - Ajout de matelas: Ouverture de l'interface d'ajout de matelas
+[2025-11-14 12:15:37] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
+[2025-11-14 15:21:26] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
+[2025-11-14 16:34:18] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
+[2025-11-14 18:47:42] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
+[2025-11-14 18:55:55] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
+[2025-11-14 18:58:49] cheker (admin) - Déconnexion: Déconnexion depuis le dashboard
+[2025-11-14 19:05:12] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
+[2025-11-14 19:11:45] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
+[2025-11-14 19:21:08] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
+[2025-11-14 19:28:17] cheker (admin) - Déconnexion: Déconnexion depuis le dashboard
+[2025-11-14 19:28:45] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
+[2025-11-14 19:28:49] cheker (admin) - Ajout de matelas: Ouverture de l'interface d'ajout de matelas
+[2025-11-14 19:42:10] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
+[2025-11-14 19:45:47] cheker (admin) - Ajout de matelas: Ouverture de l'interface d'ajout de matelas
+[2025-11-14 19:57:03] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
+[2025-11-14 20:06:44] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
+[2025-11-14 20:26:51] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
+[2025-11-14 20:29:15] cheker (admin) - Déconnexion: Déconnexion depuis le dashboard
+[2025-11-14 20:33:41] cheker (employé) - Tentative de connexion échouée: Tentative échouée
+[2025-11-14 20:33:46] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
+[2025-11-14 20:44:39] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
+[2025-11-14 21:01:19] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
+[2025-11-14 21:20:59] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
+[2025-11-14 22:55:12] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
+[2025-11-14 22:58:17] cheker (employé) - Tentative de connexion échouée: Tentative échouée
+[2025-11-14 22:58:20] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
+[2025-11-14 23:04:20] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
+[2025-11-14 23:04:24] cheker (admin) - Ajout de matelas: Ouverture de l'interface d'ajout de matelas
+[2025-11-14 23:28:42] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
+[2025-11-14 23:28:47] cheker (admin) - Ajout de matelas: Ouverture de l'interface d'ajout de matelas
+[2025-11-14 23:32:12] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
+[2025-11-14 23:32:24] cheker (admin) - Ajout de matelas: Ouverture de l'interface d'ajout de matelas
+[2025-11-15 00:22:14] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
+[2025-11-15 00:22:17] cheker (admin) - Ajout de matelas: Ouverture de l'interface d'ajout de matelas
+[2025-11-15 14:43:10] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
+[2025-11-15 14:43:43] cheker (admin) - Ajout de matelas: Ouverture de l'interface d'ajout de matelas
+[2025-11-15 16:36:11] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
+[2025-11-15 16:36:15] cheker (admin) - Ajout de matelas: Ouverture de l'interface d'ajout de matelas

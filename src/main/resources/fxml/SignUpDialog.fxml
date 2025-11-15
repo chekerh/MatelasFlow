@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.warehouse.controller.SignUpDialogController"
+      spacing="16"
+      alignment="CENTER_LEFT"
+      stylesheets="/css/modern.css"
+      styleClass="signup-root">
+
+    <Label text="Créer un compte" styleClass="signup-title"/>
+
+    <VBox spacing="12" fillWidth="true">
+        <VBox spacing="6">
+            <Label text="Nom d'utilisateur" styleClass="field-label"/>
+            <TextField fx:id="usernameField"
+                       promptText="Entrez un nom unique"
+                       styleClass="login-text-field"/>
+        </VBox>
+
+        <VBox spacing="6">
+            <Label text="Mot de passe" styleClass="field-label"/>
+            <PasswordField fx:id="passwordField"
+                           promptText="Mot de passe"
+                           styleClass="login-password-field"/>
+        </VBox>
+
+        <VBox spacing="6">
+            <Label text="Confirmer le mot de passe" styleClass="field-label"/>
+            <PasswordField fx:id="confirmPasswordField"
+                           promptText="Confirmez le mot de passe"
+                           styleClass="login-password-field"/>
+        </VBox>
+
+        <VBox spacing="6">
+            <Label text="Rôle" styleClass="field-label"/>
+            <ChoiceBox fx:id="roleChoiceBox" prefWidth="240.0"/>
+        </VBox>
+    </VBox>
+
+    <Label fx:id="feedbackLabel" styleClass="signup-feedback"/>
+
+    <HBox spacing="10" alignment="CENTER_RIGHT">
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button text="Annuler" onAction="#handleCancel" styleClass="ghost-button"/>
+        <Button fx:id="createAccountButton"
+                text="Créer"
+                onAction="#handleCreateAccount"
+                styleClass="login-button"/>
+    </HBox>
+
+    <padding>
+        <Insets top="24" right="28" bottom="24" left="28"/>
+    </padding>
+</VBox>
+

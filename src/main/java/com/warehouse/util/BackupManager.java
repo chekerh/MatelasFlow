@@ -181,7 +181,7 @@ public class BackupManager {
                 mattressMap.put("id", m.getId());
                 mattressMap.put("type", m.getType());
                 mattressMap.put("size", m.getSize());
-                mattressMap.put("brand", m.getBrand());
+                mattressMap.put("reference", m.getReference());
                 mattressMap.put("quantity", m.getQuantity());
                 mattressMap.put("prix", m.getPrix());
                 mattressList.add(mattressMap);

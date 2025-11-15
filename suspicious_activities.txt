@@ -1,0 +1,7 @@
+[2025-11-14 00:56:14] ⚠️ ACTIVITÉ SUSPECTE - admin (employé) - Raison: Trop de tentatives de connexion échouées - Détails: Échecs: 6 (max: 5)
+[2025-11-14 00:56:18] ⚠️ ACTIVITÉ SUSPECTE - admin (employé) - Raison: Trop de tentatives de connexion échouées - Détails: Échecs: 7 (max: 5)
+[2025-11-14 00:57:36] ⚠️ ACTIVITÉ SUSPECTE - admin (employé) - Raison: Trop de tentatives de connexion échouées - Détails: Échecs: 6 (max: 5)
+[2025-11-14 00:57:36] ⚠️ ACTIVITÉ SUSPECTE - admin (employé) - Raison: Trop de tentatives de connexion échouées - Détails: Échecs: 7 (max: 5)
+[2025-11-14 00:57:36] ⚠️ ACTIVITÉ SUSPECTE - admin (employé) - Raison: Trop de tentatives de connexion échouées - Détails: Échecs: 8 (max: 5)
+[2025-11-14 00:57:36] ⚠️ ACTIVITÉ SUSPECTE - admin (employé) - Raison: Trop de tentatives de connexion échouées - Détails: Échecs: 9 (max: 5)
+[2025-11-14 00:57:36] ⚠️ ACTIVITÉ SUSPECTE - admin (employé) - Raison: Trop de tentatives de connexion échouées - Détails: Échecs: 10 (max: 5)

@@ -22,20 +22,26 @@
                 <Label text="📋 Type:" GridPane.columnIndex="0" GridPane.rowIndex="0" style="-fx-font-weight: bold;"/>
                 <ComboBox fx:id="typeComboBox" promptText="💼 Sélectionner le type" GridPane.columnIndex="1" GridPane.rowIndex="0" prefWidth="400" maxWidth="Infinity" style="-fx-background-color: white; -fx-text-fill: #2c3e50;"/>
                 
-                <Label text="🛏️ Matelas:" GridPane.columnIndex="0" GridPane.rowIndex="1" style="-fx-font-weight: bold;"/>
-                <ComboBox fx:id="mattressComboBox" promptText="Sélectionner un matelas" GridPane.columnIndex="1" GridPane.rowIndex="1" prefWidth="400" maxWidth="Infinity"/>
+            <Label text="🛏️ Matelas / Référence:" GridPane.columnIndex="0" GridPane.rowIndex="1" style="-fx-font-weight: bold;"/>
+            <ComboBox fx:id="mattressComboBox" promptText="Choisir un matelas avec référence" GridPane.columnIndex="1" GridPane.rowIndex="1" prefWidth="400" maxWidth="Infinity"/>
                 
                 <Label text="📦 Quantité:" GridPane.columnIndex="0" GridPane.rowIndex="2" style="-fx-font-weight: bold;"/>
                 <TextField fx:id="quantityField" promptText="Nombre de matelas" GridPane.columnIndex="1" GridPane.rowIndex="2" prefWidth="400" maxWidth="Infinity"/>
                 
-                <Label text="💰 Prix (DT):" GridPane.columnIndex="0" GridPane.rowIndex="3" style="-fx-font-weight: bold;"/>
-                <TextField fx:id="prixField" promptText="Prix total" GridPane.columnIndex="1" GridPane.rowIndex="3" prefWidth="400" maxWidth="Infinity"/>
+                <Label text="💰 Prix unitaire (DT):" GridPane.columnIndex="0" GridPane.rowIndex="3" style="-fx-font-weight: bold;"/>
+                <TextField fx:id="unitPriceField" promptText="Coût d'achat" GridPane.columnIndex="1" GridPane.rowIndex="3" prefWidth="400" maxWidth="Infinity" editable="false"/>
                 
-                <Label text="🏪 Propriétaire:" GridPane.columnIndex="0" GridPane.rowIndex="4" style="-fx-font-weight: bold;"/>
-                <ComboBox fx:id="storeOwnerComboBox" promptText="Sélectionner un propriétaire" GridPane.columnIndex="1" GridPane.rowIndex="4" prefWidth="400" maxWidth="Infinity"/>
+                <Label text="💵 Prix de vente (DT):" GridPane.columnIndex="0" GridPane.rowIndex="4" style="-fx-font-weight: bold;"/>
+                <TextField fx:id="salePriceField" promptText="Prix par unité" GridPane.columnIndex="1" GridPane.rowIndex="4" prefWidth="400" maxWidth="Infinity"/>
                 
-                <Label text="📝 Notes:" GridPane.columnIndex="0" GridPane.rowIndex="5" style="-fx-font-weight: bold;"/>
-                <TextField fx:id="notesField" promptText="Notes ou destination" GridPane.columnIndex="1" GridPane.rowIndex="5" prefWidth="400" maxWidth="Infinity"/>
+                <Label text="🧮 Total (DT):" GridPane.columnIndex="0" GridPane.rowIndex="5" style="-fx-font-weight: bold;"/>
+                <TextField fx:id="totalPriceField" promptText="Calculé automatiquement" GridPane.columnIndex="1" GridPane.rowIndex="5" prefWidth="400" maxWidth="Infinity" editable="false"/>
+                
+                <Label text="🏪 Propriétaire:" GridPane.columnIndex="0" GridPane.rowIndex="6" style="-fx-font-weight: bold;"/>
+                <ComboBox fx:id="storeOwnerComboBox" promptText="Sélectionner un propriétaire" GridPane.columnIndex="1" GridPane.rowIndex="6" prefWidth="400" maxWidth="Infinity"/>
+                
+                <Label text="📝 Notes:" GridPane.columnIndex="0" GridPane.rowIndex="7" style="-fx-font-weight: bold;"/>
+                <TextField fx:id="notesField" promptText="Notes ou destination" GridPane.columnIndex="1" GridPane.rowIndex="7" prefWidth="400" maxWidth="Infinity"/>
             </GridPane>
             
             <!-- Lending specific fields -->

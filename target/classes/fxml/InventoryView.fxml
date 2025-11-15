@@ -3,15 +3,18 @@
 <?import javafx.scene.layout.*?>
 <VBox xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.warehouse.controller.InventoryController" spacing="16" alignment="TOP_CENTER" stylesheets="/css/modern.css">
     <Label text="Gestion des matelas" style="-fx-font-size: 20px; -fx-font-weight: bold;" />
-    <TableView fx:id="mattressTable" prefHeight="400" prefWidth="800">
-        <columns>
-            <TableColumn fx:id="typeColumn" text="Type" prefWidth="150" />
-            <TableColumn fx:id="sizeColumn" text="Taille" prefWidth="100" />
-            <TableColumn fx:id="brandColumn" text="Marque" prefWidth="150" />
-            <TableColumn fx:id="quantityColumn" text="Quantité" prefWidth="100" />
-            <TableColumn fx:id="prixColumn" text="Prix (DT)" prefWidth="100" />
-        </columns>
-    </TableView>
+    <ScrollPane fitToWidth="true" fitToHeight="true" hbarPolicy="AS_NEEDED" vbarPolicy="AS_NEEDED" styleClass="table-scroll">
+        <TableView fx:id="mattressTable" prefHeight="400" minWidth="900">
+            <columns>
+                <TableColumn fx:id="typeColumn" text="Type" prefWidth="200" />
+                <TableColumn fx:id="sizeColumn" text="Taille" prefWidth="140" />
+                <TableColumn fx:id="brandColumn" text="Référence" prefWidth="200" />
+                <TableColumn fx:id="quantityColumn" text="Quantité" prefWidth="120" />
+                <TableColumn fx:id="unitPriceColumn" text="Prix unitaire (DT)" prefWidth="140" />
+                <TableColumn fx:id="prixColumn" text="Prix de vente (DT)" prefWidth="140" />
+            </columns>
+        </TableView>
+    </ScrollPane>
     <HBox spacing="14" alignment="CENTER">
         <Button fx:id="addButton" text="Ajouter" onAction="#handleAdd">
             <tooltip><Tooltip text="Ajouter un matelas"/></tooltip>

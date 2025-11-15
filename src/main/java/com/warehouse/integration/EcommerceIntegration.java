@@ -1,7 +1,6 @@
 package com.warehouse.integration;
 
 import com.warehouse.model.Mattress;
-import com.warehouse.model.Transaction;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -105,7 +104,7 @@ public class EcommerceIntegration {
             mattress.getType(),
             mattress.getPrix(),
             mattress.getQuantity(),
-            mattress.getBrand(),
+            mattress.getReference(),
             mattress.getSize()
         );
     }

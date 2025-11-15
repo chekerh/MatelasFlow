@@ -169,13 +169,13 @@ public class PdfReportUtil {
             table.addCell(new PdfPCell(new Phrase("ID", headerFont)));
             table.addCell(new PdfPCell(new Phrase("Type", headerFont)));
             table.addCell(new PdfPCell(new Phrase("Taille", headerFont)));
-            table.addCell(new PdfPCell(new Phrase("Marque", headerFont)));
+            table.addCell(new PdfPCell(new Phrase("Référence", headerFont)));
             table.addCell(new PdfPCell(new Phrase("Quantité", headerFont)));
             for (Mattress m : mattresses) {
                 table.addCell(new PdfPCell(new Phrase(String.valueOf(m.getId()), cellFont)));
                 table.addCell(new PdfPCell(new Phrase(m.getType(), cellFont)));
                 table.addCell(new PdfPCell(new Phrase(m.getSize(), cellFont)));
-                table.addCell(new PdfPCell(new Phrase(m.getBrand() != null ? m.getBrand() : "", cellFont)));
+                table.addCell(new PdfPCell(new Phrase(m.getReference() != null ? m.getReference() : "", cellFont)));
                 table.addCell(new PdfPCell(new Phrase(String.valueOf(m.getQuantity()), cellFont)));
             }
             document.add(table);
