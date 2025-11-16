@@ -5,19 +5,25 @@
       fx:controller="com.warehouse.controller.TransactionsController"
       spacing="16" alignment="TOP_CENTER" stylesheets="/css/modern.css">
     <Label text="Gestion des transactions" style="-fx-font-size: 20px; -fx-font-weight: bold;" />
+    
+    <!-- View mode selector: allows different column sets per transaction type -->
+    <HBox spacing="10" alignment="CENTER_RIGHT">
+        <Label text="Vue :" style="-fx-text-fill: #555;"/>
+        <ComboBox fx:id="viewModeComboBox" prefWidth="220" promptText="Toutes les transactions"/>
+    </HBox>
     <ScrollPane fitToWidth="true" fitToHeight="true" hbarPolicy="AS_NEEDED" vbarPolicy="AS_NEEDED" styleClass="table-scroll">
         <TableView fx:id="transactionTable" prefHeight="400" minWidth="1100" styleClass="transactions-table">
             <columns>
-                <TableColumn fx:id="dateColumn" text="Date" prefWidth="140" />
+                <TableColumn fx:id="addMattressColumn" text="" prefWidth="80" sortable="false" />
+                <TableColumn fx:id="dateColumn" text="Date" prefWidth="130" />
                 <TableColumn fx:id="mattressNameColumn" text="Matelas" prefWidth="220"/>
                 <TableColumn fx:id="quantityColumn" text="Quantité" prefWidth="90" />
-                <TableColumn fx:id="typeColumn" text="Type" prefWidth="130" />
+                <TableColumn fx:id="typeColumn" text="Type" prefWidth="150" />
                 <TableColumn fx:id="prixColumn" text="Prix (DT)" prefWidth="130" />
                 <TableColumn fx:id="totalPriceColumn" text="Total (DT)" prefWidth="140" />
                 <TableColumn fx:id="storeOwnerNameColumn" text="Propriétaire" prefWidth="140"/>
-                <TableColumn fx:id="notesColumn" text="Notes" prefWidth="160" />
+                <TableColumn fx:id="notesColumn" text="Détails" prefWidth="260" />
                 <TableColumn fx:id="expectedReturnDateColumn" text="Date Retour" prefWidth="140" />
-                <TableColumn fx:id="addMattressColumn" text="Ajouter Matelas" prefWidth="160" sortable="false" />
             </columns>
         </TableView>
     </ScrollPane>

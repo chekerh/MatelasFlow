@@ -43,6 +43,9 @@
                 <Label text="📝 Notes:" GridPane.columnIndex="0" GridPane.rowIndex="7" style="-fx-font-weight: bold;"/>
                 <TextField fx:id="notesField" promptText="Notes ou destination" GridPane.columnIndex="1" GridPane.rowIndex="7" prefWidth="400" maxWidth="Infinity"/>
             </GridPane>
+            <Label text="ℹ️ « Retour » sert à enregistrer qu’un matelas prêté revient en stock. « Réception » correspond à une nouvelle entrée fournisseur."
+                   wrapText="true"
+                   style="-fx-font-size: 12px; -fx-text-fill: #4b5563; -fx-padding: 4 0 0 0;"/>
             
             <!-- Lending specific fields -->
             <VBox fx:id="lendingFieldsBox" spacing="8" visible="false">

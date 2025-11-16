@@ -1,5 +1,5 @@
 -- Script de mise à jour pour ajouter le type 'retour' aux transactions
-USE warehouse;
+USE warehouse ;
 
 -- Renommer la colonne 'brand' en 'reference' si elle existe encore
 ALTER TABLE mattress CHANGE COLUMN brand reference VARCHAR(100) NULL;

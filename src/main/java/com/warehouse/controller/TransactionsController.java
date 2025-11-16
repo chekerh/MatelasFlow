@@ -5,6 +5,7 @@ import com.warehouse.model.TransactionDAO;
 import com.warehouse.model.MattressDAO;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -15,6 +16,7 @@ import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 
 public class TransactionsController {
     @FXML private TableView<Transaction> transactionTable;
@@ -35,7 +37,10 @@ public class TransactionsController {
     @FXML private Label errorLabel;
     @FXML private DatePicker reportDatePicker;
 
-    private ObservableList<Transaction> transactionList = FXCollections.observableArrayList();
+    @FXML private ComboBox<String> viewModeComboBox;
+
+    private final ObservableList<Transaction> transactionList = FXCollections.observableArrayList();
+    private FilteredList<Transaction> filteredTransactions;
     private DashboardController dashboardController;
     private Transaction draggedTransaction;
 
@@ -52,6 +57,38 @@ public class TransactionsController {
         ));
         quantityColumn.setCellValueFactory(cellData -> new javafx.beans.property.SimpleIntegerProperty(cellData.getValue().getQuantity()).asObject());
         typeColumn.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(cellData.getValue().getType()));
+        typeColumn.setCellFactory(column -> new TableCell<Transaction, String>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                    setStyle("");
+                    return;
+                }
+                String lower = item.toLowerCase(Locale.ROOT);
+                if (lower.startsWith("vente")) {
+                    setText("💰 Vente");
+                    setStyle("-fx-text-fill: #16a085; -fx-font-weight: bold;");
+                } else if (lower.startsWith("prêt") || lower.startsWith("pret")) {
+                    setText("📦 Prêt");
+                    setStyle("-fx-text-fill: #2980b9; -fx-font-weight: bold;");
+                } else if (lower.startsWith("transfert")) {
+                    setText("🚚 Transfert");
+                    setStyle("-fx-text-fill: #8e44ad; -fx-font-weight: bold;");
+                } else if (lower.startsWith("retour")) {
+                    setText("🔄 Retour (retour de prêt)");
+                    setStyle("-fx-text-fill: #d35400; -fx-font-weight: bold;");
+                } else if (lower.startsWith("réception") || lower.startsWith("reception")) {
+                    setText("📥 Réception (nouveau stock)");
+                    setStyle("-fx-text-fill: #27ae60; -fx-font-weight: bold;");
+                } else {
+                    setText(item);
+                    setStyle("");
+                }
+                setAlignment(javafx.geometry.Pos.CENTER);
+            }
+        });
         prixColumn.setCellValueFactory(cellData -> new javafx.beans.property.SimpleDoubleProperty(cellData.getValue().getPrix()).asObject());
         
         // Format prix column to show 2 decimals with DT currency
@@ -70,7 +107,64 @@ public class TransactionsController {
         storeOwnerNameColumn.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(
             cellData.getValue().getStoreOwnerName() == null ? "" : cellData.getValue().getStoreOwnerName()
         ));
-        notesColumn.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(cellData.getValue().getNotes()));
+        notesColumn.setCellValueFactory(cellData -> {
+            Transaction t = cellData.getValue();
+            if (t == null) {
+                return new javafx.beans.property.SimpleStringProperty("");
+            }
+
+            String type = t.getType() == null ? "" : t.getType();
+            String mattress = t.getMattressName() == null ? "Matelas inconnu" : t.getMattressName();
+            String owner = t.getStoreOwnerName() == null ? "" : t.getStoreOwnerName();
+            int qty = t.getQuantity();
+            double unitPrice = t.getPrix();
+            double total = unitPrice * qty;
+
+            StringBuilder details = new StringBuilder();
+            String lowerType = type.toLowerCase(Locale.ROOT);
+
+            if (lowerType.startsWith("vente")) {
+                details.append("Vente de ")
+                    .append(qty).append(" x ").append(mattress)
+                    .append(" à ").append(String.format("%.2f DT", unitPrice))
+                    .append(" (Total: ").append(String.format("%.2f DT", total)).append(")");
+            } else if (lowerType.startsWith("prêt") || lowerType.startsWith("pret")) {
+                details.append("Prêt de ")
+                    .append(qty).append(" x ").append(mattress);
+                if (!owner.isEmpty()) {
+                    details.append(" à ").append(owner);
+                }
+                if (t.getExpectedReturnDate() != null) {
+                    details.append(" (retour prévu le ").append(t.getExpectedReturnDate()).append(")");
+                }
+            } else if (lowerType.startsWith("transfert")) {
+                details.append("Transfert de ")
+                    .append(qty).append(" x ").append(mattress);
+                if (!owner.isEmpty()) {
+                    details.append(" vers ").append(owner);
+                }
+            } else if (lowerType.startsWith("retour")) {
+                details.append("Retour en stock de ")
+                    .append(qty).append(" x ").append(mattress);
+                if (!owner.isEmpty()) {
+                    details.append(" depuis ").append(owner);
+                }
+            } else if (lowerType.startsWith("réception") || lowerType.startsWith("reception")) {
+                details.append("Réception de ")
+                    .append(qty).append(" x ").append(mattress)
+                    .append(" (stock augmenté)");
+            } else {
+                details.append(type).append(" - ")
+                    .append(qty).append(" x ").append(mattress);
+            }
+
+            String notes = t.getNotes();
+            if (notes != null && !notes.isBlank()) {
+                details.append(" – ").append(notes.trim());
+            }
+
+            return new javafx.beans.property.SimpleStringProperty(details.toString());
+        });
         expectedReturnDateColumn.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(
             cellData.getValue().getExpectedReturnDate() == null ? "" : cellData.getValue().getExpectedReturnDate().toString()
         ));
@@ -91,7 +185,12 @@ public class TransactionsController {
         transactionTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         bindColumnWidths();
         transactionTable.setPlaceholder(new Label("Aucune transaction enregistrée."));
-        transactionTable.setItems(transactionList);
+
+        // Wrap list in a FilteredList so we can change view per type
+        filteredTransactions = new FilteredList<>(transactionList, t -> true);
+        transactionTable.setItems(filteredTransactions);
+
+        setupViewModeComboBox();
         setupAddMatressColumn();
         if (TransactionDAO.isSortOrderSupported()) {
             enableRowReordering();
@@ -106,6 +205,53 @@ public class TransactionsController {
         transactionList.setAll(TransactionDAO.getAllTransactions());
         System.out.println("[TransactionsController] Transactions chargées: " + transactionList.size());
         errorLabel.setText("");
+        applyViewModeFilter();
+    }
+
+    private void setupViewModeComboBox() {
+        if (viewModeComboBox == null) {
+            return;
+        }
+        viewModeComboBox.setItems(FXCollections.observableArrayList(
+            "Toutes les transactions",
+            "Ventes",
+            "Prêts",
+            "Transferts",
+            "Retours / Réceptions"
+        ));
+        viewModeComboBox.getSelectionModel().selectFirst();
+        viewModeComboBox.valueProperty().addListener((obs, oldVal, newVal) -> applyViewModeFilter());
+    }
+
+    private void applyViewModeFilter() {
+        if (filteredTransactions == null) {
+            return;
+        }
+        String mode = viewModeComboBox != null ? viewModeComboBox.getValue() : "Toutes les transactions";
+        if (mode == null || mode.isBlank() || "Toutes les transactions".equals(mode)) {
+            filteredTransactions.setPredicate(t -> true);
+        } else if ("Ventes".equals(mode)) {
+            filteredTransactions.setPredicate(t -> t.getType() != null && t.getType().toLowerCase().startsWith("vente"));
+        } else if ("Prêts".equals(mode)) {
+            filteredTransactions.setPredicate(t -> t.getType() != null && (t.getType().toLowerCase().startsWith("prêt") || t.getType().toLowerCase().startsWith("pret")));
+        } else if ("Transferts".equals(mode)) {
+            filteredTransactions.setPredicate(t -> t.getType() != null && t.getType().toLowerCase().startsWith("transfert"));
+        } else if ("Retours / Réceptions".equals(mode)) {
+            filteredTransactions.setPredicate(t -> {
+                if (t.getType() == null) return false;
+                String lt = t.getType().toLowerCase();
+                return lt.startsWith("retour") || lt.startsWith("réception") || lt.startsWith("reception");
+            });
+        } else {
+            filteredTransactions.setPredicate(t -> true);
+        }
+
+        // Column visibility per mode (simulate dynamic columns)
+        boolean showOwner = "Prêts".equals(mode) || "Transferts".equals(mode);
+        boolean showReturnDate = "Prêts".equals(mode) || "Retours / Réceptions".equals(mode);
+
+        storeOwnerNameColumn.setVisible(showOwner);
+        expectedReturnDateColumn.setVisible(showReturnDate);
     }
 
     @FXML

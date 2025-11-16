@@ -40,6 +40,7 @@ public class DashboardController {
     @FXML private Label duaaLabel;
     @FXML private Button logoutButton;
     @FXML private Button darkModeButton;
+    @FXML private Button powerButton;
     @FXML private VBox navBox;
     @FXML private VBox contentPane;
     @FXML private StackPane overlayPane;
@@ -98,6 +99,9 @@ public class DashboardController {
         
         // Apply dark mode if needed
         applyDarkModeToChildren(contentPane, isDarkMode);
+        
+        // Load default content: statistics page
+        showStatistics(null);
         
         // Start dynamic duaa rotation
         startDuaaRotation();
@@ -301,6 +305,22 @@ public class DashboardController {
         } catch (Exception e) {
             System.out.println("Logo not found for dark mode: " + e.getMessage());
         }
+    }
+
+    @FXML
+    private void handleExit(ActionEvent event) {
+        // Optional: confirm before quitting
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Quitter l'application");
+        alert.setHeaderText("Voulez-vous vraiment quitter MatelasPro ?");
+        alert.setContentText("Toutes les fenêtres seront fermées.");
+        alert.initOwner(((Node) event.getSource()).getScene().getWindow());
+
+        alert.showAndWait().ifPresent(result -> {
+            if (result == ButtonType.OK) {
+                Platform.exit();
+            }
+        });
     }
 
     private void applyDarkModeToChildren(javafx.scene.Node node, boolean darkMode) {

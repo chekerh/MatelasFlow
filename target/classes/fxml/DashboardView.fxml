@@ -44,6 +44,7 @@
                 <HBox alignment="CENTER_RIGHT" spacing="15">
                     <Label fx:id="userInfoLabel" text="Utilisateur: Admin" style="-fx-font-size: 14px; -fx-text-fill: #7f8c8d;"/>
                     <Button fx:id="darkModeButton" text="🌙 Mode Sombre" onAction="#toggleDarkMode" styleClass="dashboard-button"/>
+                    <Button fx:id="powerButton" text="⏻ Éteindre" onAction="#handleExit" styleClass="dashboard-button"/>
                     <Button fx:id="logoutButton" text="🚪 Déconnexion" onAction="#handleLogout" styleClass="dashboard-button"/>
                 </HBox>
             </HBox>
