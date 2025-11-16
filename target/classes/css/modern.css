@@ -25,9 +25,9 @@
     -fx-text-fill: -fx-color-text-primary;
 }
 
-/* Dashboard specific styling */
+/* Dashboard specific styling – soft macOS-like gradient */
 .root.dashboard {
-    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, -fx-color-background 0%, -fx-color-background-alt 100%);
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, #e8ecf4 0%, #dde3ee 50%, #d5dbea 100%);
     -fx-background-image: null;
 }
 
@@ -40,14 +40,17 @@
     -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, #14161d 0%, #101118 100%);
 }
 
-/* Dashboard top section */
+/* Dashboard top section – translucent “glass” strip */
 .dashboard-top {
-    -fx-background-color: -fx-color-surface;
-    -fx-border-color: transparent transparent -fx-color-border transparent;
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%,
+        rgba(255,255,255,0.92) 0%,
+        rgba(255,255,255,0.86) 50%,
+        rgba(255,255,255,0.92) 100%);
+    -fx-border-color: rgba(255,255,255,0.85);
     -fx-border-width: 0 0 1 0;
-    -fx-background-radius: 0;
+    -fx-background-radius: 0 0 24 24;
     -fx-padding: 18 32;
-    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.08), 18, 0.35, 0, 8);
+    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.10), 22, 0.4, 0, 10);
 }
 
 .dashboard-top.dark-mode {
@@ -411,21 +414,25 @@
     -fx-text-fill: -fx-color-accent;
 }
 
+/* Left navigation – glassy sidebar */
 .nav-panel {
-    -fx-background-color: -fx-color-surface;
-    -fx-background-radius: 24;
-    -fx-border-color: -fx-color-border;
-    -fx-border-radius: 24;
-    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.06), 18, 0.35, 0, 8);
+    -fx-background-color: linear-gradient(to bottom,
+        rgba(255,255,255,0.88),
+        rgba(255,255,255,0.80));
+    -fx-background-radius: 26;
+    -fx-border-color: rgba(255,255,255,0.9);
+    -fx-border-radius: 26;
+    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.12), 24, 0.45, 0, 12);
 }
 
+/* Sidebar buttons – pill-shaped Mac style */
 .nav-button {
-    -fx-background-color: -fx-color-surface;
+    -fx-background-color: transparent;
     -fx-text-fill: -fx-color-text-primary;
-    -fx-border-color: -fx-color-border;
-    -fx-border-radius: 14;
-    -fx-background-radius: 14;
-    -fx-padding: 12 16;
+    -fx-border-color: transparent;
+    -fx-border-radius: 999;
+    -fx-background-radius: 999;
+    -fx-padding: 10 18;
     -fx-font-size: 14px;
     -fx-font-weight: 600;
     -fx-alignment: CENTER_LEFT;
@@ -433,17 +440,21 @@
 }
 
 .nav-button:hover {
-    -fx-background-color: -fx-color-accent-soft;
-    -fx-border-color: -fx-color-accent;
+    -fx-background-color: rgba(37,99,235,0.12);
     -fx-text-fill: -fx-color-accent;
 }
 
+/* Main content – large glass pane */
 .content-area {
-    -fx-background-color: -fx-color-surface;
-    -fx-background-radius: 24;
+    -fx-background-color: linear-gradient(to bottom,
+        rgba(255,255,255,0.92),
+        rgba(255,255,255,0.84));
+    -fx-background-radius: 28;
     -fx-padding: 28;
     -fx-spacing: 16;
-    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.06), 25, 0.4, 0, 12);
+    -fx-border-color: rgba(255,255,255,0.9);
+    -fx-border-radius: 28;
+    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.14), 28, 0.45, 0, 14);
 }
 
 .notification-area {
