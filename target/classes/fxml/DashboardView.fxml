@@ -3,6 +3,8 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.text.Text?>
+<?import javafx.scene.text.TextFlow?>
 
 <StackPane xmlns:fx="http://javafx.com/fxml" fx:controller="com.warehouse.controller.DashboardController" 
            stylesheets="/css/modern.css" styleClass="root dashboard">
@@ -11,8 +13,8 @@
     <BorderPane styleClass="dashboard-content">
         <!-- Top Section -->
         <top>
-            <HBox styleClass="dashboard-top" alignment="CENTER_LEFT" spacing="20" style="-fx-padding: 15 30;">
-                <!-- Logo and App Name -->
+            <HBox styleClass="dashboard-top" alignment="CENTER_LEFT" spacing="20" style="-fx-padding: 18 32;">
+                <!-- Left: Logo and App Name -->
                 <HBox spacing="12" alignment="CENTER_LEFT">
                     <ImageView fx:id="logoImage" fitHeight="40" fitWidth="40" pickOnBounds="true" preserveRatio="true"/>
                     <VBox spacing="2">
@@ -20,29 +22,22 @@
                         <Label text="Gestion d'Entrepôt" style="-fx-font-size: 12px; -fx-text-fill: #7f8c8d;"/>
                     </VBox>
                 </HBox>
-                
-                <Region HBox.hgrow="ALWAYS"/>
-                
-                <!-- Dynamic Duaa Display (Center) -->
-                <VBox alignment="CENTER_RIGHT" spacing="5" prefWidth="420" maxWidth="420">
-                    <Label fx:id="duaaHeadingLabel"
-                           styleClass="duaa-heading"
-                           wrapText="true"/>
-                    <Label fx:id="duaaLabel"
-                           styleClass="duaa-text"
-                           wrapText="true"/>
+
+                <!-- Arabic duaa centered between title and welcome -->
+                <VBox alignment="CENTER" spacing="6" HBox.hgrow="ALWAYS" maxWidth="Infinity">
+                    <TextFlow textAlignment="CENTER">
+                        <Text fx:id="duaaHeadingText" styleClass="duaa-heading"/>
+                    </TextFlow>
+                    <TextFlow textAlignment="CENTER">
+                        <Text fx:id="duaaText" styleClass="duaa-text"/>
+                    </TextFlow>
                 </VBox>
-                
+
                 <Region HBox.hgrow="ALWAYS"/>
-                
-                <!-- Welcome Message -->
-                <Label fx:id="welcomeLabel" text="Bienvenue!" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
-                
-                <Region HBox.hgrow="ALWAYS"/>
-                
-                <!-- User Info Section -->
-                <HBox alignment="CENTER_RIGHT" spacing="15">
-                    <Label fx:id="userInfoLabel" text="Utilisateur: Admin" style="-fx-font-size: 14px; -fx-text-fill: #7f8c8d;"/>
+
+                <!-- Right: Welcome, user, actions -->
+                <HBox alignment="CENTER_RIGHT" spacing="16">
+                    <Label fx:id="welcomeLabel" text="Bienvenue!" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;" prefWidth="220"/>
                     <Button fx:id="darkModeButton" text="🌙 Mode Sombre" onAction="#toggleDarkMode" styleClass="dashboard-button"/>
                     <Button fx:id="powerButton" text="⏻ Éteindre" onAction="#handleExit" styleClass="dashboard-button"/>
                     <Button fx:id="logoutButton" text="🚪 Déconnexion" onAction="#handleLogout" styleClass="dashboard-button"/>

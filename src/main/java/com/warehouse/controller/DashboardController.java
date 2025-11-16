@@ -21,6 +21,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.TextAlignment;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
+import javafx.scene.text.Text;
 import com.warehouse.model.User;
 import com.warehouse.model.UserDAO;
 import com.warehouse.util.ActivityLogger;
@@ -36,8 +37,8 @@ public class DashboardController {
     @FXML private ImageView logoImage;
     @FXML private Label welcomeLabel;
     @FXML private Label userInfoLabel;
-    @FXML private Label duaaHeadingLabel;
-    @FXML private Label duaaLabel;
+    @FXML private Text duaaHeadingText;
+    @FXML private Text duaaText;
     @FXML private Button logoutButton;
     @FXML private Button darkModeButton;
     @FXML private Button powerButton;
@@ -112,9 +113,9 @@ public class DashboardController {
      * Changes duaa every 10 seconds
      */
     private void startDuaaRotation() {
-        if (duaaLabel != null && !duaas.isEmpty()) {
+        if (duaaText != null && !duaas.isEmpty()) {
             // Set initial duaa
-            duaaLabel.setText(duaas.get(0));
+            duaaText.setText(duaas.get(0));
             
             // Schedule periodic rotation
             duaaRotationTimer = new Timer(true);
@@ -131,20 +132,20 @@ public class DashboardController {
      * Rotate to next duaa with smooth fade transition
      */
     private void rotateDuaa() {
-        if (duaaLabel == null) return;
+        if (duaaText == null) return;
         
         // Fade out
-        FadeTransition fadeOut = new FadeTransition(Duration.seconds(1), duaaLabel);
+        FadeTransition fadeOut = new FadeTransition(Duration.seconds(1), duaaText);
         fadeOut.setFromValue(1.0);
         fadeOut.setToValue(0.0);
         
         fadeOut.setOnFinished(e -> {
             // Change text
             currentDuaaIndex = (currentDuaaIndex + 1) % duaas.size();
-            duaaLabel.setText(duaas.get(currentDuaaIndex));
+            duaaText.setText(duaas.get(currentDuaaIndex));
             
             // Fade in
-            FadeTransition fadeIn = new FadeTransition(Duration.seconds(1), duaaLabel);
+            FadeTransition fadeIn = new FadeTransition(Duration.seconds(1), duaaText);
             fadeIn.setFromValue(0.0);
             fadeIn.setToValue(1.0);
             fadeIn.play();
@@ -181,49 +182,59 @@ public class DashboardController {
     }
 
     private void configureDuaaBanner() {
-        Font headingFont = resolveArabicFont(24);
-        Font textFont = resolveArabicFont(22);
+        Font headingFont = resolveArabicFont(18);
+        Font textFont = resolveArabicFont(16);
 
-        if (duaaHeadingLabel != null) {
-            duaaHeadingLabel.setWrapText(true);
-            duaaHeadingLabel.setNodeOrientation(NodeOrientation.RIGHT_TO_LEFT);
-            duaaHeadingLabel.setTextAlignment(TextAlignment.RIGHT);
-            duaaHeadingLabel.setAlignment(Pos.CENTER_RIGHT);
-            duaaHeadingLabel.setMaxWidth(Double.MAX_VALUE);
-            duaaHeadingLabel.setPrefWidth(420);
-            duaaHeadingLabel.setFont(headingFont);
-            duaaHeadingLabel.setTextFill(Color.web("#27ae60"));
-            duaaHeadingLabel.setText(duaaHeading);
+        if (duaaHeadingText != null) {
+            duaaHeadingText.setText(duaaHeading);
+            duaaHeadingText.setTextAlignment(TextAlignment.RIGHT);
+            duaaHeadingText.setFill(Color.web("#27ae60"));
+            duaaHeadingText.setFont(headingFont);
+            duaaHeadingText.setWrappingWidth(440);
         }
 
-        if (duaaLabel != null) {
-            duaaLabel.setWrapText(true);
-            duaaLabel.setNodeOrientation(NodeOrientation.RIGHT_TO_LEFT);
-            duaaLabel.setTextAlignment(TextAlignment.RIGHT);
-            duaaLabel.setAlignment(Pos.CENTER_RIGHT);
-            duaaLabel.setMaxWidth(Double.MAX_VALUE);
-            duaaLabel.setPrefWidth(420);
-            duaaLabel.setFont(textFont);
-            duaaLabel.setTextFill(Color.web("#2980b9"));
-            duaaLabel.setText(duaas.get(0));
+        if (duaaText != null) {
+            duaaText.setText(duaas.get(0));
+            duaaText.setTextAlignment(TextAlignment.RIGHT);
+            duaaText.setFill(Color.web("#2980b9"));
+            duaaText.setFont(textFont);
+            duaaText.setWrappingWidth(440);
         }
     }
 
     private Font resolveArabicFont(int size) {
+        // Prefer Arabic-capable system fonts without forcing BOLD (some fonts lack bold glyphs)
         String[] candidates = {
+            "Noto Naskh Arabic",
+            "Noto Sans Arabic",
             "Geeza Pro",
-            "PingFang ARABIC",
-            "Arial Unicode MS",
+            "Al Bayan",
             "Tahoma",
+            "Arial Unicode MS",
             "Arial"
         };
         for (String family : candidates) {
-            Font font = Font.font(family, FontWeight.BOLD, size);
-            if (font != null && family.equalsIgnoreCase(font.getFamily())) {
-                return font;
+            try {
+                Font font = Font.font(family, FontWeight.NORMAL, size);
+                if (font != null && font.getName() != null && font.getName().toLowerCase().contains(family.toLowerCase())) {
+                    return font;
+                }
+            } catch (Exception ignored) {
             }
         }
-        return Font.font("Arial", FontWeight.BOLD, size);
+        return Font.font("Arial", FontWeight.NORMAL, size);
+    }
+
+    @FXML
+    private void initializeNavbarLayout() {
+        // Prevent welcome and user info labels from being compressed to 0 width
+        if (welcomeLabel != null) {
+            welcomeLabel.setMinWidth(Region.USE_PREF_SIZE);
+        }
+        // Ensure action buttons keep readable size (CSS also enforces min-width)
+        if (darkModeButton != null) darkModeButton.setMinWidth(140);
+        if (powerButton != null) powerButton.setMinWidth(140);
+        if (logoutButton != null) logoutButton.setMinWidth(140);
     }
 
     public void setUser(String username, String role) {
@@ -232,8 +243,12 @@ public class DashboardController {
         
         // Update welcome message
         String roleDisplay = "admin".equals(role) ? "Administrateur" : "Employé";
-        welcomeLabel.setText("Bienvenue, " + username + "!");
-        userInfoLabel.setText("Utilisateur: " + username + " (" + roleDisplay + ")");
+        if (welcomeLabel != null) {
+            welcomeLabel.setText("Bienvenue, " + username);
+        }
+        if (userInfoLabel != null) {
+            userInfoLabel.setText("Utilisateur: " + username + " (" + roleDisplay + ")");
+        }
         
         // Show/hide admin buttons based on role
         boolean isAdmin = "admin".equals(role);
@@ -454,6 +469,7 @@ public class DashboardController {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/StatisticsView.fxml"));
             Parent statsRoot = loader.load();
             contentPane.getChildren().setAll(statsRoot);
+            VBox.setVgrow(statsRoot, Priority.ALWAYS);
             
             // Apply dark mode to new content if needed
             if (isDarkMode) {

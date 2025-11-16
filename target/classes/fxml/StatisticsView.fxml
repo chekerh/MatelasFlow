@@ -3,17 +3,19 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.geometry.Insets?>
 
-<VBox xmlns:fx="http://javafx.com/fxml" fx:controller="com.warehouse.controller.StatisticsController" 
-      spacing="20" alignment="TOP_CENTER" style="-fx-padding: 30;" stylesheets="/css/modern.css">
+<ScrollPane xmlns:fx="http://javafx.com/fxml" fx:controller="com.warehouse.controller.StatisticsController"
+            fitToWidth="true" fitToHeight="false" hbarPolicy="AS_NEEDED" vbarPolicy="AS_NEEDED" stylesheets="/css/modern.css">
+    <content>
+        <VBox spacing="20" alignment="TOP_CENTER" style="-fx-padding: 30;">
     
-    <!-- Header -->
-    <HBox spacing="12" alignment="CENTER_LEFT" style="-fx-padding: 0 0 20 0;">
+            <!-- Header -->
+            <HBox spacing="12" alignment="CENTER_LEFT" style="-fx-padding: 0 0 20 0;">
         <Label text="📊" style="-fx-font-size: 24px;"/>
         <Label text="Statistiques et Rapports" style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
-    </HBox>
+            </HBox>
     
-    <!-- Statistics Cards -->
-    <HBox spacing="20" alignment="CENTER">
+            <!-- Statistics Cards -->
+            <HBox spacing="20" alignment="CENTER">
         <VBox styleClass="stat-card" style="-fx-padding: 20; -fx-background-radius: 12; -fx-background-color: linear-gradient(to bottom, #4CAF50, #45a049);" alignment="CENTER" spacing="8">
             <Label text="📦" style="-fx-font-size: 32px;"/>
             <Label fx:id="stockLabel" text="Stock: 0" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: white;"/>
@@ -37,10 +39,10 @@
             <Label fx:id="lendsLabel" text="Prêts: 0" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: white;"/>
             <Label text="Transactions de prêt" style="-fx-font-size: 12px; -fx-text-fill: rgba(255,255,255,0.8);"/>
         </VBox>
-    </HBox>
+            </HBox>
     
-    <!-- Filter Section -->
-    <VBox styleClass="filter-section" style="-fx-padding: 20; -fx-background-radius: 12; -fx-background-color: rgba(255,255,255,0.9);" spacing="15">
+            <!-- Filter Section -->
+            <VBox styleClass="filter-section" style="-fx-padding: 20; -fx-background-radius: 12; -fx-background-color: rgba(255,255,255,0.9);" spacing="15">
         <Label text="🔍 Filtres" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
         <HBox spacing="20" alignment="CENTER">
             <VBox spacing="5">
@@ -58,24 +60,26 @@
                 <Button fx:id="resetButton" text="🔄 Réinitialiser" styleClass="button-accent-orange"/>
             </VBox>
         </HBox>
-    </VBox>
+            </VBox>
     
-    <!-- Transactions Table -->
-    <VBox spacing="10" VBox.vgrow="ALWAYS">
+            <!-- Transactions Table -->
+            <VBox spacing="10" VBox.vgrow="ALWAYS">
         <Label text="📋 Historique des Transactions" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
-        <TableView fx:id="transactionTable" styleClass="table-view" prefHeight="300">
-            <columns>
-                <TableColumn fx:id="dateColumn" text="Date" prefWidth="120" />
-                <TableColumn fx:id="typeColumn" text="Type" prefWidth="100" />
-                <TableColumn fx:id="mattressColumn" text="Matelas" prefWidth="150" />
-                <TableColumn fx:id="quantityColumn" text="Quantité" prefWidth="80" />
-                <TableColumn fx:id="storeOwnerColumn" text="Propriétaire" prefWidth="120" />
-                <TableColumn fx:id="prixColumn" text="Prix (€)" prefWidth="100" />
-                <TableColumn fx:id="notesColumn" text="Notes" prefWidth="200" />
-            </columns>
-        </TableView>
-    </VBox>
+                <TableView fx:id="transactionTable" styleClass="table-view" prefHeight="600" minHeight="450" minWidth="1200" VBox.vgrow="ALWAYS">
+                    <columns>
+                        <TableColumn fx:id="dateColumn" text="Date" prefWidth="180" />
+                        <TableColumn fx:id="typeColumn" text="Type" prefWidth="160" />
+                        <TableColumn fx:id="mattressColumn" text="Matelas" prefWidth="280" />
+                        <TableColumn fx:id="quantityColumn" text="Quantité" prefWidth="140" />
+                        <TableColumn fx:id="storeOwnerColumn" text="Propriétaire" prefWidth="220" />
+                        <TableColumn fx:id="prixColumn" text="Prix (DT)" prefWidth="180" />
+                        <TableColumn fx:id="notesColumn" text="Notes" prefWidth="360" />
+                    </columns>
+                </TableView>
+            </VBox>
     
-    <!-- Error Label -->
-    <Label fx:id="errorLabel" styleClass="error-label" style="-fx-font-size: 12px; -fx-text-fill: #e74c3c;"/>
-</VBox> 
+            <!-- Error Label -->
+            <Label fx:id="errorLabel" styleClass="error-label" style="-fx-font-size: 12px; -fx-text-fill: #e74c3c;"/>
+        </VBox>
+    </content>
+</ScrollPane>

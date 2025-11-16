@@ -8,17 +8,18 @@
 }
 /* Modern French UI for Login Screen */
 .root {
-    -fx-color-background: #f6f6f7;
-    -fx-color-background-alt: #ebecef;
-    -fx-color-surface: #ffffff;
-    -fx-color-surface-alt: #f2f2f4;
-    -fx-color-border: #e5e7eb;
-    -fx-color-text-primary: #111827;
-    -fx-color-text-secondary: #6b7280;
-    -fx-color-accent: #2563eb;
+    /* Grayscale base with blue accent */
+    -fx-color-background: #fafafa;          /* near white */
+    -fx-color-background-alt: #f2f2f2;      /* light gray */
+    -fx-color-surface: #ffffff;             /* white */
+    -fx-color-surface-alt: #f5f5f5;         /* off-white */
+    -fx-color-border: #e5e5e5;              /* subtle border */
+    -fx-color-text-primary: #111111;        /* black-ish */
+    -fx-color-text-secondary: #555555;      /* medium gray */
+    -fx-color-accent: #2563eb;              /* blue accent */
     -fx-color-accent-dark: #1e3a8a;
     -fx-color-accent-soft: rgba(37,99,235,0.12);
-    -fx-color-danger: #dc2626;
+    -fx-color-danger: #dc2626;              /* red for destructive actions */
     -fx-color-success: #16a34a;
     -fx-background-color: -fx-color-background;
     -fx-font-family: 'Inter', 'Segoe UI', 'Helvetica Neue', 'Arial', sans-serif;
@@ -331,11 +332,13 @@
 .duaa-heading {
     -fx-text-fill: #27ae60;
     -fx-font-weight: 700;
+    -fx-font-smoothing-type: gray;
 }
 
 .duaa-text {
     -fx-text-fill: #2980b9;
     -fx-font-weight: 600;
+    -fx-font-smoothing-type: gray;
 }
 
 .ghost-button {
@@ -407,6 +410,7 @@
     -fx-padding: 8 16;
     -fx-font-size: 13px;
     -fx-font-weight: 600;
+    -fx-min-width: 140px;
 }
 
 .dashboard-button:hover {
