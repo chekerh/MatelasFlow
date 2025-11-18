@@ -9,28 +9,28 @@
 /* Modern French UI for Login Screen */
 .root {
     /* Frosted glass base */
-    -fx-color-background: #f9fbff;
-    -fx-color-background-alt: #f0f5ff;
-    -fx-color-surface: rgba(255,255,255,0.48);
-    -fx-color-surface-alt: rgba(255,255,255,0.25);
-    -fx-color-border: rgba(255,255,255,0.48);
-    -fx-color-text-primary: #0d1320;
+    -fx-color-background: #fbfdff;
+    -fx-color-background-alt: #f4f8ff;
+    -fx-color-surface: rgba(255,255,255,0.38);
+    -fx-color-surface-alt: rgba(255,255,255,0.18);
+    -fx-color-border: rgba(255,255,255,0.38);
+    -fx-color-text-primary: #0c1220;
     -fx-color-text-secondary: #4a5568;
-    -fx-color-accent: #8fa3c3;
-    -fx-color-accent-dark: #7287a8;
-    -fx-color-accent-soft: rgba(143,163,195,0.15);
+    -fx-color-accent: #a4b7d8;
+    -fx-color-accent-dark: #8296b7;
+    -fx-color-accent-soft: rgba(164,183,216,0.12);
     -fx-color-danger: #dc2626;
     -fx-color-success: #16a34a;
     /* Glass tokens */
-    -fx-glass-highlight: rgba(255,255,255,0.90);
-    -fx-glass-mid: rgba(255,255,255,0.24);
-    -fx-glass-shadow: rgba(15,23,42,0.20);
-    -fx-glass-surface: rgba(255,255,255,0.32);
-    -fx-glass-surface-strong: rgba(255,255,255,0.58);
-    -fx-glass-border: rgba(255,255,255,0.45);
-    -fx-glass-border-strong: rgba(255,255,255,0.78);
+    -fx-glass-highlight: rgba(255,255,255,0.92);
+    -fx-glass-mid: rgba(255,255,255,0.18);
+    -fx-glass-shadow: rgba(15,23,42,0.18);
+    -fx-glass-surface: rgba(255,255,255,0.26);
+    -fx-glass-surface-strong: rgba(255,255,255,0.48);
+    -fx-glass-border: rgba(255,255,255,0.35);
+    -fx-glass-border-strong: rgba(255,255,255,0.68);
     -fx-button-text: #f9fcff;
-    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, #fbfdff 0%, #f3f7ff 45%, #eaf1ff 100%);
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, #fdfefe 0%, #f5f8ff 45%, #ecf2ff 100%);
     -fx-font-family: 'Inter', 'Segoe UI', 'Helvetica Neue', 'Arial', sans-serif;
     -fx-text-fill: -fx-color-text-primary;
 }
