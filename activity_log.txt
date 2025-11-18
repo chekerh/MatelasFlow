@@ -30,3 +30,17 @@
 [2025-11-16 16:44:48] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
 [2025-11-16 16:48:25] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
 [2025-11-18 07:33:08] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
+[2025-11-18 08:10:29] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
+[2025-11-18 08:10:53] cheker (admin) - Déconnexion: Déconnexion depuis le dashboard
+[2025-11-18 08:10:57] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
+[2025-11-18 10:49:08] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
+[2025-11-18 11:28:37] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
+[2025-11-18 11:40:10] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
+[2025-11-18 11:57:09] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
+[2025-11-18 11:57:18] cheker (admin) - Déconnexion: Déconnexion depuis le dashboard
+[2025-11-18 11:58:45] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
+[2025-11-18 12:05:01] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
+[2025-11-18 12:05:19] cheker (admin) - Déconnexion: Déconnexion depuis le dashboard
+[2025-11-18 12:57:13] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
+[2025-11-18 13:01:13] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
+[2025-11-18 13:02:10] cheker (admin) - Déconnexion: Déconnexion depuis le dashboard

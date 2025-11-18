@@ -15,8 +15,6 @@ import javafx.application.Platform;
 import javafx.animation.PauseTransition;
 import javafx.animation.FadeTransition;
 import javafx.util.Duration;
-import javafx.geometry.NodeOrientation;
-import javafx.geometry.Pos;
 import javafx.scene.paint.Color;
 import javafx.scene.text.TextAlignment;
 import javafx.scene.text.Font;
@@ -25,6 +23,8 @@ import javafx.scene.text.Text;
 import com.warehouse.model.User;
 import com.warehouse.model.UserDAO;
 import com.warehouse.util.ActivityLogger;
+import com.warehouse.util.ThemePreferences;
+import com.warehouse.controller.AdvancedFeaturesController;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -106,6 +106,40 @@ public class DashboardController {
         
         // Start dynamic duaa rotation
         startDuaaRotation();
+        
+        // Load and apply saved theme preference
+        applySavedTheme();
+    }
+    
+    /**
+     * Loads and applies the saved theme preference
+     */
+    private void applySavedTheme() {
+        try {
+            String savedTheme = ThemePreferences.loadTheme();
+            if (savedTheme != null && !savedTheme.isEmpty()) {
+                // Get the scene from any node
+                Scene scene = contentPane.getScene();
+                if (scene == null) {
+                    // If scene not ready yet, try to get it from root
+                    scene = contentPane.getScene();
+                    if (scene == null) {
+                        // Schedule to apply theme after scene is ready
+                        javafx.application.Platform.runLater(() -> {
+                            Scene laterScene = contentPane.getScene();
+                            if (laterScene != null) {
+                                AdvancedFeaturesController.applyThemeToScene(laterScene, savedTheme);
+                            }
+                        });
+                        return;
+                    }
+                }
+                AdvancedFeaturesController.applyThemeToScene(scene, savedTheme);
+            }
+        } catch (Exception e) {
+            System.err.println("Error applying saved theme: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
     
     /**

@@ -39,7 +39,7 @@
                 <HBox alignment="CENTER_RIGHT" spacing="16">
                     <Label fx:id="welcomeLabel" text="Bienvenue!" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;" prefWidth="220"/>
                     <Button fx:id="darkModeButton" text="Mode Sombre" onAction="#toggleDarkMode" styleClass="dashboard-button"/>
-                    <Button fx:id="powerButton" text="Éteindre" onAction="#handleExit" styleClass="dashboard-button button-danger"/>
+                    <Button fx:id="powerButton" text="Éteindre" onAction="#handleExit" styleClass="dashboard-button"/>
                     <Button fx:id="logoutButton" text="Déconnexion" onAction="#handleLogout" styleClass="dashboard-button"/>
                 </HBox>
             </HBox>

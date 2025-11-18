@@ -5,6 +5,8 @@ import javafx.scene.control.*;
 import com.warehouse.model.User;
 import com.warehouse.model.UserDAO;
 import com.warehouse.util.ActivityLogger;
+import com.warehouse.util.ThemePreferences;
+import com.warehouse.controller.AdvancedFeaturesController;
 import org.mindrot.jbcrypt.BCrypt;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -85,6 +87,14 @@ public class LoginController {
                 stage.setHeight(800);
                 stage.centerOnScreen();
                 stage.setMaximized(true);
+                
+                // Apply saved theme after scene is set
+                javafx.application.Platform.runLater(() -> {
+                    String savedTheme = ThemePreferences.loadTheme();
+                    if (savedTheme != null && !savedTheme.isEmpty()) {
+                        AdvancedFeaturesController.applyThemeToScene(scene, savedTheme);
+                    }
+                });
             } catch (Exception e) {
                 errorLabel.setText("Failed to load dashboard: " + e.getMessage());
                 e.printStackTrace();

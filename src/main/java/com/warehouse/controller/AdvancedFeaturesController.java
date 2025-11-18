@@ -6,21 +6,20 @@ import javafx.scene.layout.VBox;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Scene;
+import javafx.scene.Parent;
 import com.warehouse.ai.DemandPredictor;
 import com.warehouse.security.TwoFactorAuth;
 import com.warehouse.security.DataEncryption;
-import com.warehouse.ui.ThemeManager;
 import com.warehouse.integration.EcommerceIntegration;
 import com.warehouse.model.Mattress;
 import com.warehouse.model.MattressDAO;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.lang.StringBuilder;
 import java.util.Map;
 import java.util.stream.Collectors;
 import com.warehouse.model.Transaction;
 import com.warehouse.model.TransactionDAO;
+import com.warehouse.util.ThemePreferences;
 
 public class AdvancedFeaturesController {
     @FXML private TextArea aiResultsArea;
@@ -36,16 +35,23 @@ public class AdvancedFeaturesController {
     @FXML
     public void initialize() {
         setupComboBoxes();
+        // Load saved theme and select it in the combo box
+        String savedTheme = ThemePreferences.loadTheme();
+        if (savedTheme != null && !savedTheme.isEmpty()) {
+            themeComboBox.getSelectionModel().select(savedTheme);
+        }
         updateStatus("Interface des fonctionnalités avancées chargée");
     }
     
     private void setupComboBoxes() {
-        // Thèmes
+        // Thèmes - Original Layout first, then others
         ObservableList<String> themes = FXCollections.observableArrayList(
-            "Modern Blue", "Dark Purple", "Green Nature", 
-            "Orange Sunset", "Pink Rose", "Corporate Gray"
+            "Original Layout", "Modern Blue", "Dark Purple", "Green Nature", 
+            "Orange Sunset", "Pink Rose", "Corporate Gray",
+            "Frost Gray", "Mist Blue", "Sea Glass"
         );
         themeComboBox.setItems(themes);
+        // Default to first item, but will be overridden by saved theme if exists
         themeComboBox.getSelectionModel().selectFirst();
         
         // E-commerce
@@ -193,7 +199,6 @@ public class AdvancedFeaturesController {
             
             // Analyser les vraies données
             List<Transaction> allTransactions = TransactionDAO.getAllTransactions();
-            List<Mattress> allMattresses = MattressDAO.getAllMattresses();
             
             if (allTransactions.isEmpty()) {
                 sb.append("ℹ️  Aucune donnée de transaction disponible.\n");
@@ -434,6 +439,16 @@ public class AdvancedFeaturesController {
         try {
             String selectedTheme = themeComboBox.getValue();
             if (selectedTheme != null) {
+                // Get the Scene from any node
+                Scene scene = themeComboBox.getScene();
+                if (scene == null) {
+                    updateStatus("❌ Impossible d'accéder à la scène");
+                    return;
+                }
+                
+                // Apply theme to entire application
+                applyThemeToApplication(scene, selectedTheme);
+                
                 StringBuilder sb = new StringBuilder();
                 sb.append("🎨 APPLICATION DE THÈME\n");
                 sb.append("═══════════════════════\n\n");
@@ -448,44 +463,11 @@ public class AdvancedFeaturesController {
                 
                 sb.append("🎯 DÉTAILS DU THÈME:\n");
                 sb.append("─────────────────────\n");
-                switch (selectedTheme) {
-                    case "Modern Blue":
-                        sb.append("• Couleur primaire: Bleu moderne (#2196F3)\n");
-                        sb.append("• Couleur secondaire: Bleu foncé (#1976D2)\n");
-                        sb.append("• Accent: Blanc (#FFFFFF)\n");
-                        sb.append("• Style: Professionnel et moderne\n\n");
-                        break;
-                    case "Dark Purple":
-                        sb.append("• Couleur primaire: Violet foncé (#673AB7)\n");
-                        sb.append("• Couleur secondaire: Violet clair (#9575CD)\n");
-                        sb.append("• Accent: Blanc (#FFFFFF)\n");
-                        sb.append("• Style: Élégant et sophistiqué\n\n");
-                        break;
-                    case "Green Nature":
-                        sb.append("• Couleur primaire: Vert nature (#4CAF50)\n");
-                        sb.append("• Couleur secondaire: Vert clair (#81C784)\n");
-                        sb.append("• Accent: Blanc (#FFFFFF)\n");
-                        sb.append("• Style: Écologique et apaisant\n\n");
-                        break;
-                    case "Orange Sunset":
-                        sb.append("• Couleur primaire: Orange coucher de soleil (#FF9800)\n");
-                        sb.append("• Couleur secondaire: Orange clair (#FFB74D)\n");
-                        sb.append("• Accent: Blanc (#FFFFFF)\n");
-                        sb.append("• Style: Énergique et chaleureux\n\n");
-                        break;
-                    case "Pink Rose":
-                        sb.append("• Couleur primaire: Rose (#E91E63)\n");
-                        sb.append("• Couleur secondaire: Rose clair (#F48FB1)\n");
-                        sb.append("• Accent: Blanc (#FFFFFF)\n");
-                        sb.append("• Style: Romantique et doux\n\n");
-                        break;
-                    case "Corporate Gray":
-                        sb.append("• Couleur primaire: Gris corporate (#607D8B)\n");
-                        sb.append("• Couleur secondaire: Gris clair (#90A4AE)\n");
-                        sb.append("• Accent: Blanc (#FFFFFF)\n");
-                        sb.append("• Style: Professionnel et sobre\n\n");
-                        break;
-                }
+                ThemeColors colors = getThemeColors(selectedTheme);
+                sb.append("• Couleur primaire: ").append(colors.primary).append("\n");
+                sb.append("• Couleur secondaire: ").append(colors.secondary).append("\n");
+                sb.append("• Couleur d'accent: ").append(colors.accent).append("\n");
+                sb.append("• Style: ").append(colors.description).append("\n\n");
                 
                 sb.append("📱 ÉLÉMENTS MODIFIÉS:\n");
                 sb.append("─────────────────────\n");
@@ -495,22 +477,235 @@ public class AdvancedFeaturesController {
                 sb.append("• Textes et icônes\n");
                 sb.append("• Tableaux et formulaires\n\n");
                 
-                sb.append("💾 PERSISTANCE:\n");
-                sb.append("───────────────\n");
-                sb.append("• Thème sauvegardé automatiquement\n");
-                sb.append("• Restauration au prochain démarrage\n");
-                sb.append("• Synchronisation entre sessions\n\n");
-                
                 // Mettre à jour l'aperçu du thème
                 updateThemePreview(selectedTheme);
                 
-                updateStatus("✅ Thème " + selectedTheme + " appliqué avec succès");
+                // Save theme preference
+                ThemePreferences.saveTheme(selectedTheme);
+                
+                updateStatus("✅ Thème " + selectedTheme + " appliqué avec succès et sauvegardé");
                 
             } else {
                 updateStatus("❌ Veuillez sélectionner un thème");
             }
         } catch (Exception e) {
             updateStatus("❌ Erreur lors de l'application du thème: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * Public method to apply theme - can be called from other controllers
+     */
+    public static void applyThemeToScene(Scene scene, String themeName) {
+        if (scene == null || themeName == null) {
+            return;
+        }
+        
+        AdvancedFeaturesController controller = new AdvancedFeaturesController();
+        controller.applyThemeToApplication(scene, themeName);
+    }
+    
+    private void applyThemeToApplication(Scene scene, String themeName) {
+        ThemeColors colors = getThemeColors(themeName);
+        Parent root = scene.getRoot();
+        
+        // Build comprehensive dynamic CSS string
+        String dynamicCSS = String.format(
+            ".root { " +
+            "-fx-color-accent: %s !important; " +
+            "-fx-color-accent-dark: %s !important; " +
+            "-fx-color-accent-soft: %s !important; " +
+            "} " +
+            ".button:not(.button-danger):not(#deleteButton):not(#powerButton) { " +
+            "-fx-background-color: linear-gradient(to bottom, %s, %s) !important; " +
+            "-fx-effect: dropshadow(gaussian, %s, 10, 0.35, 0, 4) !important; " +
+            "} " +
+            ".button:not(.button-danger):not(#deleteButton):not(#powerButton):hover { " +
+            "-fx-background-color: linear-gradient(to bottom, %s, %s) !important; " +
+            "-fx-effect: dropshadow(gaussian, %s, 18, 0.35, 0, 8) !important; " +
+            "} " +
+            ".nav-button { " +
+            "-fx-background-color: %s !important; " +
+            "} " +
+            ".nav-button:hover { " +
+            "-fx-background-color: %s !important; " +
+            "} " +
+            ".nav-button.selected { " +
+            "-fx-background-color: %s !important; " +
+            "} " +
+            ".dashboard-button:not(.button-danger):not(#deleteButton):not(#powerButton) { " +
+            "-fx-background-color: linear-gradient(to bottom, %s, %s) !important; " +
+            "-fx-effect: dropshadow(gaussian, %s, 10, 0.35, 0, 4) !important; " +
+            "} " +
+            ".dashboard-button:not(.button-danger):not(#deleteButton):not(#powerButton):hover { " +
+            "-fx-background-color: linear-gradient(to bottom, %s, %s) !important; " +
+            "-fx-effect: dropshadow(gaussian, %s, 18, 0.35, 0, 8) !important; " +
+            "} " +
+            ".button-enhanced { " +
+            "-fx-background-color: linear-gradient(to bottom, %s, %s) !important; " +
+            "} " +
+            ".button-enhanced:hover { " +
+            "-fx-background-color: linear-gradient(to bottom, %s, %s) !important; " +
+            "}",
+            colors.accent,
+            colors.accentDark,
+            colors.accentSoft,
+            colors.accent, colors.accentDark,
+            colors.shadowColor,
+            colors.accentHover, colors.accent,
+            colors.shadowColorHover,
+            colors.accentSoft,
+            colors.accentHover,
+            colors.accent,
+            colors.accent, colors.accentDark,
+            colors.shadowColor,
+            colors.accentHover, colors.accent,
+            colors.shadowColorHover,
+            colors.accent, colors.accentDark,
+            colors.accentHover, colors.accent
+        );
+        
+        // Remove previous theme stylesheet if exists
+        scene.getStylesheets().removeIf(url -> url != null && url.contains("data:text/css"));
+        
+        // Create data URL for dynamic CSS
+        try {
+            String dataUrl = "data:text/css;charset=utf-8," + java.net.URLEncoder.encode(dynamicCSS, java.nio.charset.StandardCharsets.UTF_8);
+            scene.getStylesheets().add(dataUrl);
+        } catch (Exception e) {
+            // Fallback: apply style directly to root
+            System.err.println("Error encoding CSS: " + e.getMessage());
+        }
+        
+        // Also apply style directly to root for immediate effect
+        root.setStyle(dynamicCSS);
+        
+        // Apply theme recursively to all buttons and nav elements
+        applyThemeToNodes(root, colors);
+    }
+    
+    private void applyThemeToNodes(Parent parent, ThemeColors colors) {
+        for (javafx.scene.Node node : parent.getChildrenUnmodifiable()) {
+            if (node instanceof Button) {
+                Button btn = (Button) node;
+                // Only apply to non-danger buttons
+                String btnId = btn.getId();
+                if (!btn.getStyleClass().contains("button-danger") && 
+                    (btnId == null || (!btnId.equals("deleteButton") && !btnId.equals("powerButton")))) {
+                    String btnStyle = String.format(
+                        "-fx-background-color: linear-gradient(to bottom, %s, %s) !important; " +
+                        "-fx-effect: dropshadow(gaussian, %s, 10, 0.35, 0, 4) !important;",
+                        colors.accent, colors.accentDark, colors.shadowColor
+                    );
+                    btn.setStyle(btnStyle);
+                }
+            }
+            if (node instanceof Parent) {
+                applyThemeToNodes((Parent) node, colors);
+            }
+        }
+    }
+    
+    private static class ThemeColors {
+        String primary;
+        String secondary;
+        String accent;
+        String accentDark;
+        String accentHover;
+        String accentSoft;
+        String shadowColor;
+        String shadowColorHover;
+        String description;
+        
+        ThemeColors(String primary, String secondary, String accent, String accentDark, 
+                   String accentHover, String accentSoft, String shadowColor, String shadowColorHover, String description) {
+            this.primary = primary;
+            this.secondary = secondary;
+            this.accent = accent;
+            this.accentDark = accentDark;
+            this.accentHover = accentHover;
+            this.accentSoft = accentSoft;
+            this.shadowColor = shadowColor;
+            this.shadowColorHover = shadowColorHover;
+            this.description = description;
+        }
+    }
+    
+    private ThemeColors getThemeColors(String themeName) {
+        switch (themeName) {
+            case "Original Layout":
+                return new ThemeColors(
+                    "#dfe6f5", "#b9c7df", "#c7d4ec", "#9fb0cb",
+                    "#e9effa", "rgba(206,220,242,0.12)",
+                    "rgba(191,210,236,0.22)", "rgba(161,183,217,0.28)",
+                    "Verre quasi transparent inspiré d'iOS"
+                );
+            case "Modern Blue":
+                return new ThemeColors(
+                    "#2196F3", "#1976D2", "#2196F3", "#1976D2",
+                    "#42A5F5", "rgba(33,150,243,0.12)",
+                    "rgba(33,150,243,0.25)", "rgba(33,150,243,0.35)",
+                    "Professionnel et moderne"
+                );
+            case "Dark Purple":
+                return new ThemeColors(
+                    "#673AB7", "#512DA8", "#673AB7", "#512DA8",
+                    "#7E57C2", "rgba(103,58,183,0.12)",
+                    "rgba(103,58,183,0.25)", "rgba(103,58,183,0.35)",
+                    "Élégant et sophistiqué"
+                );
+            case "Green Nature":
+                return new ThemeColors(
+                    "#4CAF50", "#388E3C", "#4CAF50", "#388E3C",
+                    "#66BB6A", "rgba(76,175,80,0.12)",
+                    "rgba(76,175,80,0.25)", "rgba(76,175,80,0.35)",
+                    "Écologique et apaisant"
+                );
+            case "Orange Sunset":
+                return new ThemeColors(
+                    "#FF9800", "#F57C00", "#FF9800", "#F57C00",
+                    "#FFB74D", "rgba(255,152,0,0.12)",
+                    "rgba(255,152,0,0.25)", "rgba(255,152,0,0.35)",
+                    "Énergique et chaleureux"
+                );
+            case "Pink Rose":
+                return new ThemeColors(
+                    "#E91E63", "#C2185B", "#E91E63", "#C2185B",
+                    "#F48FB1", "rgba(233,30,99,0.12)",
+                    "rgba(233,30,99,0.25)", "rgba(233,30,99,0.35)",
+                    "Romantique et doux"
+                );
+            case "Corporate Gray":
+                return new ThemeColors(
+                    "#607D8B", "#455A64", "#607D8B", "#455A64",
+                    "#78909C", "rgba(96,125,139,0.12)",
+                    "rgba(96,125,139,0.25)", "rgba(96,125,139,0.35)",
+                    "Professionnel et sobre"
+                );
+            case "Frost Gray":
+                return new ThemeColors(
+                    "#7A8C9F", "#5F6F80", "#7A8C9F", "#5F6F80",
+                    "#93A3B5", "rgba(122,140,159,0.18)",
+                    "rgba(122,140,159,0.28)", "rgba(122,140,159,0.36)",
+                    "Gris glacé doux type panneau de contrôle"
+                );
+            case "Mist Blue":
+                return new ThemeColors(
+                    "#8BB7D9", "#6DA0C5", "#8BB7D9", "#6DA0C5",
+                    "#A2C7E2", "rgba(139,183,217,0.18)",
+                    "rgba(139,183,217,0.28)", "rgba(139,183,217,0.36)",
+                    "Bleu brumeux lumineux"
+                );
+            case "Sea Glass":
+                return new ThemeColors(
+                    "#7AC8C1", "#5AAEA7", "#7AC8C1", "#5AAEA7",
+                    "#92D6CF", "rgba(122,200,193,0.18)",
+                    "rgba(122,200,193,0.28)", "rgba(122,200,193,0.36)",
+                    "Vert mer translucide"
+                );
+            default:
+                return getThemeColors("Original Layout");
         }
     }
     
@@ -596,15 +791,8 @@ public class AdvancedFeaturesController {
     }
     
     private String getThemeColor(String themeName) {
-        switch (themeName) {
-            case "Modern Blue": return "#2196F3";
-            case "Dark Purple": return "#673AB7";
-            case "Green Nature": return "#4CAF50";
-            case "Orange Sunset": return "#FF9800";
-            case "Pink Rose": return "#E91E63";
-            case "Corporate Gray": return "#607D8B";
-            default: return "#2196F3";
-        }
+        ThemeColors colors = getThemeColors(themeName);
+        return colors.accent;
     }
     
     // === Intégrations ===
