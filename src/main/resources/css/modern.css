@@ -16,15 +16,60 @@
     -fx-color-border: #e5e5e5;              /* subtle border */
     -fx-color-text-primary: #111111;        /* black-ish */
     -fx-color-text-secondary: #555555;      /* medium gray */
-    -fx-color-accent: #2563eb;              /* blue accent */
-    -fx-color-accent-dark: #1e3a8a;
-    -fx-color-accent-soft: rgba(37,99,235,0.12);
+    -fx-color-accent: #0f1f3d;              /* darker blue, closer to black */
+    -fx-color-accent-dark: #0a152b;
+    -fx-color-accent-soft: rgba(15,31,61,0.12);
     -fx-color-danger: #dc2626;              /* red for destructive actions */
     -fx-color-success: #16a34a;
     -fx-background-color: -fx-color-background;
     -fx-font-family: 'Inter', 'Segoe UI', 'Helvetica Neue', 'Arial', sans-serif;
     -fx-text-fill: -fx-color-text-primary;
 }
+
+/* Global button system: blue default, red danger */
+.button {
+    -fx-background-color: linear-gradient(to bottom, -fx-color-accent, derive(-fx-color-accent, -12%));
+    -fx-text-fill: #ffffff;
+    -fx-background-radius: 14;
+    -fx-border-radius: 14;
+    -fx-padding: 10 18;
+    -fx-font-size: 14px;
+    -fx-font-weight: 600;
+    -fx-effect: dropshadow(gaussian, rgba(37,99,235,0.22), 10, 0.35, 0, 4);
+}
+.button:hover {
+    -fx-background-color: linear-gradient(to bottom, derive(-fx-color-accent, -6%), -fx-color-accent);
+    -fx-effect: dropshadow(gaussian, rgba(15,31,61,0.25), 18, 0.35, 0, 8);
+    -fx-translate-y: -1;
+}
+.button {
+    -fx-transition: all 120ms ease-in-out;
+}
+.button:pressed {
+    -fx-effect: none;
+    -fx-translate-y: 1;
+}
+
+.button-danger, #deleteButton, #powerButton {
+    -fx-background-color: linear-gradient(to bottom, -fx-color-danger, derive(-fx-color-danger, -12%));
+    -fx-text-fill: #ffffff;
+    -fx-effect: dropshadow(gaussian, rgba(220,38,38,0.25), 10, 0.35, 0, 4);
+}
+.button-danger:hover, #deleteButton:hover, #powerButton:hover {
+    -fx-background-color: linear-gradient(to bottom, derive(-fx-color-danger, -6%), -fx-color-danger);
+}
+
+/* iOS-like glass containers */
+.dashboard-top, .nav-panel, .content-area {
+    -fx-background-color: linear-gradient(to bottom, rgba(255,255,255,0.85), rgba(255,255,255,0.78));
+    -fx-background-radius: 22;
+    -fx-border-color: rgba(255,255,255,0.9);
+    -fx-border-radius: 22;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.10), 20, 0.35, 0, 8);
+}
+.dashboard-top { -fx-background-radius: 0 0 22 22; }
+.content-area { -fx-background-radius: 24; -fx-padding: 24; }
+.nav-panel { -fx-background-radius: 24; }
 
 /* Dashboard specific styling – soft macOS-like gradient */
 .root.dashboard {
@@ -354,6 +399,49 @@
     -fx-text-fill: -fx-color-accent;
 }
 
+/* Compact circular icon-only button for table cells */
+.icon-button {
+    -fx-background-color: rgba(15,31,61,0.08) !important;
+    -fx-text-fill: -fx-color-text-primary !important;
+    -fx-background-radius: 999;
+    -fx-border-radius: 999;
+    -fx-padding: 4 8;
+    -fx-min-width: 28px;
+    -fx-min-height: 28px;
+    -fx-max-width: 28px;
+    -fx-max-height: 28px;
+    -fx-font-size: 14px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 6, 0.3, 0, 2);
+}
+.icon-button:hover {
+    -fx-background-color: rgba(15,31,61,0.16) !important;
+}
+
+/* Make sure icon-only buttons don't inherit primary blue */
+.root .icon-button {
+    -fx-background-color: rgba(15,31,61,0.08) !important;
+    -fx-text-fill: -fx-color-text-primary !important;
+}
+
+/* Login screen polish: slightly translucent blue for modern feel */
+.login-button {
+    -fx-background-color: linear-gradient(to bottom, rgba(15,31,61,0.78), rgba(15,31,61,0.70));
+    -fx-text-fill: #ffffff;
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-padding: 14 20;
+    -fx-font-size: 16px;
+    -fx-font-weight: 600;
+    -fx-effect: dropshadow(gaussian, rgba(15,31,61,0.25), 18, 0.35, 0, 6);
+}
+.login-button:hover {
+    -fx-background-color: linear-gradient(to bottom, rgba(15,31,61,0.84), rgba(15,31,61,0.76));
+}
+.login-button:pressed {
+    -fx-effect: none;
+    -fx-translate-y: 1;
+}
+
 .signup-root {
     -fx-background-color: -fx-color-surface;
     -fx-background-radius: 12;
@@ -421,8 +509,8 @@
 /* Left navigation – glassy sidebar */
 .nav-panel {
     -fx-background-color: linear-gradient(to bottom,
-        rgba(255,255,255,0.88),
-        rgba(255,255,255,0.80));
+        rgba(255,255,255,0.94),
+        rgba(255,255,255,0.86));
     -fx-background-radius: 26;
     -fx-border-color: rgba(255,255,255,0.9);
     -fx-border-radius: 26;
@@ -431,9 +519,9 @@
 
 /* Sidebar buttons – pill-shaped Mac style */
 .nav-button {
-    -fx-background-color: transparent;
+    -fx-background-color: rgba(255,255,255,0.35);
     -fx-text-fill: -fx-color-text-primary;
-    -fx-border-color: transparent;
+    -fx-border-color: rgba(255,255,255,0.5);
     -fx-border-radius: 999;
     -fx-background-radius: 999;
     -fx-padding: 10 18;
@@ -444,8 +532,23 @@
 }
 
 .nav-button:hover {
-    -fx-background-color: rgba(37,99,235,0.12);
+    -fx-background-color: rgba(15,31,61,0.12);
     -fx-text-fill: -fx-color-accent;
+}
+
+/* Icon sizing inside nav and buttons */
+.nav-button ImageView {
+    -fx-fit-width: 18;
+    -fx-fit-height: 18;
+    -fx-opacity: 0.9;
+}
+.nav-button > .graphic {
+    -fx-padding: 0 8 0 0;
+}
+.dashboard-button ImageView {
+    -fx-fit-width: 16;
+    -fx-fit-height: 16;
+    -fx-opacity: 0.95;
 }
 
 /* Main content – large glass pane */
@@ -529,6 +632,7 @@
     -fx-border-radius: 16;
     -fx-padding: 0;
     -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.05), 16, 0.4, 0, 8);
+    -fx-font-size: 14px;
 }
 
 .table-view .column-header-background {
@@ -560,6 +664,18 @@
 .table-view .label {
     -fx-text-fill: #111111;
     -fx-fill: #111111;
+}
+
+/* Pills for dashboard controls */
+.dashboard-button {
+    -fx-background-color: linear-gradient(to bottom, -fx-color-accent, derive(-fx-color-accent, -8%));
+    -fx-text-fill: white;
+    -fx-background-radius: 999;
+    -fx-border-radius: 999;
+    -fx-padding: 10 18;
+    -fx-font-size: 14px;
+    -fx-font-weight: 600;
+    -fx-effect: dropshadow(gaussian, rgba(15,31,61,0.18), 14, 0.35, 0, 6);
 }
 
 .dashboard-content {
@@ -829,6 +945,32 @@
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.4), 20, 0.2, 0, 8);
 }
 
+/* Modernized alert without default exclamation icon look */
+.modern-alert {
+    -fx-background-color: linear-gradient(to bottom, rgba(255,255,255,0.96), rgba(255,255,255,0.9));
+    -fx-background-radius: 16;
+    -fx-border-color: rgba(0,0,0,0.06);
+    -fx-border-radius: 16;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.18), 18, 0.3, 0, 6);
+}
+.modern-alert .header-panel .label {
+    -fx-text-fill: -fx-color-text-primary;
+    -fx-font-weight: 700;
+}
+.modern-alert .content {
+    -fx-text-fill: -fx-color-text-secondary;
+}
+.modern-alert > *.button-bar > *.container > .button {
+    -fx-background-color: linear-gradient(to bottom, -fx-color-accent, derive(-fx-color-accent, -10%));
+    -fx-text-fill: white;
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+}
+.modern-alert > *.button-bar > *.container > .button:cancel {
+    -fx-background-color: rgba(0,0,0,0.06);
+    -fx-text-fill: -fx-color-text-primary;
+}
+
 .button-accent-green {
     -fx-background-color: linear-gradient(to bottom, #4caf50, #388e3c);
     -fx-text-fill: white;
@@ -967,6 +1109,42 @@
 .dark-mode .combo-box-popup .list-view .list-cell:hover {
     -fx-background-color: rgba(255,255,255,0.1);
 } 
+
+/* =========================
+   Final overrides (ensure new theme wins)
+   ========================= */
+.root .button {
+    -fx-background-color: linear-gradient(to bottom, -fx-color-accent, derive(-fx-color-accent, -12%)) !important;
+    -fx-text-fill: #ffffff !important;
+    -fx-background-radius: 14 !important;
+    -fx-border-radius: 14 !important;
+    -fx-font-weight: 600 !important;
+}
+.root .toolbar .button {
+    -fx-min-height: 40 !important;
+    -fx-padding: 8 16 !important;
+    -fx-font-size: 14px !important;
+}
+.root #navBox .button {
+    -fx-background-color: rgba(255,255,255,0.18) !important;
+    -fx-text-fill: -fx-color-text-primary !important;
+    -fx-border-color: rgba(255,255,255,0.45) !important;
+    -fx-background-radius: 999 !important;
+    -fx-border-radius: 999 !important;
+}
+.root .dashboard-button {
+    -fx-background-color: linear-gradient(to bottom, -fx-color-accent, derive(-fx-color-accent, -12%)) !important;
+    -fx-text-fill: #ffffff !important;
+}
+.root .button-danger, .root #deleteButton, .root #powerButton {
+    -fx-background-color: linear-gradient(to bottom, -fx-color-danger, derive(-fx-color-danger, -12%)) !important;
+    -fx-text-fill: #ffffff !important;
+}
+/* Ensure icon-button keeps neutral fill, after all overrides */
+.root .icon-button {
+    -fx-background-color: rgba(15,31,61,0.10) !important;
+    -fx-text-fill: -fx-color-text-primary !important;
+}
 
 /* Advanced ComboBox styling */
 .combo-box {

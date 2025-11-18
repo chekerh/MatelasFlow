@@ -311,10 +311,10 @@ public class DashboardController {
         // Update logo for dark mode
         try {
             if (isDarkMode) {
-                Image logo = new Image(getClass().getResource("/images/white-logo.png").toExternalForm());
+                Image logo = new Image(getClass().getResource("/images/SuperMousse.jpg").toExternalForm());
                 logoImage.setImage(logo);
             } else {
-                Image logo = new Image(getClass().getResource("/images/dark-logo.png").toExternalForm());
+                Image logo = new Image(getClass().getResource("/images/SuperMousse.jpg").toExternalForm());
                 logoImage.setImage(logo);
             }
         } catch (Exception e) {
@@ -330,6 +330,10 @@ public class DashboardController {
         alert.setHeaderText("Voulez-vous vraiment quitter MatelasPro ?");
         alert.setContentText("Toutes les fenêtres seront fermées.");
         alert.initOwner(((Node) event.getSource()).getScene().getWindow());
+        alert.setGraphic(null);
+        if (alert.getDialogPane() != null) {
+            alert.getDialogPane().getStyleClass().add("modern-alert");
+        }
 
         alert.showAndWait().ifPresent(result -> {
             if (result == ButtonType.OK) {

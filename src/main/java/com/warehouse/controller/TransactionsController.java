@@ -310,10 +310,11 @@ public class TransactionsController {
     }
 
     private class AddButtonCell extends TableCell<Transaction, Void> {
-        private final Button addButton = new Button("➕");
+        private final Button addButton = new Button("\uFF0B");
 
         AddButtonCell() {
-            addButton.getStyleClass().add("ghost-button");
+            addButton.getStyleClass().addAll("icon-button");
+            addButton.setStyle("-fx-font-weight: 700;");
             addButton.setMaxWidth(Double.MAX_VALUE);
             addButton.setTooltip(new Tooltip("Ajouter un matelas (+1)"));
             addButton.setOnAction(event -> {

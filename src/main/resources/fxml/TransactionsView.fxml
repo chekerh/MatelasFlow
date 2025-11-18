@@ -9,7 +9,7 @@
     <!-- View mode selector: allows different column sets per transaction type -->
     <HBox spacing="10" alignment="CENTER_RIGHT">
         <Label text="Vue :" style="-fx-text-fill: #555;"/>
-        <ComboBox fx:id="viewModeComboBox" prefWidth="220" promptText="Toutes les transactions"/>
+        <ComboBox fx:id="viewModeComboBox" prefWidth="300" promptText="Toutes les transactions"  />
     </HBox>
     <ScrollPane fitToWidth="true" fitToHeight="true" hbarPolicy="AS_NEEDED" vbarPolicy="AS_NEEDED" styleClass="table-scroll">
         <TableView fx:id="transactionTable" prefHeight="400" minWidth="1100" styleClass="transactions-table">
@@ -27,7 +27,7 @@
             </columns>
         </TableView>
     </ScrollPane>
-    <HBox spacing="14" alignment="CENTER">
+    <HBox spacing="14" alignment="CENTER" styleClass="toolbar">
         <Button fx:id="addButton" text="Ajouter une transaction" onAction="#handleAdd">
             <tooltip><Tooltip text="Ajouter une transaction"/></tooltip>
         </Button>
@@ -37,7 +37,7 @@
         <Button fx:id="pdfReportButton" text="Générer PDF" onAction="#handlePdfReport">
             <tooltip><Tooltip text="Générer le rapport PDF du jour sélectionné"/></tooltip>
         </Button>
-        <Button fx:id="deleteButton" text="Supprimer" onAction="#handleDelete">
+        <Button fx:id="deleteButton" text="Supprimer" onAction="#handleDelete" styleClass="button-danger">
             <tooltip><Tooltip text="Supprimer la transaction sélectionnée"/></tooltip>
         </Button>
         <DatePicker fx:id="reportDatePicker" promptText="Date du rapport" />

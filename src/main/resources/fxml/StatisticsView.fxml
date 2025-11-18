@@ -65,15 +65,15 @@
             <!-- Transactions Table -->
             <VBox spacing="10" VBox.vgrow="ALWAYS">
         <Label text="📋 Historique des Transactions" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;"/>
-                <TableView fx:id="transactionTable" styleClass="table-view" prefHeight="600" minHeight="450" minWidth="1200" VBox.vgrow="ALWAYS">
+                <TableView fx:id="transactionTable" styleClass="table-view" prefHeight="520" minHeight="420" VBox.vgrow="ALWAYS">
                     <columns>
-                        <TableColumn fx:id="dateColumn" text="Date" prefWidth="180" />
-                        <TableColumn fx:id="typeColumn" text="Type" prefWidth="160" />
-                        <TableColumn fx:id="mattressColumn" text="Matelas" prefWidth="280" />
-                        <TableColumn fx:id="quantityColumn" text="Quantité" prefWidth="140" />
-                        <TableColumn fx:id="storeOwnerColumn" text="Propriétaire" prefWidth="220" />
-                        <TableColumn fx:id="prixColumn" text="Prix (DT)" prefWidth="180" />
-                        <TableColumn fx:id="notesColumn" text="Notes" prefWidth="360" />
+                        <TableColumn fx:id="dateColumn" text="Date" prefWidth="120" />
+                        <TableColumn fx:id="typeColumn" text="Type" prefWidth="120" />
+                        <TableColumn fx:id="mattressColumn" text="Matelas" prefWidth="200" />
+                        <TableColumn fx:id="quantityColumn" text="Quantité" prefWidth="90" />
+                        <TableColumn fx:id="storeOwnerColumn" text="Propriétaire" prefWidth="140" />
+                        <TableColumn fx:id="prixColumn" text="Prix (DT)" prefWidth="120" />
+                        <TableColumn fx:id="notesColumn" text="Notes" prefWidth="210" />
                     </columns>
                 </TableView>
             </VBox>

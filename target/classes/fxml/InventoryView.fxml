@@ -15,14 +15,14 @@
             </columns>
         </TableView>
     </ScrollPane>
-    <HBox spacing="14" alignment="CENTER">
+    <HBox spacing="14" alignment="CENTER" styleClass="toolbar">
         <Button fx:id="addButton" text="Ajouter" onAction="#handleAdd">
             <tooltip><Tooltip text="Ajouter un matelas"/></tooltip>
         </Button>
         <Button fx:id="editButton" text="Modifier" onAction="#handleEdit">
             <tooltip><Tooltip text="Modifier le matelas sélectionné"/></tooltip>
         </Button>
-        <Button fx:id="deleteButton" text="Supprimer" onAction="#handleDelete">
+        <Button fx:id="deleteButton" text="Supprimer" onAction="#handleDelete" styleClass="button-danger">
             <tooltip><Tooltip text="Supprimer le matelas sélectionné"/></tooltip>
         </Button>
         <Button fx:id="refreshButton" text="Rafraîchir" onAction="#handleRefresh">
