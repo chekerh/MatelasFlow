@@ -11,6 +11,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import com.warehouse.model.User;
 import com.warehouse.model.UserDAO;
+import com.warehouse.util.InputValidator;
 import org.mindrot.jbcrypt.BCrypt;
 
 public class UserOverlayController {
@@ -41,7 +42,7 @@ public class UserOverlayController {
         ObservableList<String> roles = FXCollections.observableArrayList("admin", "employé");
         roleComboBox.setItems(roles);
         
-        if (isEditMode) {
+        if (isEditMode && user != null) {
             dialogTitle.setText("Modifier l'utilisateur");
             usernameField.setText(user.getUsername());
             usernameField.setDisable(true); // Don't allow username change in edit mode
@@ -67,14 +68,29 @@ public class UserOverlayController {
             String role = roleComboBox.getValue();
             
             // Validation
-            if (username.isEmpty()) {
-                showAlert("Erreur", "Le nom d'utilisateur est obligatoire.", AlertType.ERROR);
+            InputValidator.ValidationResult usernameValidation = InputValidator.validateUsername(username);
+            if (!usernameValidation.isValid()) {
+                showAlert("Erreur", usernameValidation.getMessage(), AlertType.ERROR);
                 return;
             }
             
-            if (!isEditMode && password.isEmpty()) {
-                showAlert("Erreur", "Le mot de passe est obligatoire pour un nouvel utilisateur.", AlertType.ERROR);
-                return;
+            if (!isEditMode) {
+                InputValidator.ValidationResult passwordValidation = InputValidator.validatePassword(password);
+                if (!passwordValidation.isValid()) {
+                    showAlert("Erreur", passwordValidation.getMessage(), AlertType.ERROR);
+                    return;
+                }
+                if (passwordValidation.isWarning()) {
+                    // Show warning but allow to proceed
+                    showAlert("Avertissement", passwordValidation.getMessage(), AlertType.WARNING);
+                }
+            } else if (!password.isEmpty()) {
+                // Validate password if provided during edit
+                InputValidator.ValidationResult passwordValidation = InputValidator.validatePassword(password);
+                if (!passwordValidation.isValid()) {
+                    showAlert("Erreur", passwordValidation.getMessage(), AlertType.ERROR);
+                    return;
+                }
             }
             
             if (!password.isEmpty() && !password.equals(confirmPassword)) {

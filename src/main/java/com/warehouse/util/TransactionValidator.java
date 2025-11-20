@@ -2,9 +2,7 @@ package com.warehouse.util;
 
 import com.warehouse.model.Mattress;
 import com.warehouse.model.StoreOwner;
-import com.warehouse.model.Transaction;
 import java.time.LocalDate;
-import java.util.List;
 
 public class TransactionValidator {
     

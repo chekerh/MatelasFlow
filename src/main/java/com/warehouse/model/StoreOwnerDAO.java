@@ -1,10 +1,14 @@
 package com.warehouse.model;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class StoreOwnerDAO {
+    private static final Logger logger = LoggerFactory.getLogger(StoreOwnerDAO.class);
     public static List<StoreOwner> getAllStoreOwners() {
         List<StoreOwner> owners = new ArrayList<>();
         String sql = "SELECT * FROM store_owner";
@@ -19,7 +23,7 @@ public class StoreOwnerDAO {
                 ));
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.error("Error fetching all store owners", e);
         }
         return owners;
     }
@@ -30,9 +34,13 @@ public class StoreOwnerDAO {
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, owner.getName());
             stmt.setString(2, owner.getContact());
-            return stmt.executeUpdate() > 0;
+            boolean success = stmt.executeUpdate() > 0;
+            if (success) {
+                logger.info("Store owner added successfully: name={}", owner.getName());
+            }
+            return success;
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.error("Error adding store owner: name={}", owner.getName(), e);
             return false;
         }
     }
@@ -44,9 +52,13 @@ public class StoreOwnerDAO {
             stmt.setString(1, owner.getName());
             stmt.setString(2, owner.getContact());
             stmt.setInt(3, owner.getId());
-            return stmt.executeUpdate() > 0;
+            boolean success = stmt.executeUpdate() > 0;
+            if (success) {
+                logger.info("Store owner updated successfully: id={}, name={}", owner.getId(), owner.getName());
+            }
+            return success;
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.error("Error updating store owner: id={}, name={}", owner.getId(), owner.getName(), e);
             return false;
         }
     }
@@ -56,17 +68,37 @@ public class StoreOwnerDAO {
         try (Connection conn = DBUtil.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, id);
-            return stmt.executeUpdate() > 0;
+            boolean success = stmt.executeUpdate() > 0;
+            if (success) {
+                logger.info("Store owner deleted successfully: id={}", id);
+            }
+            return success;
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.error("Error deleting store owner: id={}", id, e);
             return false;
         }
     }
 
     public static StoreOwner getStoreOwnerById(Integer id) {
-        if (id == null) return null;
-        for (StoreOwner s : getAllStoreOwners()) {
-            if (s.getId() == id) return s;
+        if (id == null) {
+            return null;
+        }
+        String sql = "SELECT * FROM store_owner WHERE id = ?";
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, id);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    logger.debug("Store owner found by ID: id={}, name={}", id, rs.getString("name"));
+                    return new StoreOwner(
+                        rs.getInt("id"),
+                        rs.getString("name"),
+                        rs.getString("contact")
+                    );
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Error fetching store owner by ID: id={}", id, e);
         }
         return null;
     }

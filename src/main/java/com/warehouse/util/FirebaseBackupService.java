@@ -4,9 +4,6 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import com.google.firebase.database.*;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import javafx.application.Platform;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -26,7 +23,6 @@ public class FirebaseBackupService {
     private static final String FIREBASE_KEY_PATH = "/firebase-key.json";
     private static DatabaseReference databaseRef;
     private static boolean initialized = false;
-    private static Gson gson = new GsonBuilder().setPrettyPrinting().create();
     
     /**
      * Initialize Firebase Admin SDK

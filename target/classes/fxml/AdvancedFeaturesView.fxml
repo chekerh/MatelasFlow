@@ -3,7 +3,7 @@
 <?import javafx.scene.layout.*?>
 <VBox xmlns="http://javafx.com/fxml" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.warehouse.controller.AdvancedFeaturesController"
-      spacing="20" alignment="TOP_CENTER" stylesheets="/css/modern.css">
+      spacing="20" alignment="TOP_CENTER" stylesheets="/css/modern.css" styleClass="advanced-root">
     
     <Label text="🚀 Fonctionnalités Avancées" style="-fx-font-size: 24px; -fx-font-weight: bold;" />
     
@@ -12,16 +12,26 @@
         
         <!-- IA et Prédictions -->
         <Tab text="🤖 Intelligence Artificielle" closable="false">
-            <VBox spacing="15" style="-fx-padding: 20;">
-                <Label text="Prédictions et Détection d'Anomalies" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+            <VBox spacing="15" style="-fx-padding: 20;" styleClass="adv-section">
+                <Label text="Prédictions et Détection d'Anomalies" styleClass="adv-section__title"/>
                 
                 <HBox spacing="10" alignment="CENTER_LEFT">
                     <Button text="📊 Prédire la Demande" onAction="#predictDemand" styleClass="button-enhanced"/>
                     <Button text="⚠️ Détecter les Fraudes" onAction="#detectFraud" styleClass="button-enhanced"/>
                     <Button text="📈 Analyser les Tendances" onAction="#analyzeTrends" styleClass="button-enhanced"/>
                 </HBox>
-                
-                <TextArea fx:id="aiResultsArea" editable="false" prefRowCount="15" wrapText="true"/>
+
+                <StackPane styleClass="advanced-console" VBox.vgrow="ALWAYS">
+                    <TextArea fx:id="aiResultsArea" editable="false" wrapText="true" VBox.vgrow="ALWAYS" />
+                </StackPane>
+
+                <TableView fx:id="aiResultsTable" prefHeight="300" visible="false" managed="false" styleClass="advanced-table">
+                    <columns>
+                        <TableColumn fx:id="aiMetricColumn" text="Indicateur" prefWidth="220"/>
+                        <TableColumn fx:id="aiValueColumn" text="Valeur" prefWidth="180"/>
+                        <TableColumn fx:id="aiInsightColumn" text="Interprétation" prefWidth="320"/>
+                    </columns>
+                </TableView>
             </VBox>
         </Tab>
         

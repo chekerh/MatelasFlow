@@ -5,6 +5,7 @@ import com.warehouse.model.MattressDAO;
 import com.warehouse.model.User;
 import com.warehouse.model.UserDAO;
 import com.warehouse.util.ActivityLogger;
+import com.warehouse.ui.SkeletonPane;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -16,6 +17,9 @@ import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import javafx.beans.property.SimpleDoubleProperty;
+import javafx.application.Platform;
+
+import java.util.concurrent.CompletableFuture;
 
 public class InventoryController {
     @FXML private TableView<Mattress> mattressTable;
@@ -34,6 +38,8 @@ public class InventoryController {
     private ObservableList<Mattress> mattressList = FXCollections.observableArrayList();
     private DashboardController dashboardController;
     private Mattress draggedMattress;
+    private final SkeletonPane tableSkeleton = SkeletonPane.forTable(420, 220);
+    private final Label emptyPlaceholder = new Label("Aucun matelas trouvé dans la base de données.");
 
     public void setDashboardController(DashboardController dashboardController) {
         this.dashboardController = dashboardController;
@@ -41,7 +47,7 @@ public class InventoryController {
 
     @FXML
     public void initialize() {
-        mattressTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        mattressTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
         mattressTable.setFixedCellSize(56);
         typeColumn.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(cellData.getValue().getType()));
         sizeColumn.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(cellData.getValue().getSize()));
@@ -61,7 +67,7 @@ public class InventoryController {
         unitPriceColumn.setStyle("-fx-alignment: CENTER;");
         prixColumn.setStyle("-fx-alignment: CENTER;");
 
-        mattressTable.setPlaceholder(new Label("Aucun matelas trouvé dans la base de données."));
+        mattressTable.setPlaceholder(tableSkeleton);
         mattressTable.setItems(mattressList);
         if (MattressDAO.isSortOrderSupported()) {
             enableRowReordering();
@@ -87,13 +93,37 @@ public class InventoryController {
 
     @FXML
     public void loadMattresses() {
-        mattressList.setAll(MattressDAO.getAllMattresses());
-        System.out.println("[InventoryController] Matelas chargés: " + mattressList.size());
-        if (!mattressList.isEmpty()) {
-            Mattress sample = mattressList.get(0);
-            System.out.println("[InventoryController] Exemple -> type=" + sample.getType() + ", taille=" + sample.getSize());
+        showSkeleton(true);
+        CompletableFuture
+            .supplyAsync(MattressDAO::getAllMattresses)
+            .thenAccept(list -> Platform.runLater(() -> {
+                mattressList.setAll(list);
+                System.out.println("[InventoryController] Matelas chargés: " + mattressList.size());
+                errorLabel.setText("");
+                showSkeleton(false);
+            }))
+            .exceptionally(ex -> {
+                com.warehouse.util.ErrorHandler.handleError(
+                    "InventoryController.loadMattresses",
+                    ex,
+                    () -> {
+                        String userMessage = com.warehouse.util.ErrorHandler.getUserFriendlyMessage(ex);
+                        errorLabel.setText("Erreur: " + userMessage);
+                        if (dashboardController != null) {
+                            dashboardController.showNotification("Erreur lors du chargement des matelas: " + userMessage, true);
+                        }
+                    }
+                );
+                return null;
+            });
+    }
+
+    private void showSkeleton(boolean loading) {
+        if (loading) {
+            mattressTable.setPlaceholder(tableSkeleton);
+        } else {
+            mattressTable.setPlaceholder(mattressList.isEmpty() ? emptyPlaceholder : new Label(""));
         }
-        errorLabel.setText("");
     }
 
     @FXML

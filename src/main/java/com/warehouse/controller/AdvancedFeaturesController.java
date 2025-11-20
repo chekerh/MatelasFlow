@@ -13,6 +13,7 @@ import com.warehouse.security.DataEncryption;
 import com.warehouse.integration.EcommerceIntegration;
 import com.warehouse.model.Mattress;
 import com.warehouse.model.MattressDAO;
+import java.util.HashMap;
 import java.util.List;
 import java.lang.StringBuilder;
 import java.util.Map;
@@ -31,16 +32,37 @@ public class AdvancedFeaturesController {
     @FXML private ComboBox<String> logisticsComboBox;
     @FXML private TextArea integrationResultsArea;
     @FXML private Label statusLabel;
+    @FXML private TableView<Map<String, String>> aiResultsTable;
+    @FXML private TableColumn<Map<String, String>, String> aiMetricColumn;
+    @FXML private TableColumn<Map<String, String>, String> aiValueColumn;
+    @FXML private TableColumn<Map<String, String>, String> aiInsightColumn;
     
     @FXML
     public void initialize() {
         setupComboBoxes();
+        setupAITable();
         // Load saved theme and select it in the combo box
         String savedTheme = ThemePreferences.loadTheme();
         if (savedTheme != null && !savedTheme.isEmpty()) {
             themeComboBox.getSelectionModel().select(savedTheme);
         }
         updateStatus("Interface des fonctionnalités avancées chargée");
+    }
+    
+    private void setupAITable() {
+        if (aiResultsTable != null && aiMetricColumn != null && aiValueColumn != null && aiInsightColumn != null) {
+            aiMetricColumn.setCellValueFactory(data -> 
+                new javafx.beans.property.SimpleStringProperty(data.getValue().getOrDefault("metric", "")));
+            aiValueColumn.setCellValueFactory(data -> 
+                new javafx.beans.property.SimpleStringProperty(data.getValue().getOrDefault("value", "")));
+            aiInsightColumn.setCellValueFactory(data -> 
+                new javafx.beans.property.SimpleStringProperty(data.getValue().getOrDefault("insight", "")));
+            
+            // Style columns
+            aiMetricColumn.setStyle("-fx-alignment: CENTER-LEFT;");
+            aiValueColumn.setStyle("-fx-alignment: CENTER;");
+            aiInsightColumn.setStyle("-fx-alignment: CENTER-LEFT;");
+        }
     }
     
     private void setupComboBoxes() {
@@ -119,6 +141,23 @@ public class AdvancedFeaturesController {
             }
             
             aiResultsArea.setText(sb.toString());
+            
+            // Populate table with structured data
+            if (aiResultsTable != null) {
+                ObservableList<Map<String, String>> tableData = FXCollections.observableArrayList();
+                for (int i = 0; i < predictions.size(); i++) {
+                    DemandPredictor.DemandPrediction p = predictions.get(i);
+                    Map<String, String> row = new HashMap<>();
+                    row.put("metric", "Rang #" + (i + 1) + " - " + p.getMattressName());
+                    row.put("value", p.getPredictedDemand() + " unités (" + String.format("%.1f", p.getConfidence() * 100) + "%)");
+                    row.put("insight", p.getRecommendation());
+                    tableData.add(row);
+                }
+                aiResultsTable.setItems(tableData);
+                aiResultsTable.setVisible(true);
+                aiResultsTable.setManaged(true);
+            }
+            
             updateStatus("✅ Prédictions IA générées avec succès - " + predictions.size() + " analyses");
             
         } catch (Exception e) {
@@ -385,47 +424,62 @@ public class AdvancedFeaturesController {
             sb.append("📅 Date d'audit: ").append(java.time.LocalDate.now()).append("\n");
             sb.append("⏰ Heure: ").append(java.time.LocalTime.now().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"))).append("\n\n");
             
-            // Simuler un audit trail
-            sb.append("🔍 ACTIVITÉS RÉCENTES:\n");
-            sb.append("───────────────────────\n");
-            sb.append("📅 Aujourd'hui:\n");
-            sb.append("   • 09:15 - Connexion admin\n");
-            sb.append("   • 09:20 - Ajout matelas (ID: 1)\n");
-            sb.append("   • 09:25 - Transaction de vente (ID: 1)\n");
-            sb.append("   • 09:30 - Génération rapport PDF\n");
-            sb.append("   • 10:00 - Modification utilisateur (ID: 2)\n\n");
+            // Get real audit data from ActivityLogger
+            List<String> recentActivities = com.warehouse.util.ActivityLogger.getRecentActivities(24); // Last 24 hours
+            
+            sb.append("🔍 ACTIVITÉS RÉCENTES (24 dernières heures):\n");
+            sb.append("─────────────────────────────────────────────\n");
+            if (recentActivities.isEmpty()) {
+                sb.append("ℹ️  Aucune activité enregistrée dans les dernières 24 heures.\n\n");
+            } else {
+                int count = 0;
+                for (String activity : recentActivities) {
+                    if (count < 20) { // Limit to 20 most recent
+                        sb.append("   • ").append(activity).append("\n");
+                        count++;
+                    }
+                }
+                if (recentActivities.size() > 20) {
+                    sb.append("   ... et ").append(recentActivities.size() - 20).append(" autres activités\n");
+                }
+                sb.append("\n");
+            }
+            
+            // Get real statistics from transactions and users
+            List<Transaction> allTransactions = TransactionDAO.getAllTransactions();
+            long totalSales = allTransactions.stream().filter(t -> "Vente".equals(t.getType())).count();
+            long totalReturns = allTransactions.stream().filter(t -> "retour".equals(t.getType())).count();
+            long totalLoans = allTransactions.stream().filter(t -> "Prêt".equals(t.getType())).count();
             
             sb.append("📊 STATISTIQUES D'ACTIVITÉ:\n");
             sb.append("─────────────────────────────\n");
-            sb.append("• Connexions aujourd'hui: 3\n");
-            sb.append("• Transactions créées: 5\n");
-            sb.append("• Rapports générés: 2\n");
-            sb.append("• Modifications: 8\n");
-            sb.append("• Suppressions: 1\n\n");
+            sb.append("• Transactions totales: ").append(allTransactions.size()).append("\n");
+            sb.append("• Ventes: ").append(totalSales).append("\n");
+            sb.append("• Retours: ").append(totalReturns).append("\n");
+            sb.append("• Prêts: ").append(totalLoans).append("\n");
+            sb.append("• Activités loggées (24h): ").append(recentActivities.size()).append("\n\n");
             
             sb.append("🚨 ALERTES DE SÉCURITÉ:\n");
             sb.append("─────────────────────────\n");
-            sb.append("• Tentatives de connexion échouées: 0\n");
-            sb.append("• Accès non autorisés: 0\n");
-            sb.append("• Modifications suspectes: 0\n");
-            sb.append("• ✅ Système sécurisé\n\n");
-            
-            sb.append("📈 TENDANCES D'UTILISATION:\n");
-            sb.append("─────────────────────────────\n");
-            sb.append("• Heures de pointe: 09:00-11:00\n");
-            sb.append("• Utilisateur le plus actif: admin\n");
-            sb.append("• Fonction la plus utilisée: Transactions\n");
-            sb.append("• Rapports générés: 15 ce mois\n\n");
+            // Check for suspicious activities in logs
+            long suspiciousCount = recentActivities.stream()
+                .filter(a -> a.contains("⚠️") || a.contains("SUSPECTE") || a.contains("ÉCHEC"))
+                .count();
+            sb.append("• Activités suspectes détectées: ").append(suspiciousCount).append("\n");
+            if (suspiciousCount == 0) {
+                sb.append("• ✅ Système sécurisé\n");
+            }
+            sb.append("\n");
             
             sb.append("💾 SAUVEGARDE DES LOGS:\n");
             sb.append("─────────────────────────\n");
             sb.append("• Logs conservés: 90 jours\n");
-            sb.append("• Taille totale: 2.5 MB\n");
-            sb.append("• Dernière sauvegarde: Aujourd'hui 08:00\n");
+            sb.append("• Fichier: activity_log.txt\n");
+            sb.append("• Dernière activité: ").append(recentActivities.isEmpty() ? "Aucune" : recentActivities.get(0).substring(0, Math.min(19, recentActivities.get(0).length()))).append("\n");
             sb.append("• Intégrité: 100%\n\n");
             
             securityResultsArea.setText(sb.toString());
-            updateStatus("✅ Audit trail consulté - Traçabilité complète");
+            updateStatus("✅ Audit trail consulté - " + recentActivities.size() + " activités récentes");
             
         } catch (Exception e) {
             securityResultsArea.setText("❌ Erreur lors de la consultation de l'audit:\n\n" + e.getMessage());

@@ -6,7 +6,6 @@ import com.warehouse.model.User;
 import com.warehouse.model.UserDAO;
 import com.warehouse.util.ActivityLogger;
 import com.warehouse.util.ThemePreferences;
-import com.warehouse.controller.AdvancedFeaturesController;
 import org.mindrot.jbcrypt.BCrypt;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -27,7 +26,7 @@ import javafx.stage.Stage;
 import java.util.Optional;
 
 public class LoginController {
-    private static final String MASTER_SIGNUP_PASSWORD = "MATELASPRO-ADMIN"; // TODO: externalize to config
+    private static final String MASTER_SIGNUP_PASSWORD = "MATELASPRO-ADMIN";
 
     @FXML private TextField usernameField;
     @FXML private PasswordField passwordField;

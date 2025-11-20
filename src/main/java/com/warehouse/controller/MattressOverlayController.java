@@ -8,6 +8,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import com.warehouse.model.Mattress;
 import com.warehouse.model.MattressDAO;
+import com.warehouse.util.InputValidator;
 
 public class MattressOverlayController {
     @FXML private ComboBox<String> typeComboBox;
@@ -49,13 +50,43 @@ public class MattressOverlayController {
                 customTypeField.clear();
             }
         });
+        
+        // Add input validation for numeric fields
+        setupNumericValidation(quantityField, true); // Integer only
+        setupNumericValidation(unitPriceField, false); // Decimal allowed
+        setupNumericValidation(salePriceField, false); // Decimal allowed
+    }
+    
+    /**
+     * Sets up numeric validation for TextField using TextFormatter
+     */
+    private void setupNumericValidation(TextField field, boolean integerOnly) {
+        javafx.scene.control.TextFormatter<String> formatter;
+        if (integerOnly) {
+            formatter = new javafx.scene.control.TextFormatter<>(change -> {
+                String newText = change.getControlNewText();
+                if (newText.isEmpty() || newText.matches("\\d+")) {
+                    return change;
+                }
+                return null;
+            });
+        } else {
+            formatter = new javafx.scene.control.TextFormatter<>(change -> {
+                String newText = change.getControlNewText();
+                if (newText.isEmpty() || newText.matches("\\d*\\.?\\d*")) {
+                    return change;
+                }
+                return null;
+            });
+        }
+        field.setTextFormatter(formatter);
     }
 
     public void setMattress(Mattress mattress) {
         this.mattress = mattress;
         this.isEditMode = (mattress != null);
         
-        if (isEditMode) {
+        if (isEditMode && mattress != null) {
             dialogTitle.setText("Modifier le matelas");
             String type = mattress.getType();
             if (typeComboBox.getItems().contains(type)) {
@@ -97,7 +128,25 @@ public class MattressOverlayController {
             String salePriceStr = salePriceField.getText().trim();
             
             // Validation
-            if (type == null || type.isEmpty() || size.isEmpty() || quantityStr.isEmpty() || unitPriceStr.isEmpty() || salePriceStr.isEmpty()) {
+            InputValidator.ValidationResult referenceValidation = InputValidator.validateLength(reference, "La référence", InputValidator.MAX_REFERENCE_LENGTH);
+            if (!referenceValidation.isValid()) {
+                showAlert("Erreur", referenceValidation.getMessage(), AlertType.ERROR);
+                return;
+            }
+            
+            InputValidator.ValidationResult typeValidation = InputValidator.validateLength(type, "Le type", InputValidator.MAX_NAME_LENGTH);
+            if (!typeValidation.isValid()) {
+                showAlert("Erreur", typeValidation.getMessage(), AlertType.ERROR);
+                return;
+            }
+            
+            InputValidator.ValidationResult sizeValidation = InputValidator.validateLength(size, "La taille", InputValidator.MAX_NAME_LENGTH);
+            if (!sizeValidation.isValid()) {
+                showAlert("Erreur", sizeValidation.getMessage(), AlertType.ERROR);
+                return;
+            }
+            
+            if (type == null || type.isEmpty() || size.isEmpty() || reference.isEmpty() || quantityStr.isEmpty() || unitPriceStr.isEmpty() || salePriceStr.isEmpty()) {
                 showAlert("Erreur", "Tous les champs obligatoires doivent être remplis.", AlertType.ERROR);
                 return;
             }

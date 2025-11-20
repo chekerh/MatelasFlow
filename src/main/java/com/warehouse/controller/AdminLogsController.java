@@ -2,11 +2,9 @@ package com.warehouse.controller;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import javafx.scene.layout.VBox;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import com.warehouse.util.ActivityLogger;
-import com.warehouse.model.User;
 import java.io.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;

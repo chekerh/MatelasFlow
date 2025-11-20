@@ -2,7 +2,7 @@ package com.warehouse.controller;
 
 import com.warehouse.model.Transaction;
 import com.warehouse.model.TransactionDAO;
-import com.warehouse.model.MattressDAO;
+import com.warehouse.ui.SkeletonPane;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -14,9 +14,11 @@ import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
+import javafx.application.Platform;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
+import java.util.concurrent.CompletableFuture;
 
 public class TransactionsController {
     @FXML private TableView<Transaction> transactionTable;
@@ -43,6 +45,8 @@ public class TransactionsController {
     private FilteredList<Transaction> filteredTransactions;
     private DashboardController dashboardController;
     private Transaction draggedTransaction;
+    private final SkeletonPane tableSkeleton = SkeletonPane.forTable(560, 260);
+    private final Label emptyPlaceholder = new Label("Aucune transaction enregistrée.");
 
     public void setDashboardController(DashboardController dashboardController) {
         this.dashboardController = dashboardController;
@@ -182,9 +186,9 @@ public class TransactionsController {
         expectedReturnDateColumn.setStyle("-fx-alignment: CENTER;");
         totalPriceColumn.setStyle("-fx-alignment: CENTER;");
 
-        transactionTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        transactionTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
         bindColumnWidths();
-        transactionTable.setPlaceholder(new Label("Aucune transaction enregistrée."));
+        transactionTable.setPlaceholder(tableSkeleton);
 
         // Wrap list in a FilteredList so we can change view per type
         filteredTransactions = new FilteredList<>(transactionList, t -> true);
@@ -202,10 +206,38 @@ public class TransactionsController {
 
     @FXML
     public void loadTransactions() {
-        transactionList.setAll(TransactionDAO.getAllTransactions());
-        System.out.println("[TransactionsController] Transactions chargées: " + transactionList.size());
-        errorLabel.setText("");
-        applyViewModeFilter();
+        showSkeleton(true);
+        CompletableFuture
+            .supplyAsync(TransactionDAO::getAllTransactions)
+            .thenAccept(list -> Platform.runLater(() -> {
+                transactionList.setAll(list);
+                System.out.println("[TransactionsController] Transactions chargées: " + transactionList.size());
+                errorLabel.setText("");
+                applyViewModeFilter();
+                showSkeleton(false);
+            }))
+            .exceptionally(ex -> {
+                com.warehouse.util.ErrorHandler.handleError(
+                    "TransactionsController.loadTransactions",
+                    ex,
+                    () -> {
+                        String userMessage = com.warehouse.util.ErrorHandler.getUserFriendlyMessage(ex);
+                        errorLabel.setText("Erreur: " + userMessage);
+                        if (dashboardController != null) {
+                            dashboardController.showNotification("Erreur lors du chargement des transactions: " + userMessage, true);
+                        }
+                    }
+                );
+                return null;
+            });
+    }
+
+    private void showSkeleton(boolean loading) {
+        if (loading) {
+            transactionTable.setPlaceholder(tableSkeleton);
+        } else {
+            transactionTable.setPlaceholder(transactionList.isEmpty() ? emptyPlaceholder : new Label(""));
+        }
     }
 
     private void setupViewModeComboBox() {
@@ -369,9 +401,13 @@ public class TransactionsController {
         try {
             transaction.setQuantity(transaction.getQuantity() + 1);
             boolean success = TransactionDAO.updateTransaction(transaction);
+            // Note: Inventory is automatically updated by TransactionDAO.updateTransaction()
             if (success) {
-                adjustInventoryForQuickAdd(transaction);
                 loadTransactions();
+                // Refresh inventory if available
+                if (dashboardController != null) {
+                    dashboardController.refreshInventory();
+                }
                 errorLabel.setText("Quantité augmentée.");
             } else {
                 errorLabel.setText("Impossible d'ajouter le matelas.");
@@ -379,15 +415,6 @@ public class TransactionsController {
         } catch (Exception e) {
             e.printStackTrace();
             errorLabel.setText("Erreur lors de l'ajout.");
-        }
-    }
-
-    private void adjustInventoryForQuickAdd(Transaction transaction) {
-        String type = transaction.getType();
-        if ("Vente".equalsIgnoreCase(type) || "Prêt".equalsIgnoreCase(type) || "Transfert".equalsIgnoreCase(type)) {
-            MattressDAO.decreaseQuantity(transaction.getMattressId(), 1);
-        } else if ("retour".equalsIgnoreCase(type) || "Réception".equalsIgnoreCase(type)) {
-            MattressDAO.increaseQuantity(transaction.getMattressId(), 1);
         }
     }
 

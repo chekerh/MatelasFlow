@@ -1,10 +1,14 @@
 package com.warehouse.model;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class MattressDAO {
+    private static final Logger logger = LoggerFactory.getLogger(MattressDAO.class);
     private static volatile boolean SORT_ORDER_SUPPORTED = true;
 
     public static List<Mattress> getAllMattresses() {
@@ -16,10 +20,10 @@ public class MattressDAO {
                 if (trySortOrder && isUnknownColumn(e, "sort_order")) {
                     SORT_ORDER_SUPPORTED = false;
                     trySortOrder = false;
-                    System.err.println("[MattressDAO] Colonne sort_order absente – la persistance de l'ordre est désactivée tant que le script update_schema.sql n'est pas exécuté.");
+                    logger.warn("Colonne sort_order absente – la persistance de l'ordre est désactivée tant que le script update_schema.sql n'est pas exécuté.");
                     continue;
                 }
-                e.printStackTrace();
+                logger.error("Error fetching mattresses", e);
                 return new ArrayList<>();
             }
         }
@@ -27,42 +31,80 @@ public class MattressDAO {
 
     private static List<Mattress> fetchMattresses(boolean includeSortOrder) throws SQLException {
         List<Mattress> mattresses = new ArrayList<>();
-        String selectClause = includeSortOrder
-            ? "SELECT id, type AS mattress_type, size AS mattress_size, reference AS mattress_reference, quantity, unit_price, prix, sort_order FROM mattress ORDER BY sort_order ASC, id ASC"
-            : "SELECT id, type AS mattress_type, size AS mattress_size, reference AS mattress_reference, quantity, unit_price, prix FROM mattress ORDER BY id ASC";
-        try (Connection conn = DBUtil.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(selectClause)) {
-            while (rs.next()) {
-                mattresses.add(new Mattress(
-                    rs.getInt("id"),
-                    rs.getString("mattress_type"),
-                    rs.getString("mattress_size"),
-                    rs.getString("mattress_reference"),
-                    rs.getInt("quantity"),
-                    rs.getDouble("unit_price"),
-                    rs.getDouble("prix"),
-                    includeSortOrder ? rs.getInt("sort_order") : rs.getInt("id")
-                ));
+        try (Connection conn = DBUtil.getConnection()) {
+            // Check if initial_stock column exists
+            boolean hasInitialStock = columnExists(conn, "mattress", "initial_stock");
+            String selectClause = includeSortOrder
+                ? (hasInitialStock 
+                    ? "SELECT id, type AS mattress_type, size AS mattress_size, reference AS mattress_reference, quantity, initial_stock, unit_price, prix, sort_order FROM mattress ORDER BY sort_order ASC, id ASC"
+                    : "SELECT id, type AS mattress_type, size AS mattress_size, reference AS mattress_reference, quantity, quantity AS initial_stock, unit_price, prix, sort_order FROM mattress ORDER BY sort_order ASC, id ASC")
+                : (hasInitialStock
+                    ? "SELECT id, type AS mattress_type, size AS mattress_size, reference AS mattress_reference, quantity, initial_stock, unit_price, prix FROM mattress ORDER BY id ASC"
+                    : "SELECT id, type AS mattress_type, size AS mattress_size, reference AS mattress_reference, quantity, quantity AS initial_stock, unit_price, prix FROM mattress ORDER BY id ASC");
+            try (Statement stmt = conn.createStatement();
+                 ResultSet rs = stmt.executeQuery(selectClause)) {
+                while (rs.next()) {
+                    mattresses.add(new Mattress(
+                        rs.getInt("id"),
+                        rs.getString("mattress_type"),
+                        rs.getString("mattress_size"),
+                        rs.getString("mattress_reference"),
+                        rs.getInt("quantity"),
+                        rs.getInt("initial_stock"),
+                        rs.getDouble("unit_price"),
+                        rs.getDouble("prix"),
+                        includeSortOrder ? rs.getInt("sort_order") : rs.getInt("id")
+                    ));
+                }
             }
         }
         return mattresses;
     }
+    
+    private static boolean columnExists(Connection conn, String table, String column) {
+        try {
+            DatabaseMetaData metaData = conn.getMetaData();
+            try (ResultSet rs = metaData.getColumns(conn.getCatalog(), null, table, column)) {
+                return rs.next();
+            }
+        } catch (SQLException e) {
+            return false;
+        }
+    }
 
     public static boolean addMattress(Mattress mattress) {
-        String sql = "INSERT INTO mattress (type, size, reference, quantity, unit_price, prix, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?)";
-        try (Connection conn = DBUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, mattress.getType());
-            stmt.setString(2, mattress.getSize());
-            stmt.setString(3, mattress.getReference());
-            stmt.setInt(4, mattress.getQuantity());
-            stmt.setDouble(5, mattress.getUnitPrice());
-            stmt.setDouble(6, mattress.getSalePrice());
-            stmt.setInt(7, getNextSortOrder(conn, "mattress"));
-            return stmt.executeUpdate() > 0;
+        try (Connection conn = DBUtil.getConnection()) {
+            // Check if initial_stock column exists
+            boolean hasInitialStock = columnExists(conn, "mattress", "initial_stock");
+            String sql = hasInitialStock
+                ? "INSERT INTO mattress (type, size, reference, quantity, initial_stock, unit_price, prix, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+                : "INSERT INTO mattress (type, size, reference, quantity, unit_price, prix, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?)";
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setString(1, mattress.getType());
+                stmt.setString(2, mattress.getSize());
+                stmt.setString(3, mattress.getReference());
+                stmt.setInt(4, mattress.getQuantity());
+                if (hasInitialStock) {
+                    stmt.setInt(5, mattress.getInitialStock() > 0 ? mattress.getInitialStock() : mattress.getQuantity());
+                    stmt.setDouble(6, mattress.getUnitPrice());
+                    stmt.setDouble(7, mattress.getSalePrice());
+                    stmt.setInt(8, getNextSortOrder(conn, "mattress"));
+                } else {
+                    stmt.setDouble(5, mattress.getUnitPrice());
+                    stmt.setDouble(6, mattress.getSalePrice());
+                    stmt.setInt(7, getNextSortOrder(conn, "mattress"));
+                }
+                boolean success = stmt.executeUpdate() > 0;
+                if (success) {
+                    logger.info("Mattress added successfully: type={}, size={}, reference={}, quantity={}", 
+                        mattress.getType(), mattress.getSize(), mattress.getReference(), mattress.getQuantity());
+                } else {
+                    logger.warn("Failed to add mattress: no rows affected");
+                }
+                return success;
+            }
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.error("Error adding mattress: {}", e.getMessage(), e);
             return false;
         }
     }
@@ -78,9 +120,16 @@ public class MattressDAO {
             stmt.setDouble(5, mattress.getUnitPrice());
             stmt.setDouble(6, mattress.getSalePrice());
             stmt.setInt(7, mattress.getId());
-            return stmt.executeUpdate() > 0;
+            boolean success = stmt.executeUpdate() > 0;
+            if (success) {
+                logger.info("Mattress updated successfully: id={}, type={}, quantity={}", 
+                    mattress.getId(), mattress.getType(), mattress.getQuantity());
+            } else {
+                logger.warn("Failed to update mattress: id={}, no rows affected", mattress.getId());
+            }
+            return success;
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.error("Error updating mattress: id={}, error={}", mattress.getId(), e.getMessage(), e);
             return false;
         }
     }
@@ -90,9 +139,15 @@ public class MattressDAO {
         try (Connection conn = DBUtil.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, id);
-            return stmt.executeUpdate() > 0;
+            boolean success = stmt.executeUpdate() > 0;
+            if (success) {
+                logger.info("Mattress deleted successfully: id={}", id);
+            } else {
+                logger.warn("Failed to delete mattress: id={}, no rows affected", id);
+            }
+            return success;
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.error("Error deleting mattress: id={}, error={}", id, e.getMessage(), e);
             return false;
         }
     }
@@ -104,9 +159,13 @@ public class MattressDAO {
             stmt.setInt(1, amount);
             stmt.setInt(2, mattressId);
             stmt.setInt(3, amount);
-            return stmt.executeUpdate() > 0;
+            boolean success = stmt.executeUpdate() > 0;
+            if (success) {
+                logger.debug("Decreased mattress quantity: id={}, amount={}", mattressId, amount);
+            }
+            return success;
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.error("Error decreasing mattress quantity: id={}, amount={}", mattressId, amount, e);
             return false;
         }
     }
@@ -117,9 +176,13 @@ public class MattressDAO {
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, amount);
             stmt.setInt(2, mattressId);
-            return stmt.executeUpdate() > 0;
+            boolean success = stmt.executeUpdate() > 0;
+            if (success) {
+                logger.debug("Increased mattress quantity: id={}, amount={}", mattressId, amount);
+            }
+            return success;
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.error("Error increasing mattress quantity: id={}, amount={}", mattressId, amount, e);
             return false;
         }
     }
@@ -131,12 +194,15 @@ public class MattressDAO {
             stmt.setInt(1, id);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
+                    boolean hasInitialStock = columnExists(conn, "mattress", "initial_stock");
+                    int initialStock = hasInitialStock ? rs.getInt("initial_stock") : rs.getInt("quantity");
                     return new Mattress(
                         rs.getInt("id"),
                         rs.getString("type"),
                         rs.getString("size"),
                         rs.getString("reference"),
                         rs.getInt("quantity"),
+                        initialStock,
                         rs.getDouble("unit_price"),
                         rs.getDouble("prix"),
                         rs.getInt("sort_order")
@@ -144,7 +210,7 @@ public class MattressDAO {
                 }
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.error("Error fetching mattress by ID: id={}", id, e);
         }
         return null;
     }
@@ -165,8 +231,9 @@ public class MattressDAO {
             }
             stmt.executeBatch();
             conn.commit();
+            logger.debug("Updated sort order for {} mattresses", orderedMattresses.size());
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.error("Error updating mattress sort order", e);
         }
     }
 

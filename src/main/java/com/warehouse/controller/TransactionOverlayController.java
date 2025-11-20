@@ -15,6 +15,7 @@ import com.warehouse.model.StoreOwner;
 import com.warehouse.model.StoreOwnerDAO;
 import com.warehouse.model.User;
 import com.warehouse.model.UserDAO;
+import com.warehouse.util.InputValidator;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -64,11 +65,45 @@ public class TransactionOverlayController {
             updateFieldsForType();
         });
 
+        // Add input validation for numeric fields
+        setupNumericValidation(quantityField, true); // Integer only
+        setupNumericValidation(salePriceField, false); // Decimal allowed
+        setupNumericValidation(unitPriceField, false); // Decimal allowed (though read-only)
+        
         quantityField.textProperty().addListener((obs, oldVal, newVal) -> updateTotalPrice());
         salePriceField.textProperty().addListener((obs, oldVal, newVal) -> updateTotalPrice());
         mattressComboBox.valueProperty().addListener((obs, oldVal, newVal) -> populatePricesForSelection(newVal));
         unitPriceField.setEditable(false);
         totalPriceField.setEditable(false);
+    }
+    
+    /**
+     * Sets up numeric validation for TextField using TextFormatter
+     * @param field The TextField to validate
+     * @param integerOnly If true, only integers allowed; if false, decimals allowed
+     */
+    private void setupNumericValidation(TextField field, boolean integerOnly) {
+        javafx.scene.control.TextFormatter<String> formatter;
+        if (integerOnly) {
+            // Integer only: allow digits, no decimals
+            formatter = new javafx.scene.control.TextFormatter<>(change -> {
+                String newText = change.getControlNewText();
+                if (newText.isEmpty() || newText.matches("\\d+")) {
+                    return change;
+                }
+                return null;
+            });
+        } else {
+            // Decimal: allow digits and one decimal point
+            formatter = new javafx.scene.control.TextFormatter<>(change -> {
+                String newText = change.getControlNewText();
+                if (newText.isEmpty() || newText.matches("\\d*\\.?\\d*")) {
+                    return change;
+                }
+                return null;
+            });
+        }
+        field.setTextFormatter(formatter);
     }
     
     public void setTransaction(Transaction transaction) {
@@ -79,8 +114,8 @@ public class TransactionOverlayController {
             dialogTitle.setText("Modifier la transaction");
             
             // Convert type to display format with icon
-            String displayType = transaction.getType();
-            if ("Vente".equals(displayType)) {
+            String displayType = transaction != null ? transaction.getType() : null;
+            if (displayType != null && "Vente".equals(displayType)) {
                 displayType = "💰 Vente";
             } else if ("Prêt".equals(displayType)) {
                 displayType = "📦 Prêt";
@@ -99,7 +134,7 @@ public class TransactionOverlayController {
             typeComboBox.setValue(displayType);
             
             // Set mattress value by finding the matching string
-            Mattress mattress = MattressDAO.getMattressById(transaction.getMattressId());
+            Mattress mattress = (transaction != null) ? MattressDAO.getMattressById(transaction.getMattressId()) : null;
             if (mattress != null) {
                 String reference = (mattress.getReference() == null || mattress.getReference().isBlank())
                     ? "Réf inconnue"
@@ -111,21 +146,23 @@ public class TransactionOverlayController {
                 unitPriceField.clear();
             }
             
-            quantityField.setText(String.valueOf(transaction.getQuantity()));
-            salePriceField.setText(String.valueOf(transaction.getPrix()));
-            updateTotalPrice();
-            
-            if (transaction.getStoreOwnerId() != null) {
-                StoreOwner storeOwner = StoreOwnerDAO.getStoreOwnerById(transaction.getStoreOwnerId());
-                if (storeOwner != null) {
-                    String storeOwnerString = "🏪 " + storeOwner.getName();
-                    storeOwnerComboBox.setValue(storeOwnerString);
+            if (transaction != null) {
+                quantityField.setText(String.valueOf(transaction.getQuantity()));
+                salePriceField.setText(String.valueOf(transaction.getPrix()));
+                updateTotalPrice();
+                
+                if (transaction.getStoreOwnerId() != null) {
+                    StoreOwner storeOwner = StoreOwnerDAO.getStoreOwnerById(transaction.getStoreOwnerId());
+                    if (storeOwner != null) {
+                        String storeOwnerString = "🏪 " + storeOwner.getName();
+                        storeOwnerComboBox.setValue(storeOwnerString);
+                    }
                 }
-            }
-            
-            notesField.setText(transaction.getNotes());
-            if (transaction.getExpectedReturnDate() != null) {
-                expectedReturnDatePicker.setValue(transaction.getExpectedReturnDate());
+                
+                notesField.setText(transaction.getNotes());
+                if (transaction.getExpectedReturnDate() != null) {
+                    expectedReturnDatePicker.setValue(transaction.getExpectedReturnDate());
+                }
             }
         } else {
             dialogTitle.setText("Ajouter une transaction");
@@ -300,6 +337,21 @@ public class TransactionOverlayController {
             LocalDate expectedReturnDate = expectedReturnDatePicker.getValue();
             String destination = destinationField.getText().trim();
             
+            // Validate field lengths
+            InputValidator.ValidationResult notesValidation = InputValidator.validateLength(notes, "Les notes", InputValidator.MAX_NOTES_LENGTH);
+            if (!notesValidation.isValid()) {
+                showAlert("Erreur", notesValidation.getMessage(), AlertType.ERROR);
+                return;
+            }
+            
+            if (!destination.isEmpty()) {
+                InputValidator.ValidationResult destValidation = InputValidator.validateLength(destination, "La destination", InputValidator.MAX_NAME_LENGTH);
+                if (!destValidation.isValid()) {
+                    showAlert("Erreur", destValidation.getMessage(), AlertType.ERROR);
+                    return;
+                }
+            }
+            
             if (quantityStr.isEmpty() || salePriceStr.isEmpty()) {
                 showAlert("Erreur", "La quantité et le prix sont obligatoires.", AlertType.ERROR);
                 return;
@@ -437,12 +489,8 @@ public class TransactionOverlayController {
             
             boolean success;
             if (isEditMode) {
-                // Store old values for stock adjustment
-                String oldType = transaction.getType();
-                int oldQuantity = transaction.getQuantity();
-                int oldMattressId = transaction.getMattressId();
-                
                 // Update existing transaction
+                // Note: Inventory adjustment is now handled automatically by TransactionDAO.updateTransaction()
                 transaction.setType(typeForDB);
                 transaction.setMattressId(selectedMattress.getId());
                 transaction.setQuantity(quantity);
@@ -451,23 +499,7 @@ public class TransactionOverlayController {
                 transaction.setNotes(finalNotes);
                 transaction.setExpectedReturnDate(expectedReturnDate);
                 success = TransactionDAO.updateTransaction(transaction);
-                
-                // Adjust stock based on type changes
-                if (success) {
-                    // Revert old transaction's stock effect
-                    if ("Vente".equals(oldType) || "Prêt".equals(oldType) || "Transfert".equals(oldType)) {
-                        MattressDAO.increaseQuantity(oldMattressId, oldQuantity);
-                    } else if ("retour".equals(oldType) || "Réception".equals(oldType)) {
-                        MattressDAO.decreaseQuantity(oldMattressId, oldQuantity);
-                    }
-                    
-                    // Apply new transaction's stock effect
-                    if ("Vente".equals(typeForDB) || "Prêt".equals(typeForDB) || "Transfert".equals(typeForDB)) {
-                        MattressDAO.decreaseQuantity(selectedMattress.getId(), quantity);
-                    } else if ("retour".equals(typeForDB) || "Réception".equals(typeForDB)) {
-                        MattressDAO.increaseQuantity(selectedMattress.getId(), quantity);
-                    }
-                }
+                // Note: Inventory is now automatically updated by TransactionDAO.updateTransaction()
             } else {
                 // Create new transaction
                 Transaction newTransaction = new Transaction(
@@ -482,19 +514,7 @@ public class TransactionOverlayController {
                     expectedReturnDate
                 );
                 success = TransactionDAO.addTransaction(newTransaction);
-                
-                // Update mattress quantity
-                if (success) {
-                    if ("Vente".equals(typeForDB) || "Prêt".equals(typeForDB) || "Transfert".equals(typeForDB)) {
-                        System.out.println("DEBUG: DECREASING quantity for mattress ID=" + selectedMattress.getId() + " by " + quantity);
-                        boolean decreaseSuccess = MattressDAO.decreaseQuantity(selectedMattress.getId(), quantity);
-                        System.out.println("DEBUG: Decrease result = " + decreaseSuccess);
-                    } else if ("retour".equals(typeForDB) || "Réception".equals(typeForDB)) {
-                        System.out.println("DEBUG: INCREASING quantity for mattress ID=" + selectedMattress.getId() + " by " + quantity);
-                        boolean increaseSuccess = MattressDAO.increaseQuantity(selectedMattress.getId(), quantity);
-                        System.out.println("DEBUG: Increase result = " + increaseSuccess);
-                    }
-                }
+                // Note: Inventory is now automatically updated by TransactionDAO.addTransaction()
             }
             
             if (success) {

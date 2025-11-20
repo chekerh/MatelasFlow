@@ -12,19 +12,22 @@ import javafx.stage.Stage;
 import javafx.scene.Node;
 import javafx.event.ActionEvent;
 import javafx.application.Platform;
-import javafx.animation.PauseTransition;
-import javafx.animation.FadeTransition;
+import javafx.animation.*;
 import javafx.util.Duration;
 import javafx.scene.paint.Color;
 import javafx.scene.text.TextAlignment;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
+import javafx.scene.effect.GaussianBlur;
 import com.warehouse.model.User;
 import com.warehouse.model.UserDAO;
 import com.warehouse.util.ActivityLogger;
-import com.warehouse.util.ThemePreferences;
-import com.warehouse.controller.AdvancedFeaturesController;
+import com.warehouse.ui.IconFactory;
+import com.warehouse.service.ThemeService;
+import com.warehouse.service.QuickStatsService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -32,8 +35,10 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.function.Consumer;
 
 public class DashboardController {
+    private static final Logger logger = LoggerFactory.getLogger(DashboardController.class);
     @FXML private ImageView logoImage;
     @FXML private Label welcomeLabel;
     @FXML private Label userInfoLabel;
@@ -42,18 +47,34 @@ public class DashboardController {
     @FXML private Button logoutButton;
     @FXML private Button darkModeButton;
     @FXML private Button powerButton;
+    @FXML private Button inventoryButton;
+    @FXML private Button transactionsButton;
+    @FXML private Button ownersButton;
     @FXML private VBox navBox;
     @FXML private VBox contentPane;
+    @FXML private StackPane contentBody;
     @FXML private StackPane overlayPane;
     @FXML private VBox notificationArea;
     @FXML private Label notificationLabel;
     @FXML private Button userManagementButton;
     @FXML private Button adminLogsButton;
     @FXML private Button advancedFeaturesButton;
+    @FXML private Button statisticsButton;
+    @FXML private Button reportsButton;
+    @FXML private HBox quickActionsBar;
+    @FXML private Label lowStockValueLabel;
+    @FXML private Label lowStockSubLabel;
+    @FXML private Label pendingReturnsValueLabel;
+    @FXML private Label pendingReturnsSubLabel;
+    @FXML private Label todayRevenueValueLabel;
     
     private String currentUser;
     private String currentRole;
     private boolean isDarkMode = false;
+    private boolean highContrastMode = false;
+    private final GaussianBlur navBlur = new GaussianBlur(0);
+    private final GaussianBlur contentBlur = new GaussianBlur(0);
+    private Timeline quickStatsTimeline;
     
     // Dynamic Duaa rotation
     private static final String DUAA_RESOURCE = "/text/duaas.txt";
@@ -81,13 +102,13 @@ public class DashboardController {
             Image logo = new Image(getClass().getResource("/images/SuperMousse.jpg").toExternalForm());
             logoImage.setImage(logo);
         } catch (Exception e) {
-            System.out.println("Logo not found: " + e.getMessage());
+            logger.warn("Logo not found: {}", e.getMessage());
             // Try white logo as fallback
             try {
                 Image logo = new Image(getClass().getResource("/images/SuperMousse.jpg").toExternalForm());
                 logoImage.setImage(logo);
             } catch (Exception e2) {
-                System.out.println("White logo also not found: " + e2.getMessage());
+                logger.warn("White logo also not found: {}", e2.getMessage());
             }
         }
         
@@ -99,7 +120,7 @@ public class DashboardController {
         notificationArea.setManaged(false);
         
         // Apply dark mode if needed
-        applyDarkModeToChildren(contentPane, isDarkMode);
+        ThemeService.applyDarkModeToChildren(contentPane, isDarkMode);
         
         // Load default content: statistics page
         showStatistics(null);
@@ -108,38 +129,86 @@ public class DashboardController {
         startDuaaRotation();
         
         // Load and apply saved theme preference
-        applySavedTheme();
+        ThemeService.applySavedThemeToNode(contentPane);
+
+        navBox.setEffect(navBlur);
+        contentPane.setEffect(contentBlur);
+
+        setupNavIcons();
+        setupResponsiveObserver();
+        refreshQuickStats();
+        startQuickStatsRefresher();
     }
     
-    /**
-     * Loads and applies the saved theme preference
-     */
-    private void applySavedTheme() {
-        try {
-            String savedTheme = ThemePreferences.loadTheme();
-            if (savedTheme != null && !savedTheme.isEmpty()) {
-                // Get the scene from any node
-                Scene scene = contentPane.getScene();
-                if (scene == null) {
-                    // If scene not ready yet, try to get it from root
-                    scene = contentPane.getScene();
-                    if (scene == null) {
-                        // Schedule to apply theme after scene is ready
-                        javafx.application.Platform.runLater(() -> {
-                            Scene laterScene = contentPane.getScene();
-                            if (laterScene != null) {
-                                AdvancedFeaturesController.applyThemeToScene(laterScene, savedTheme);
-                            }
-                        });
-                        return;
-                    }
-                }
-                AdvancedFeaturesController.applyThemeToScene(scene, savedTheme);
-            }
-        } catch (Exception e) {
-            System.err.println("Error applying saved theme: " + e.getMessage());
-            e.printStackTrace();
+    private void setupNavIcons() {
+        setButtonIcon(inventoryButton, "shippingbox");
+        setButtonIcon(transactionsButton, "creditcard");
+        setButtonIcon(ownersButton, "person");
+        setButtonIcon(userManagementButton, "person2");
+        setButtonIcon(statisticsButton, "chartbar");
+        setButtonIcon(reportsButton, "doctext");
+        setButtonIcon(adminLogsButton, "power");
+        setButtonIcon(advancedFeaturesButton, "plus");
+    }
+
+    private void setButtonIcon(Button button, String iconName) {
+        if (button == null) {
+            return;
         }
+        var icon = IconFactory.svg(iconName, 16);
+        button.setGraphic(icon);
+        button.setContentDisplay(ContentDisplay.LEFT);
+        button.setGraphicTextGap(10);
+    }
+
+    private void setupResponsiveObserver() {
+        contentPane.sceneProperty().addListener((obs, oldScene, newScene) -> {
+            if (newScene != null) {
+                registerResponsiveListeners(newScene);
+                updateResponsiveMode(newScene.getWidth());
+                if (highContrastMode) {
+                    newScene.getRoot().getStyleClass().add("high-contrast");
+                }
+            }
+        });
+    }
+
+    private void registerResponsiveListeners(Scene scene) {
+        scene.widthProperty().addListener((o, oldVal, newVal) -> updateResponsiveMode(newVal.doubleValue()));
+    }
+
+    private void updateResponsiveMode(double width) {
+        Scene scene = contentPane.getScene();
+        if (scene == null) {
+            return;
+        }
+        var root = scene.getRoot();
+        if (width < 1280) {
+            if (!root.getStyleClass().contains("compact")) {
+                root.getStyleClass().add("compact");
+            }
+        } else {
+            root.getStyleClass().remove("compact");
+        }
+    }
+
+    private void startQuickStatsRefresher() {
+        quickStatsTimeline = new Timeline(
+            new KeyFrame(Duration.minutes(2), e -> refreshQuickStats())
+        );
+        quickStatsTimeline.setCycleCount(Animation.INDEFINITE);
+        quickStatsTimeline.play();
+    }
+
+    private void refreshQuickStats() {
+        QuickStatsService.refreshAndUpdate(
+            quickActionsBar,
+            lowStockValueLabel,
+            lowStockSubLabel,
+            pendingReturnsValueLabel,
+            pendingReturnsSubLabel,
+            todayRevenueValueLabel
+        );
     }
     
     /**
@@ -203,7 +272,7 @@ public class DashboardController {
                 }
             }
         } catch (IOException e) {
-            System.out.println("Impossible de charger le fichier des invocations: " + e.getMessage());
+            logger.warn("Impossible de charger le fichier des invocations: {}", e.getMessage());
         }
 
         if (lines.size() > 1) {
@@ -319,7 +388,7 @@ public class DashboardController {
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
             stage.setScene(new Scene(loginRoot));
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error during logout", e);
         }
     }
 
@@ -329,17 +398,14 @@ public class DashboardController {
         darkModeButton.setText(isDarkMode ? "☀️ Mode Clair" : "🌙 Mode Sombre");
         
         // Apply dark mode to all main containers
-        applyDarkModeToChildren(contentPane, isDarkMode);
-        applyDarkModeToChildren(navBox, isDarkMode);
-        applyDarkModeToChildren(notificationArea, isDarkMode);
+        ThemeService.applyDarkModeToChildren(contentPane, isDarkMode);
+        ThemeService.applyDarkModeToChildren(navBox, isDarkMode);
+        ThemeService.applyDarkModeToChildren(notificationArea, isDarkMode);
         
         // Apply dark mode to the root scene
         Scene scene = contentPane.getScene();
         if (scene != null) {
-            scene.getRoot().getStyleClass().removeAll("dark-mode");
-            if (isDarkMode) {
-                scene.getRoot().getStyleClass().add("dark-mode");
-            }
+            ThemeService.toggleDarkModeOnScene(scene, isDarkMode);
         }
         
         // Update logo for dark mode
@@ -376,18 +442,6 @@ public class DashboardController {
         });
     }
 
-    private void applyDarkModeToChildren(javafx.scene.Node node, boolean darkMode) {
-        if (darkMode) {
-            node.getStyleClass().add("dark-mode");
-        } else {
-            node.getStyleClass().remove("dark-mode");
-        }
-        if (node instanceof javafx.scene.Parent) {
-            for (javafx.scene.Node child : ((javafx.scene.Parent) node).getChildrenUnmodifiable()) {
-                applyDarkModeToChildren(child, darkMode);
-            }
-        }
-    }
 
     // Notification system
     public void showNotification(String message, boolean isError) {
@@ -416,9 +470,10 @@ public class DashboardController {
         overlayPane.getChildren().add(overlayContent);
         overlayPane.setVisible(true);
         overlayPane.setManaged(true);
+        toggleBackgroundBlur(true);
         
         if (isDarkMode) {
-            applyDarkModeToChildren(overlayContent, true);
+            ThemeService.applyDarkModeToChildren(overlayContent, true);
         }
     }
 
@@ -426,142 +481,126 @@ public class DashboardController {
         overlayPane.setVisible(false);
         overlayPane.setManaged(false);
         overlayPane.getChildren().clear();
+        toggleBackgroundBlur(false);
     }
 
     // Navigation methods
     @FXML
     private void showInventory(ActionEvent event) {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/InventoryView.fxml"));
-            Parent inventoryRoot = loader.load();
-            InventoryController inventoryController = loader.getController();
-            inventoryController.setDashboardController(this);
-            contentPane.getChildren().setAll(inventoryRoot);
-            
-            // Apply dark mode to new content if needed
-            if (isDarkMode) {
-                applyDarkModeToChildren(inventoryRoot, true);
+        loadSection("/fxml/InventoryView.fxml", controller -> {
+            if (controller instanceof InventoryController inventoryController) {
+                inventoryController.setDashboardController(this);
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+        });
+    }
+    
+    /**
+     * Refreshes the inventory view if it's currently loaded
+     */
+    public void refreshInventory() {
+        // Find and refresh inventory controller if loaded
+        if (contentBody != null && !contentBody.getChildren().isEmpty()) {
+            Parent currentContent = (Parent) contentBody.getChildren().get(0);
+            Object controller = currentContent.getUserData();
+            if (controller instanceof InventoryController) {
+                ((InventoryController) controller).loadMattresses();
+            }
         }
     }
 
     @FXML
     private void showTransactions(ActionEvent event) {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/TransactionsView.fxml"));
-            Parent transactionsRoot = loader.load();
-            TransactionsController transactionsController = loader.getController();
-            transactionsController.setDashboardController(this);
-            contentPane.getChildren().setAll(transactionsRoot);
-            
-            // Apply dark mode to new content if needed
-            if (isDarkMode) {
-                applyDarkModeToChildren(transactionsRoot, true);
+        loadSection("/fxml/TransactionsView.fxml", controller -> {
+            if (controller instanceof TransactionsController transactionsController) {
+                transactionsController.setDashboardController(this);
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        });
     }
 
     @FXML
     private void showStoreOwners(ActionEvent event) {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/StoreOwnersView.fxml"));
-            Parent ownersRoot = loader.load();
-            StoreOwnersController storeOwnersController = loader.getController();
-            storeOwnersController.setDashboardController(this);
-            contentPane.getChildren().setAll(ownersRoot);
-            
-            // Apply dark mode to new content if needed
-            if (isDarkMode) {
-                applyDarkModeToChildren(ownersRoot, true);
+        loadSection("/fxml/StoreOwnersView.fxml", controller -> {
+            if (controller instanceof StoreOwnersController ownersController) {
+                ownersController.setDashboardController(this);
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        });
     }
 
     @FXML
     private void showUserManagement(ActionEvent event) {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/UserManagementView.fxml"));
-            Parent userRoot = loader.load();
-            UserManagementController userManagementController = loader.getController();
-            userManagementController.setDashboardController(this);
-            contentPane.getChildren().setAll(userRoot);
-            
-            // Apply dark mode to new content if needed
-            if (isDarkMode) {
-                applyDarkModeToChildren(userRoot, true);
+        loadSection("/fxml/UserManagementView.fxml", controller -> {
+            if (controller instanceof UserManagementController userManagementController) {
+                userManagementController.setDashboardController(this);
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        });
     }
 
     @FXML
     private void showStatistics(ActionEvent event) {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/StatisticsView.fxml"));
-            Parent statsRoot = loader.load();
-            contentPane.getChildren().setAll(statsRoot);
-            VBox.setVgrow(statsRoot, Priority.ALWAYS);
-            
-            // Apply dark mode to new content if needed
-            if (isDarkMode) {
-                applyDarkModeToChildren(statsRoot, true);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        loadSection("/fxml/StatisticsView.fxml", null);
     }
 
     @FXML
     private void showReports(ActionEvent event) {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/ReportsView.fxml"));
-            Parent reportsRoot = loader.load();
-            contentPane.getChildren().setAll(reportsRoot);
-            
-            // Apply dark mode to new content if needed
-            if (isDarkMode) {
-                applyDarkModeToChildren(reportsRoot, true);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        loadSection("/fxml/ReportsView.fxml", null);
     }
     
     @FXML
     private void showAdminLogs(ActionEvent event) {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/AdminLogsView.fxml"));
-            Parent adminLogsRoot = loader.load();
-            contentPane.getChildren().setAll(adminLogsRoot);
-            
-            // Apply dark mode to new content if needed
-            if (isDarkMode) {
-                applyDarkModeToChildren(adminLogsRoot, true);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        loadSection("/fxml/AdminLogsView.fxml", null);
     }
     
     @FXML
     private void showAdvancedFeatures(ActionEvent event) {
+        loadSection("/fxml/AdvancedFeaturesView.fxml", null);
+    }
+
+    private void loadSection(String fxmlPath, Consumer<Object> controllerConfigurator) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/AdvancedFeaturesView.fxml"));
-            Parent advancedFeaturesRoot = loader.load();
-            contentPane.getChildren().setAll(advancedFeaturesRoot);
-            
-            if (isDarkMode) {
-                applyDarkModeToChildren(advancedFeaturesRoot, true);
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
+            Parent root = loader.load();
+            if (controllerConfigurator != null) {
+                controllerConfigurator.accept(loader.getController());
             }
+            ThemeService.applyThemeToNode(root, isDarkMode);
+            displayContent(root);
+            refreshQuickStats();
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error loading section: {}", fxmlPath, e);
         }
     }
+
+    private void displayContent(Parent newContent) {
+        if (contentBody == null) {
+            return;
+        }
+        newContent.setOpacity(0);
+        newContent.setTranslateY(18);
+        contentBody.getChildren().setAll(newContent);
+        VBox.setVgrow(contentBody, Priority.ALWAYS);
+
+        FadeTransition fade = new FadeTransition(Duration.millis(240), newContent);
+        fade.setFromValue(0);
+        fade.setToValue(1);
+
+        TranslateTransition slide = new TranslateTransition(Duration.millis(320), newContent);
+        slide.setFromY(24);
+        slide.setToY(0);
+
+        ParallelTransition parallelTransition = new ParallelTransition(fade, slide);
+        parallelTransition.setInterpolator(Interpolator.EASE_BOTH);
+        parallelTransition.play();
+    }
+
+    private void toggleBackgroundBlur(boolean enable) {
+        double target = enable ? 18 : 0;
+        Timeline blurTimeline = new Timeline(
+            new KeyFrame(Duration.millis(220),
+                new KeyValue(navBlur.radiusProperty(), target, Interpolator.EASE_BOTH),
+                new KeyValue(contentBlur.radiusProperty(), target, Interpolator.EASE_BOTH)
+            )
+        );
+        blurTimeline.play();
+    }
+
 } 

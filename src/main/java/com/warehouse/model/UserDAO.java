@@ -1,11 +1,15 @@
 package com.warehouse.model;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class UserDAO {
+    private static final Logger logger = LoggerFactory.getLogger(UserDAO.class);
     public static User findByUsername(String username) {
         String sql = "SELECT * FROM users WHERE username = ?";
         try (Connection conn = DBUtil.getConnection();
@@ -21,7 +25,7 @@ public class UserDAO {
                 );
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.error("Error finding user by username: {}", username, e);
         }
         return null;
     }
@@ -41,7 +45,7 @@ public class UserDAO {
                 ));
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.error("Error fetching all users", e);
         }
         return users;
     }
@@ -53,9 +57,13 @@ public class UserDAO {
             stmt.setString(1, user.getUsername());
             stmt.setString(2, user.getPasswordHash());
             stmt.setString(3, user.getRole());
-            return stmt.executeUpdate() > 0;
+            boolean success = stmt.executeUpdate() > 0;
+            if (success) {
+                logger.info("User added successfully: username={}, role={}", user.getUsername(), user.getRole());
+            }
+            return success;
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.error("Error adding user: username={}", user.getUsername(), e);
             return false;
         }
     }
@@ -68,9 +76,13 @@ public class UserDAO {
             stmt.setString(2, user.getPasswordHash());
             stmt.setString(3, user.getRole());
             stmt.setInt(4, user.getId());
-            return stmt.executeUpdate() > 0;
+            boolean success = stmt.executeUpdate() > 0;
+            if (success) {
+                logger.info("User updated successfully: id={}, username={}", user.getId(), user.getUsername());
+            }
+            return success;
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.error("Error updating user: id={}, username={}", user.getId(), user.getUsername(), e);
             return false;
         }
     }
@@ -80,9 +92,13 @@ public class UserDAO {
         try (Connection conn = DBUtil.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, id);
-            return stmt.executeUpdate() > 0;
+            boolean success = stmt.executeUpdate() > 0;
+            if (success) {
+                logger.info("User deleted successfully: id={}", id);
+            }
+            return success;
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.error("Error deleting user: id={}", id, e);
             return false;
         }
     }

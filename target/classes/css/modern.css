@@ -1,3 +1,81 @@
+.nav-button .app-icon {
+    -fx-fill: #0d1320;
+    -fx-opacity: 0.86;
+}
+
+.dark-mode .nav-button .app-icon {
+    -fx-fill: #f5f7ff;
+    -fx-opacity: 0.95;
+}
+.advanced-root {
+    -fx-padding: 24 36 36 36;
+    -fx-background-color: linear-gradient(to bottom, rgba(10,15,35,0.82), rgba(10,15,35,0.90));
+    -fx-background-radius: 28;
+}
+
+.adv-section {
+    -fx-background-color: rgba(255,255,255,0.08);
+    -fx-border-color: rgba(255,255,255,0.15);
+    -fx-border-radius: 22;
+    -fx-background-radius: 22;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 18, 0.35, 0, 6);
+}
+
+.adv-section__title {
+    -fx-font-size: 18px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #f8fbff;
+}
+
+.advanced-console {
+    -fx-background-color: rgba(3,7,18,0.65);
+    -fx-border-color: rgba(255,255,255,0.15);
+    -fx-border-radius: 20;
+    -fx-background-radius: 20;
+    -fx-padding: 0;
+}
+
+.advanced-console .text-area,
+.advanced-console .text-area .content {
+    -fx-background-color: transparent;
+}
+
+.advanced-table {
+    -fx-background-color: rgba(255,255,255,0.08);
+    -fx-border-color: rgba(255,255,255,0.15);
+    -fx-border-radius: 18;
+    -fx-background-radius: 18;
+    -fx-padding: 8;
+    -fx-effect: dropshadow(gaussian, rgba(3,7,18,0.45), 16, 0.4, 0, 8);
+}
+
+.advanced-table .column-header-background {
+    -fx-background-color: rgba(255,255,255,0.12);
+    -fx-background-radius: 14 14 0 0;
+}
+
+.advanced-table .column-header {
+    -fx-border-width: 0;
+}
+
+.advanced-table .table-row-cell {
+    -fx-border-color: transparent;
+    -fx-background-color: transparent;
+}
+
+.advanced-table .table-row-cell:odd {
+    -fx-background-color: rgba(255,255,255,0.03);
+}
+
+.advanced-table .table-row-cell:selected {
+    -fx-background-color: rgba(96,165,250,0.25);
+}
+
+.advanced-table .table-cell {
+    -fx-text-fill: #f5f7ff;
+    -fx-font-size: 13px;
+    -fx-border-color: transparent;
+}
 .table-scroll {
     -fx-background-color: transparent;
     -fx-padding: 0;
@@ -99,6 +177,36 @@
 .dashboard-top { -fx-background-radius: 0 0 32 32; }
 .content-area { -fx-background-radius: 34; -fx-padding: 30; }
 .nav-panel { -fx-background-radius: 32; }
+
+.quick-actions {
+    -fx-padding: 0 0 18 0;
+}
+
+.quick-card {
+    -fx-background-color: rgba(255,255,255,0.35);
+    -fx-border-color: rgba(255,255,255,0.45);
+    -fx-border-radius: 18;
+    -fx-background-radius: 18;
+    -fx-padding: 16 20;
+    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.08), 18, 0.45, 0, 8);
+}
+
+.quick-card__title {
+    -fx-text-fill: -fx-color-text-secondary;
+    -fx-font-size: 12px;
+    -fx-letter-spacing: 0.08em;
+}
+
+.quick-card__value {
+    -fx-text-fill: -fx-color-text-primary;
+    -fx-font-size: 26px;
+    -fx-font-weight: 700;
+}
+
+.quick-card__subtitle {
+    -fx-text-fill: -fx-color-text-secondary;
+    -fx-font-size: 12px;
+}
 
 .notification-area {
     -fx-background-color: rgba(255,255,255,0.65);
@@ -470,6 +578,51 @@
 .signup-button:pressed {
     -fx-scale-x: 0.97;
     -fx-scale-y: 0.97;
+}
+
+.skeleton-pane {
+    -fx-background-color: transparent;
+    -fx-padding: 12;
+    -fx-border-radius: 20;
+    -fx-background-radius: 20;
+}
+
+.skeleton-base {
+    -fx-background-color: linear-gradient(to right, rgba(255,255,255,0.15), rgba(255,255,255,0.05));
+    -fx-background-radius: 20;
+    -fx-border-radius: 20;
+}
+
+.root.compact .content-area {
+    -fx-padding: 22;
+}
+
+.root.compact .quick-actions {
+    -fx-alignment: CENTER;
+    -fx-spacing: 10;
+}
+
+.root.high-contrast {
+    -fx-color-background: #0b0f18;
+    -fx-color-background-alt: #131a27;
+    -fx-color-surface: rgba(11,15,24,0.9);
+    -fx-color-surface-alt: rgba(11,15,24,0.75);
+    -fx-color-border: rgba(255,255,255,0.35);
+    -fx-color-text-primary: #f8fafc;
+    -fx-color-text-secondary: #cbd5f5;
+    -fx_color-accent: #60a5fa;
+    -fx-button-text: #faffff;
+}
+
+.root.high-contrast .button:focused {
+    -fx-border-color: #ffffff;
+    -fx-effect: dropshadow(gaussian, rgba(96,165,250,0.65), 14, 0.5, 0, 0);
+}
+
+.root.high-contrast .nav-panel,
+.root.high-contrast .content-area,
+.root.high-contrast .dashboard-top {
+    -fx-border-color: rgba(96,165,250,0.4);
 }
 
 .login-hint {

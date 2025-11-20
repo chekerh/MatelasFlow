@@ -31,6 +31,15 @@ public final class SchemaMigrator {
         }
         ensureColumn(conn, "mattress", "unit_price",
             "ALTER TABLE `mattress` ADD COLUMN `unit_price` DECIMAL(10,2) NOT NULL DEFAULT 0 AFTER `quantity`");
+        // Add initial_stock column to track original stock received
+        ensureColumn(conn, "mattress", "initial_stock",
+            "ALTER TABLE `mattress` ADD COLUMN `initial_stock` INT NOT NULL DEFAULT 0 AFTER `quantity`");
+        // If initial_stock is 0 but quantity > 0, set initial_stock = quantity (for existing data)
+        try (Statement stmt = conn.createStatement()) {
+            stmt.executeUpdate("UPDATE `mattress` SET initial_stock = quantity WHERE initial_stock = 0 AND quantity > 0");
+        } catch (SQLException e) {
+            // Ignore if column doesn't exist yet
+        }
     }
 
     private static void ensureMattressSortOrder(Connection conn) throws SQLException {

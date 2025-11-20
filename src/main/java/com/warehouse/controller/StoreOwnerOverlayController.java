@@ -7,8 +7,11 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import com.warehouse.model.StoreOwner;
 import com.warehouse.model.StoreOwnerDAO;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class StoreOwnerOverlayController {
+    private static final Logger logger = LoggerFactory.getLogger(StoreOwnerOverlayController.class);
     @FXML private TextField nameField;
     @FXML private TextField contactField;
     @FXML private Label dialogTitle;
@@ -30,7 +33,7 @@ public class StoreOwnerOverlayController {
         this.storeOwner = storeOwner;
         this.isEditMode = (storeOwner != null);
         
-        if (isEditMode) {
+        if (isEditMode && storeOwner != null) {
             dialogTitle.setText("Modifier le propriétaire");
             nameField.setText(storeOwner.getName());
             contactField.setText(storeOwner.getContact());
@@ -89,7 +92,7 @@ public class StoreOwnerOverlayController {
             }
             
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error in StoreOwnerOverlayController.handleOk", e);
             if (dashboardController != null) {
                 dashboardController.showNotification("Une erreur inattendue s'est produite: " + e.getMessage(), true);
             }
