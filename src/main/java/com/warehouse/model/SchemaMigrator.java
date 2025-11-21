@@ -34,11 +34,30 @@ public final class SchemaMigrator {
         // Add initial_stock column to track original stock received
         ensureColumn(conn, "mattress", "initial_stock",
             "ALTER TABLE `mattress` ADD COLUMN `initial_stock` INT NOT NULL DEFAULT 0 AFTER `quantity`");
+        // Add quantity_sold column to track total quantity sold
+        ensureColumn(conn, "mattress", "quantity_sold",
+            "ALTER TABLE `mattress` ADD COLUMN `quantity_sold` INT NOT NULL DEFAULT 0 AFTER `initial_stock`");
         // If initial_stock is 0 but quantity > 0, set initial_stock = quantity (for existing data)
         try (Statement stmt = conn.createStatement()) {
             stmt.executeUpdate("UPDATE `mattress` SET initial_stock = quantity WHERE initial_stock = 0 AND quantity > 0");
         } catch (SQLException e) {
             // Ignore if column doesn't exist yet
+        }
+        // Calculate initial quantity_sold from existing sales transactions
+        // Update ALL mattresses (set to 0 if no sales) to ensure consistency
+        try (Statement stmt = conn.createStatement()) {
+            if (columnExists(conn, "mattress", "quantity_sold") && columnExists(conn, "transaction", "type")) {
+                stmt.executeUpdate(
+                    "UPDATE mattress m " +
+                    "SET m.quantity_sold = COALESCE((" +
+                    "    SELECT SUM(t.quantity) " +
+                    "    FROM transaction t " +
+                    "    WHERE t.mattress_id = m.id AND t.type = 'Vente'" +
+                    "), 0)"
+                );
+            }
+        } catch (SQLException e) {
+            // Ignore if columns don't exist yet or if there are no transactions
         }
     }
 

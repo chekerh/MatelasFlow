@@ -35,6 +35,7 @@ public class LoginController {
     @FXML private ImageView logoImage;
     @FXML private StackPane rootContainer;
     @FXML private VBox loginPane;
+    @FXML private CheckBox rememberUsernameCheckBox;
 
     @FXML
     public void initialize() {
@@ -59,6 +60,15 @@ public class LoginController {
         if (logoImage != null) {
             VBox.setMargin(logoImage, new javafx.geometry.Insets(0, 0, 12, 0));
         }
+        
+        // Load saved username if exists
+        String savedUsername = loadSavedUsername();
+        if (savedUsername != null && !savedUsername.isEmpty()) {
+            usernameField.setText(savedUsername);
+            rememberUsernameCheckBox.setSelected(true);
+            // Auto-focus password field if username is remembered
+            javafx.application.Platform.runLater(() -> passwordField.requestFocus());
+        }
     }
 
     @FXML
@@ -67,7 +77,13 @@ public class LoginController {
         String password = passwordField.getText();
         User user = UserDAO.findByUsername(username);
         if (user != null && BCrypt.checkpw(password, user.getPasswordHash())) {
-            // Login successful
+            // Login successful - save username if checkbox is checked
+            if (rememberUsernameCheckBox.isSelected()) {
+                saveUsername(username);
+            } else {
+                clearSavedUsername();
+            }
+            
             ActivityLogger.logActivity(user, ActivityLogger.ActivityType.LOGIN_SUCCESS, 
                 "Connexion depuis " + System.getProperty("user.name") + "@" + System.getProperty("os.name"));
             
@@ -104,6 +120,71 @@ public class LoginController {
                 ActivityLogger.ActivityType.LOGIN_FAILED, "Tentative échouée");
             errorLabel.setText("Invalid username or password");
         }
+    }
+    
+    private void saveUsername(String username) {
+        try {
+            java.io.File prefsFile = getLoginPreferencesFile();
+            java.util.Properties props = new java.util.Properties();
+            
+            // Load existing preferences
+            if (prefsFile.exists()) {
+                try (java.io.FileInputStream in = new java.io.FileInputStream(prefsFile)) {
+                    props.load(in);
+                }
+            }
+            
+            props.setProperty("saved.username", username);
+            prefsFile.getParentFile().mkdirs();
+            
+            try (java.io.FileOutputStream out = new java.io.FileOutputStream(prefsFile)) {
+                props.store(out, "Login Preferences - MatelasPro");
+            }
+        } catch (Exception e) {
+            // Silently fail - not critical
+        }
+    }
+    
+    private String loadSavedUsername() {
+        try {
+            java.io.File prefsFile = getLoginPreferencesFile();
+            if (!prefsFile.exists()) {
+                return null;
+            }
+            
+            java.util.Properties props = new java.util.Properties();
+            try (java.io.FileInputStream in = new java.io.FileInputStream(prefsFile)) {
+                props.load(in);
+                return props.getProperty("saved.username", null);
+            }
+        } catch (Exception e) {
+            return null;
+        }
+    }
+    
+    private void clearSavedUsername() {
+        try {
+            java.io.File prefsFile = getLoginPreferencesFile();
+            if (prefsFile.exists()) {
+                java.util.Properties props = new java.util.Properties();
+                try (java.io.FileInputStream in = new java.io.FileInputStream(prefsFile)) {
+                    props.load(in);
+                }
+                props.remove("saved.username");
+                try (java.io.FileOutputStream out = new java.io.FileOutputStream(prefsFile)) {
+                    props.store(out, "Login Preferences - MatelasPro");
+                }
+            }
+        } catch (Exception e) {
+            // Silently fail
+        }
+    }
+    
+    private java.io.File getLoginPreferencesFile() {
+        String userHome = System.getProperty("user.home");
+        String appDir = ".matelaspro";
+        java.io.File appDirFile = new java.io.File(userHome, appDir);
+        return new java.io.File(appDirFile, "login_preferences.properties");
     }
 
     @FXML

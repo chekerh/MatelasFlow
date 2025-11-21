@@ -130,6 +130,18 @@ public class DashboardController {
         
         // Load and apply saved theme preference
         ThemeService.applySavedThemeToNode(contentPane);
+        
+        // Load and apply saved dark mode preference
+        isDarkMode = com.warehouse.util.ThemePreferences.loadDarkMode();
+        if (isDarkMode) {
+            darkModeButton.setText("☀️ Mode Clair");
+            ThemeService.applyDarkModeToChildren(contentPane, true);
+            ThemeService.applyDarkModeToChildren(navBox, true);
+            Scene scene = contentPane.getScene();
+            if (scene != null) {
+                ThemeService.toggleDarkModeOnScene(scene, true);
+            }
+        }
 
         navBox.setEffect(navBlur);
         contentPane.setEffect(contentBlur);
@@ -397,15 +409,35 @@ public class DashboardController {
         isDarkMode = !isDarkMode;
         darkModeButton.setText(isDarkMode ? "☀️ Mode Clair" : "🌙 Mode Sombre");
         
+        // Save dark mode preference
+        com.warehouse.util.ThemePreferences.saveDarkMode(isDarkMode);
+        
         // Apply dark mode to all main containers
         ThemeService.applyDarkModeToChildren(contentPane, isDarkMode);
         ThemeService.applyDarkModeToChildren(navBox, isDarkMode);
         ThemeService.applyDarkModeToChildren(notificationArea, isDarkMode);
         
+        // Apply dark mode to current content if exists
+        if (contentBody != null && !contentBody.getChildren().isEmpty()) {
+            Parent currentContent = (Parent) contentBody.getChildren().get(0);
+            ThemeService.applyDarkModeToChildren(currentContent, isDarkMode);
+        }
+        
         // Apply dark mode to the root scene
         Scene scene = contentPane.getScene();
         if (scene != null) {
             ThemeService.toggleDarkModeOnScene(scene, isDarkMode);
+            
+            // Force refresh by reapplying styles
+            javafx.application.Platform.runLater(() -> {
+                if (isDarkMode) {
+                    scene.getRoot().getStyleClass().add("dark-mode");
+                } else {
+                    scene.getRoot().getStyleClass().remove("dark-mode");
+                }
+                // Trigger style refresh
+                scene.getRoot().setStyle(scene.getRoot().getStyle() + " ");
+            });
         }
         
         // Update logo for dark mode
@@ -418,7 +450,7 @@ public class DashboardController {
                 logoImage.setImage(logo);
             }
         } catch (Exception e) {
-            System.out.println("Logo not found for dark mode: " + e.getMessage());
+            logger.warn("Logo not found for dark mode: {}", e.getMessage());
         }
     }
 

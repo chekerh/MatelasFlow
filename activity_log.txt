@@ -63,3 +63,17 @@
 [2025-11-18 20:20:07] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
 [2025-11-19 19:13:40] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
 [2025-11-20 19:17:45] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
+[2025-11-20 20:03:11] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
+[2025-11-20 20:03:52] cheker (admin) - Déconnexion: Déconnexion depuis le dashboard
+[2025-11-20 20:15:02] chekeker (employé) - Tentative de connexion échouée: Tentative échouée
+[2025-11-20 20:15:10] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
+[2025-11-20 20:16:39] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
+[2025-11-20 20:17:17] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
+[2025-11-20 20:39:58] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
+[2025-11-20 20:40:21] cheker (admin) - Ajout de matelas: Ouverture de l'interface d'ajout de matelas
+[2025-11-20 20:48:07] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
+[2025-11-20 20:48:33] cheker (admin) - Ajout de matelas: Ouverture de l'interface d'ajout de matelas
+[2025-11-20 21:27:39] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
+[2025-11-21 14:54:15] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
+[2025-11-21 14:54:25] cheker (admin) - Ajout de matelas: Ouverture de l'interface d'ajout de matelas
+[2025-11-21 21:30:43] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X

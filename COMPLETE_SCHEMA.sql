@@ -1,8 +1,8 @@
 -- ============================================================================
--- MatelasPro - Complete Database Schema (Optimized)
+-- MatelasPro - Complete Database Schema (Updated with All Features)
 -- Database: warehouse_db
--- Version: 1.0
--- Date: October 12, 2025
+-- Version: 2.0
+-- Date: Updated with all recent enhancements
 -- ============================================================================
 
 -- Use the database
@@ -29,7 +29,7 @@ VALUES ('admin', '$2a$10$N9qo8uLOickgx2ZMkIjefe.JQGfewQ92s/dUV4xJNVEWNVZJxlApm',
 ON DUPLICATE KEY UPDATE username=username;
 
 -- ============================================================================
--- TABLE 2: mattress (Matelas)
+-- TABLE 2: mattress (Matelas) - Updated with all new columns
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS mattress (
@@ -38,22 +38,34 @@ CREATE TABLE IF NOT EXISTS mattress (
     size VARCHAR(50) NOT NULL,
     reference VARCHAR(100) DEFAULT NULL,
     quantity INT NOT NULL DEFAULT 0,
-    prix DECIMAL(10,2) NOT NULL,
+    initial_stock INT NOT NULL DEFAULT 0 COMMENT 'Stock initial reçu',
+    quantity_sold INT NOT NULL DEFAULT 0 COMMENT 'Quantité totale vendue',
+    unit_price DECIMAL(10,2) NOT NULL DEFAULT 0 COMMENT 'Prix d''achat unitaire',
+    prix DECIMAL(10,2) NOT NULL COMMENT 'Prix de vente',
+    sort_order INT NOT NULL DEFAULT 0 COMMENT 'Ordre d''affichage personnalisé',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_type (type),
     INDEX idx_size (size),
     INDEX idx_quantity (quantity),
-    INDEX idx_type_size (type, size)
+    INDEX idx_type_size (type, size),
+    INDEX idx_sort_order (sort_order)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Note: MySQL doesn't support IF NOT EXISTS in ALTER TABLE
+-- These columns will be added automatically by SchemaMigrator if they don't exist
+-- For manual migration, check if columns exist first before adding them
+
+-- Update initial_stock for existing records
+UPDATE mattress SET initial_stock = quantity WHERE initial_stock = 0 AND quantity > 0;
+
 -- Insert sample mattresses
-INSERT INTO mattress (type, size, reference, quantity, unit_price, prix) VALUES
-('Mousse', '90x190', 'SuperMousse', 50, 1200.00, 1500.00),
-('Ressort', '140x190', 'SuperMousse', 30, 2000.00, 2500.00),
-('Latex', '160x200', 'SuperMousse', 20, 3000.00, 3500.00),
-('Mousse', '120x190', 'SuperMousse', 40, 1500.00, 1800.00),
-('Ressort', '180x200', 'SuperMousse', 15, 3200.00, 4000.00)
+INSERT INTO mattress (type, size, reference, quantity, initial_stock, quantity_sold, unit_price, prix, sort_order) VALUES
+('Mousse', '90x190', 'SuperMousse', 50, 50, 0, 1200.00, 1500.00, 1),
+('Ressort', '140x190', 'SuperMousse', 30, 30, 0, 2000.00, 2500.00, 2),
+('Latex', '160x200', 'SuperMousse', 20, 20, 0, 3000.00, 3500.00, 3),
+('Mousse', '120x190', 'SuperMousse', 40, 40, 0, 1500.00, 1800.00, 4),
+('Ressort', '180x200', 'SuperMousse', 15, 15, 0, 3200.00, 4000.00, 5)
 ON DUPLICATE KEY UPDATE id=id;
 
 -- ============================================================================
@@ -78,7 +90,7 @@ INSERT INTO store_owner (name, contact, address) VALUES
 ON DUPLICATE KEY UPDATE id=id;
 
 -- ============================================================================
--- TABLE 4: transaction (Transactions)
+-- TABLE 4: transaction (Transactions) - Updated with all new columns
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS transaction (
@@ -90,8 +102,9 @@ CREATE TABLE IF NOT EXISTS transaction (
     store_owner_id INT DEFAULT NULL,
     user_id INT NOT NULL,
     prix DECIMAL(10,2) NOT NULL,
-    expected_return_date DATE DEFAULT NULL,
+    expected_return_date DATE DEFAULT NULL COMMENT 'Date de retour prévue pour les prêts',
     notes TEXT DEFAULT NULL,
+    sort_order INT NOT NULL DEFAULT 0 COMMENT 'Ordre d''affichage personnalisé',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_date (date),
     INDEX idx_type (type),
@@ -99,10 +112,19 @@ CREATE TABLE IF NOT EXISTS transaction (
     INDEX idx_store_owner_id (store_owner_id),
     INDEX idx_user_id (user_id),
     INDEX idx_date_type (date, type),
+    INDEX idx_sort_order (sort_order),
     FOREIGN KEY (mattress_id) REFERENCES mattress(id) ON DELETE RESTRICT ON UPDATE CASCADE,
     FOREIGN KEY (store_owner_id) REFERENCES store_owner(id) ON DELETE SET NULL ON UPDATE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE RESTRICT ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Note: For existing databases, columns will be added automatically by SchemaMigrator
+-- If you need to add them manually, check if they exist first, then run:
+-- ALTER TABLE transaction ADD COLUMN expected_return_date DATE DEFAULT NULL AFTER prix;
+-- ALTER TABLE transaction ADD COLUMN sort_order INT NOT NULL DEFAULT 0 AFTER expected_return_date;
+
+-- Update sort_order for existing records
+UPDATE transaction SET sort_order = id WHERE sort_order = 0 OR sort_order IS NULL;
 
 -- ============================================================================
 -- TABLE 5: activity_log (Journal d'activité)
@@ -141,13 +163,14 @@ SELECT
     s.name AS store_owner_name,
     u.username AS user_name,
     t.expected_return_date,
-    t.notes
+    t.notes,
+    t.sort_order
 FROM transaction t
 JOIN mattress m ON t.mattress_id = m.id
 LEFT JOIN store_owner s ON t.store_owner_id = s.id
 JOIN users u ON t.user_id = u.id;
 
--- View: Inventory summary
+-- View: Inventory summary with sales tracking
 CREATE OR REPLACE VIEW inventory_summary AS
 SELECT 
     m.id,
@@ -155,14 +178,17 @@ SELECT
     m.size,
     m.reference,
     m.quantity AS current_stock,
-    m.prix AS unit_price,
+    m.initial_stock,
+    m.quantity_sold,
+    m.unit_price,
+    m.prix AS sale_price,
     m.quantity * m.prix AS total_value,
-    COALESCE(SUM(CASE WHEN t.type = 'Vente' THEN t.quantity ELSE 0 END), 0) AS total_sold,
+    COALESCE(SUM(CASE WHEN t.type = 'Vente' THEN t.quantity ELSE 0 END), 0) AS total_sold_transactions,
     COALESCE(SUM(CASE WHEN t.type = 'Prêt' THEN t.quantity ELSE 0 END), 0) AS total_lent,
     m.updated_at AS last_updated
 FROM mattress m
 LEFT JOIN transaction t ON m.id = t.mattress_id
-GROUP BY m.id;
+GROUP BY m.id, m.type, m.size, m.reference, m.quantity, m.initial_stock, m.quantity_sold, m.unit_price, m.prix, m.updated_at;
 
 -- ============================================================================
 -- STORED PROCEDURES (Performance optimization)
@@ -179,6 +205,8 @@ BEGIN
         size,
         reference,
         quantity,
+        initial_stock,
+        quantity_sold,
         prix
     FROM mattress
     WHERE quantity <= threshold
@@ -193,7 +221,7 @@ CREATE PROCEDURE IF NOT EXISTS GetTransactionsByDateRange(
 BEGIN
     SELECT * FROM transaction_details
     WHERE DATE(date) BETWEEN start_date AND end_date
-    ORDER BY date DESC;
+    ORDER BY sort_order ASC, date DESC;
 END$$
 
 -- Procedure: Get user activity
@@ -213,6 +241,25 @@ BEGIN
     ORDER BY timestamp DESC;
 END$$
 
+-- Procedure: Get mattress sales statistics
+CREATE PROCEDURE IF NOT EXISTS GetMattressSalesStats(IN p_mattress_id INT)
+BEGIN
+    SELECT 
+        m.id,
+        m.type,
+        m.size,
+        m.reference,
+        m.initial_stock,
+        m.quantity AS current_stock,
+        m.quantity_sold,
+        COALESCE(SUM(CASE WHEN t.type = 'Vente' THEN t.quantity * t.prix ELSE 0 END), 0) AS total_revenue,
+        COALESCE(SUM(CASE WHEN t.type = 'Vente' THEN t.quantity ELSE 0 END), 0) AS total_sold_count
+    FROM mattress m
+    LEFT JOIN transaction t ON m.id = t.mattress_id AND t.type = 'Vente'
+    WHERE m.id = p_mattress_id
+    GROUP BY m.id, m.type, m.size, m.reference, m.initial_stock, m.quantity, m.quantity_sold;
+END$$
+
 DELIMITER ;
 
 -- ============================================================================
@@ -222,18 +269,35 @@ DELIMITER ;
 DELIMITER $$
 
 -- Trigger: Update mattress quantity after transaction
+-- Also updates quantity_sold when a sale is made
 CREATE TRIGGER IF NOT EXISTS update_stock_after_transaction
 AFTER INSERT ON transaction
 FOR EACH ROW
 BEGIN
     IF NEW.type = 'Vente' OR NEW.type = 'Transfert' OR NEW.type = 'Prêt' THEN
+        -- Decrease stock for sales, loans, transfers
         UPDATE mattress 
         SET quantity = quantity - NEW.quantity
         WHERE id = NEW.mattress_id;
+        
+        -- Update quantity_sold for sales
+        IF NEW.type = 'Vente' THEN
+            UPDATE mattress 
+            SET quantity_sold = quantity_sold + NEW.quantity
+            WHERE id = NEW.mattress_id;
+        END IF;
     ELSEIF NEW.type = 'retour' OR NEW.type = 'Réception' THEN
+        -- Increase stock for returns, receptions
         UPDATE mattress 
         SET quantity = quantity + NEW.quantity
         WHERE id = NEW.mattress_id;
+        
+        -- Update initial_stock for receptions
+        IF NEW.type = 'Réception' THEN
+            UPDATE mattress 
+            SET initial_stock = initial_stock + NEW.quantity
+            WHERE id = NEW.mattress_id;
+        END IF;
     END IF;
 END$$
 
@@ -280,6 +344,9 @@ ON transaction(date, type, mattress_id);
 CREATE INDEX IF NOT EXISTS idx_mattress_type_quantity 
 ON mattress(type, quantity);
 
+CREATE INDEX IF NOT EXISTS idx_mattress_quantity_sold 
+ON mattress(quantity_sold);
+
 -- ============================================================================
 -- STATISTICS UPDATE (For query optimizer)
 -- ============================================================================
@@ -304,21 +371,34 @@ FROM information_schema.TABLES
 WHERE TABLE_SCHEMA = 'warehouse_db'
 ORDER BY TABLE_NAME;
 
--- ============================================================================
--- OPTIMIZATION SETTINGS (Optional - for production)
--- ============================================================================
+-- Check mattress table columns
+SELECT 
+    COLUMN_NAME,
+    DATA_TYPE,
+    COLUMN_TYPE,
+    COLUMN_COMMENT
+FROM information_schema.COLUMNS
+WHERE TABLE_SCHEMA = 'warehouse_db' 
+AND TABLE_NAME = 'mattress'
+ORDER BY ORDINAL_POSITION;
 
--- Enable InnoDB performance features
-SET GLOBAL innodb_buffer_pool_size = 256M;  -- Adjust based on available RAM
-SET GLOBAL innodb_flush_log_at_trx_commit = 2;  -- Better performance, still safe
-SET GLOBAL innodb_log_file_size = 64M;
+-- Check transaction table columns
+SELECT 
+    COLUMN_NAME,
+    DATA_TYPE,
+    COLUMN_TYPE,
+    COLUMN_COMMENT
+FROM information_schema.COLUMNS
+WHERE TABLE_SCHEMA = 'warehouse_db' 
+AND TABLE_NAME = 'transaction'
+ORDER BY ORDINAL_POSITION;
 
 -- ============================================================================
 -- COMPLETION MESSAGE
 -- ============================================================================
 
 SELECT 
-    '✅ Database schema created successfully!' AS Status,
+    '✅ Database schema created/updated successfully!' AS Status,
     'warehouse_db' AS Database_Name,
     COUNT(*) AS Total_Tables
 FROM information_schema.TABLES

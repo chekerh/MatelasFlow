@@ -27,7 +27,6 @@ public class PdfReportUtil {
         File reportsFolder = new File(reportsFolderPath);
         if (!reportsFolder.exists()) {
             reportsFolder.mkdirs();
-            System.out.println("Created reports folder: " + reportsFolderPath);
         }
         
         return reportsFolderPath;

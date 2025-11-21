@@ -19,19 +19,40 @@
                     <Button text="📊 Prédire la Demande" onAction="#predictDemand" styleClass="button-enhanced"/>
                     <Button text="⚠️ Détecter les Fraudes" onAction="#detectFraud" styleClass="button-enhanced"/>
                     <Button text="📈 Analyser les Tendances" onAction="#analyzeTrends" styleClass="button-enhanced"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Button fx:id="exportButton" text="💾 Exporter" onAction="#exportResults" styleClass="button-enhanced" visible="false" managed="false"/>
                 </HBox>
 
-                <StackPane styleClass="advanced-console" VBox.vgrow="ALWAYS">
-                    <TextArea fx:id="aiResultsArea" editable="false" wrapText="true" VBox.vgrow="ALWAYS" />
-                </StackPane>
-
-                <TableView fx:id="aiResultsTable" prefHeight="300" visible="false" managed="false" styleClass="advanced-table">
-                    <columns>
-                        <TableColumn fx:id="aiMetricColumn" text="Indicateur" prefWidth="220"/>
-                        <TableColumn fx:id="aiValueColumn" text="Valeur" prefWidth="180"/>
-                        <TableColumn fx:id="aiInsightColumn" text="Interprétation" prefWidth="320"/>
-                    </columns>
-                </TableView>
+                <!-- SplitPane pour afficher table et détails côte à côte -->
+                <SplitPane dividerPositions="0.65" VBox.vgrow="ALWAYS">
+                    <!-- Table principale -->
+                    <VBox spacing="10">
+                        <HBox spacing="10" alignment="CENTER_LEFT">
+                            <Label text="📊 Résultats Structurés" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <TextField fx:id="searchField" promptText="🔍 Rechercher..." prefWidth="200" onKeyReleased="#filterTable"/>
+                        </HBox>
+                        <TableView fx:id="aiResultsTable" VBox.vgrow="ALWAYS" styleClass="advanced-table">
+                            <columns>
+                                <TableColumn fx:id="aiRankColumn" text="Rang" prefWidth="60" sortable="true"/>
+                                <TableColumn fx:id="aiMetricColumn" text="Indicateur / Matelas" prefWidth="200" sortable="true"/>
+                                <TableColumn fx:id="aiValueColumn" text="Valeur Prédite" prefWidth="140" sortable="true"/>
+                                <TableColumn fx:id="aiConfidenceColumn" text="Confiance" prefWidth="100" sortable="true"/>
+                                <TableColumn fx:id="aiDateColumn" text="Date Prédiction" prefWidth="130" sortable="true"/>
+                                <TableColumn fx:id="aiInsightColumn" text="Recommandation" prefWidth="280" sortable="false"/>
+                                <TableColumn fx:id="aiFactorsColumn" text="Facteurs" prefWidth="200" sortable="false"/>
+                            </columns>
+                        </TableView>
+                    </VBox>
+                    
+                    <!-- Détails textuels -->
+                    <VBox spacing="10">
+                        <Label text="📝 Détails et Analyse" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+                        <StackPane styleClass="advanced-console" VBox.vgrow="ALWAYS">
+                            <TextArea fx:id="aiResultsArea" editable="false" wrapText="true" VBox.vgrow="ALWAYS" />
+                        </StackPane>
+                    </VBox>
+                </SplitPane>
             </VBox>
         </Tab>
         

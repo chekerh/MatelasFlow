@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 import com.warehouse.model.Transaction;
 import com.warehouse.model.TransactionDAO;
 import com.warehouse.util.ThemePreferences;
+import com.warehouse.service.ThemeService;
 
 public class AdvancedFeaturesController {
     @FXML private TextArea aiResultsArea;
@@ -33,14 +34,24 @@ public class AdvancedFeaturesController {
     @FXML private TextArea integrationResultsArea;
     @FXML private Label statusLabel;
     @FXML private TableView<Map<String, String>> aiResultsTable;
+    @FXML private TableColumn<Map<String, String>, String> aiRankColumn;
     @FXML private TableColumn<Map<String, String>, String> aiMetricColumn;
     @FXML private TableColumn<Map<String, String>, String> aiValueColumn;
+    @FXML private TableColumn<Map<String, String>, String> aiConfidenceColumn;
+    @FXML private TableColumn<Map<String, String>, String> aiDateColumn;
     @FXML private TableColumn<Map<String, String>, String> aiInsightColumn;
+    @FXML private TableColumn<Map<String, String>, String> aiFactorsColumn;
+    @FXML private TextField searchField;
+    @FXML private Button exportButton;
+    
+    private ObservableList<Map<String, String>> allTableData = FXCollections.observableArrayList();
+    private javafx.collections.transformation.FilteredList<Map<String, String>> filteredTableData;
     
     @FXML
     public void initialize() {
         setupComboBoxes();
         setupAITable();
+        setupSearchFilter();
         // Load saved theme and select it in the combo box
         String savedTheme = ThemePreferences.loadTheme();
         if (savedTheme != null && !savedTheme.isEmpty()) {
@@ -50,18 +61,100 @@ public class AdvancedFeaturesController {
     }
     
     private void setupAITable() {
-        if (aiResultsTable != null && aiMetricColumn != null && aiValueColumn != null && aiInsightColumn != null) {
-            aiMetricColumn.setCellValueFactory(data -> 
-                new javafx.beans.property.SimpleStringProperty(data.getValue().getOrDefault("metric", "")));
-            aiValueColumn.setCellValueFactory(data -> 
-                new javafx.beans.property.SimpleStringProperty(data.getValue().getOrDefault("value", "")));
-            aiInsightColumn.setCellValueFactory(data -> 
-                new javafx.beans.property.SimpleStringProperty(data.getValue().getOrDefault("insight", "")));
+        if (aiResultsTable != null) {
+            // Initialize filtered list
+            filteredTableData = new javafx.collections.transformation.FilteredList<>(allTableData, p -> true);
+            aiResultsTable.setItems(filteredTableData);
             
-            // Style columns
-            aiMetricColumn.setStyle("-fx-alignment: CENTER-LEFT;");
-            aiValueColumn.setStyle("-fx-alignment: CENTER;");
-            aiInsightColumn.setStyle("-fx-alignment: CENTER-LEFT;");
+            // Setup all columns
+            if (aiRankColumn != null) {
+                aiRankColumn.setCellValueFactory(data -> 
+                    new javafx.beans.property.SimpleStringProperty(data.getValue().getOrDefault("rank", "")));
+                aiRankColumn.setStyle("-fx-alignment: CENTER;");
+            }
+            
+            if (aiMetricColumn != null) {
+                aiMetricColumn.setCellValueFactory(data -> 
+                    new javafx.beans.property.SimpleStringProperty(data.getValue().getOrDefault("metric", "")));
+                aiMetricColumn.setStyle("-fx-alignment: CENTER-LEFT;");
+            }
+            
+            if (aiValueColumn != null) {
+                aiValueColumn.setCellValueFactory(data -> 
+                    new javafx.beans.property.SimpleStringProperty(data.getValue().getOrDefault("value", "")));
+                aiValueColumn.setStyle("-fx-alignment: CENTER;");
+            }
+            
+            if (aiConfidenceColumn != null) {
+                aiConfidenceColumn.setCellValueFactory(data -> 
+                    new javafx.beans.property.SimpleStringProperty(data.getValue().getOrDefault("confidence", "")));
+                aiConfidenceColumn.setStyle("-fx-alignment: CENTER;");
+                // Custom cell factory for colored confidence
+                aiConfidenceColumn.setCellFactory(column -> new javafx.scene.control.TableCell<Map<String, String>, String>() {
+                    @Override
+                    protected void updateItem(String item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (empty || item == null) {
+                            setText(null);
+                            setStyle("");
+                        } else {
+                            setText(item);
+                            // Color based on confidence percentage
+                            try {
+                                String percentStr = item.replace("%", "").trim();
+                                double percent = Double.parseDouble(percentStr);
+                                if (percent >= 70) {
+                                    setStyle("-fx-text-fill: #4ade80; -fx-font-weight: bold;"); // Green
+                                } else if (percent >= 50) {
+                                    setStyle("-fx-text-fill: #fbbf24; -fx-font-weight: bold;"); // Yellow
+                                } else {
+                                    setStyle("-fx-text-fill: #f87171; -fx-font-weight: bold;"); // Red
+                                }
+                            } catch (NumberFormatException e) {
+                                setStyle("");
+                            }
+                        }
+                    }
+                });
+            }
+            
+            if (aiDateColumn != null) {
+                aiDateColumn.setCellValueFactory(data -> 
+                    new javafx.beans.property.SimpleStringProperty(data.getValue().getOrDefault("date", "")));
+                aiDateColumn.setStyle("-fx-alignment: CENTER;");
+            }
+            
+            if (aiInsightColumn != null) {
+                aiInsightColumn.setCellValueFactory(data -> 
+                    new javafx.beans.property.SimpleStringProperty(data.getValue().getOrDefault("insight", "")));
+                aiInsightColumn.setStyle("-fx-alignment: CENTER-LEFT;");
+            }
+            
+            if (aiFactorsColumn != null) {
+                aiFactorsColumn.setCellValueFactory(data -> 
+                    new javafx.beans.property.SimpleStringProperty(data.getValue().getOrDefault("factors", "")));
+                aiFactorsColumn.setStyle("-fx-alignment: CENTER-LEFT;");
+            }
+            
+            // Enable sorting
+            aiResultsTable.setSortPolicy(t -> true);
+        }
+    }
+    
+    private void setupSearchFilter() {
+        if (searchField != null) {
+            searchField.textProperty().addListener((observable, oldValue, newValue) -> {
+                if (filteredTableData != null) {
+                    filteredTableData.setPredicate(data -> {
+                        if (newValue == null || newValue.isEmpty()) {
+                            return true;
+                        }
+                        String lowerCaseFilter = newValue.toLowerCase();
+                        return data.values().stream()
+                            .anyMatch(value -> value != null && value.toLowerCase().contains(lowerCaseFilter));
+                    });
+                }
+            });
         }
     }
     
@@ -144,16 +237,23 @@ public class AdvancedFeaturesController {
             
             // Populate table with structured data
             if (aiResultsTable != null) {
-                ObservableList<Map<String, String>> tableData = FXCollections.observableArrayList();
+                allTableData.clear();
                 for (int i = 0; i < predictions.size(); i++) {
                     DemandPredictor.DemandPrediction p = predictions.get(i);
                     Map<String, String> row = new HashMap<>();
-                    row.put("metric", "Rang #" + (i + 1) + " - " + p.getMattressName());
-                    row.put("value", p.getPredictedDemand() + " unités (" + String.format("%.1f", p.getConfidence() * 100) + "%)");
+                    row.put("rank", "#" + (i + 1));
+                    row.put("metric", p.getMattressName());
+                    row.put("value", p.getPredictedDemand() + " unités");
+                    row.put("confidence", String.format("%.1f", p.getConfidence() * 100) + "%");
+                    row.put("date", p.getPredictionDate().toString());
                     row.put("insight", p.getRecommendation());
-                    tableData.add(row);
+                    row.put("factors", String.join(", ", p.getFactors()));
+                    allTableData.add(row);
                 }
-                aiResultsTable.setItems(tableData);
+                if (exportButton != null) {
+                    exportButton.setVisible(true);
+                    exportButton.setManaged(true);
+                }
                 aiResultsTable.setVisible(true);
                 aiResultsTable.setManaged(true);
             }
@@ -219,6 +319,30 @@ public class AdvancedFeaturesController {
             }
             
             aiResultsArea.setText(sb.toString());
+            
+            // Populate table with fraud data
+            if (aiResultsTable != null) {
+                allTableData.clear();
+                for (int i = 0; i < frauds.size(); i++) {
+                    DemandPredictor.FraudDetection fraud = frauds.get(i);
+                    Map<String, String> row = new HashMap<>();
+                    row.put("rank", "#" + (i + 1));
+                    row.put("metric", fraud.getType());
+                    row.put("value", fraud.getSeverity());
+                    row.put("confidence", fraud.getSeverity().equals("HIGH") ? "🔴 Élevé" : "🟡 Modéré");
+                    row.put("date", java.time.LocalDate.now().toString());
+                    row.put("insight", fraud.getDetails());
+                    row.put("factors", fraud.getTransactionId());
+                    allTableData.add(row);
+                }
+                if (exportButton != null) {
+                    exportButton.setVisible(!frauds.isEmpty());
+                    exportButton.setManaged(!frauds.isEmpty());
+                }
+                aiResultsTable.setVisible(true);
+                aiResultsTable.setManaged(true);
+            }
+            
             updateStatus(frauds.isEmpty() ? "✅ Système sécurisé - Aucune fraude détectée" : "🚨 " + frauds.size() + " alertes de fraude détectées");
             
         } catch (Exception e) {
@@ -315,6 +439,42 @@ public class AdvancedFeaturesController {
             }
             
             aiResultsArea.setText(sb.toString());
+            
+            // Populate table with trend data (top mattresses)
+            if (aiResultsTable != null && !allTransactions.isEmpty()) {
+                allTableData.clear();
+                Map<Integer, Long> mattressSales = allTransactions.stream()
+                    .filter(t -> "Vente".equals(t.getType()))
+                    .collect(Collectors.groupingBy(Transaction::getMattressId, Collectors.counting()));
+                
+                List<Map.Entry<Integer, Long>> topMattresses = mattressSales.entrySet().stream()
+                    .sorted(Map.Entry.<Integer, Long>comparingByValue().reversed())
+                    .limit(10)
+                    .collect(Collectors.toList());
+                
+                for (int i = 0; i < topMattresses.size(); i++) {
+                    Map.Entry<Integer, Long> entry = topMattresses.get(i);
+                    Mattress mattress = MattressDAO.getMattressById(entry.getKey());
+                    if (mattress != null) {
+                        Map<String, String> row = new HashMap<>();
+                        row.put("rank", "#" + (i + 1));
+                        row.put("metric", mattress.getType() + " (" + mattress.getSize() + ")");
+                        row.put("value", entry.getValue() + " ventes");
+                        row.put("confidence", "📈 Tendance");
+                        row.put("date", java.time.LocalDate.now().toString());
+                        row.put("insight", "Matelas populaire - " + (entry.getValue() > 5 ? "Fort potentiel" : "Potentiel modéré"));
+                        row.put("factors", "Basé sur " + entry.getValue() + " transactions");
+                        allTableData.add(row);
+                    }
+                }
+                if (exportButton != null) {
+                    exportButton.setVisible(!allTableData.isEmpty());
+                    exportButton.setManaged(!allTableData.isEmpty());
+                }
+                aiResultsTable.setVisible(true);
+                aiResultsTable.setManaged(true);
+            }
+            
             updateStatus("✅ Analyse des tendances terminée - " + allTransactions.size() + " transactions analysées");
             
         } catch (Exception e) {
@@ -766,6 +926,30 @@ public class AdvancedFeaturesController {
     @FXML
     private void toggleDarkMode() {
         try {
+            // Get the scene and apply dark mode
+            Scene scene = themeComboBox != null ? themeComboBox.getScene() : null;
+            if (scene == null && statusLabel != null) {
+                scene = statusLabel.getScene();
+            }
+            
+            final Scene finalScene = scene; // Make final for lambda
+            if (finalScene != null) {
+                // Apply dark mode to the entire scene
+                ThemeService.toggleDarkModeOnScene(finalScene, true);
+                
+                // Apply dark mode to all children recursively
+                if (finalScene.getRoot() instanceof Parent) {
+                    ThemeService.applyDarkModeToChildren(finalScene.getRoot(), true);
+                }
+                
+                // Force refresh by reapplying styles
+                javafx.application.Platform.runLater(() -> {
+                    finalScene.getRoot().getStyleClass().add("dark-mode");
+                    // Trigger a style refresh
+                    finalScene.getRoot().setStyle(finalScene.getRoot().getStyle() + " ");
+                });
+            }
+            
             StringBuilder sb = new StringBuilder();
             sb.append("🌙 MODE SOMBRE\n");
             sb.append("═══════════════\n\n");
@@ -794,6 +978,10 @@ public class AdvancedFeaturesController {
             sb.append("• Meilleur contraste en faible luminosité\n");
             sb.append("• Interface moderne et élégante\n\n");
             
+            if (securityResultsArea != null) {
+                securityResultsArea.setText(sb.toString());
+            }
+            
             updateStatus("✅ Mode sombre activé - Protection des yeux");
             
         } catch (Exception e) {
@@ -804,6 +992,30 @@ public class AdvancedFeaturesController {
     @FXML
     private void toggleLightMode() {
         try {
+            // Get the scene and remove dark mode
+            Scene scene = themeComboBox != null ? themeComboBox.getScene() : null;
+            if (scene == null && statusLabel != null) {
+                scene = statusLabel.getScene();
+            }
+            
+            final Scene finalScene = scene; // Make final for lambda
+            if (finalScene != null) {
+                // Remove dark mode from the entire scene
+                ThemeService.toggleDarkModeOnScene(finalScene, false);
+                
+                // Remove dark mode from all children recursively
+                if (finalScene.getRoot() instanceof Parent) {
+                    ThemeService.applyDarkModeToChildren(finalScene.getRoot(), false);
+                }
+                
+                // Force refresh by reapplying styles
+                javafx.application.Platform.runLater(() -> {
+                    finalScene.getRoot().getStyleClass().remove("dark-mode");
+                    // Trigger a style refresh
+                    finalScene.getRoot().setStyle(finalScene.getRoot().getStyle() + " ");
+                });
+            }
+            
             StringBuilder sb = new StringBuilder();
             sb.append("☀️ MODE CLAIR\n");
             sb.append("═══════════════\n\n");
@@ -831,6 +1043,10 @@ public class AdvancedFeaturesController {
             sb.append("• Compatible avec tous les écrans\n");
             sb.append("• Interface familière et rassurante\n");
             sb.append("• Idéal pour la bureautique\n\n");
+            
+            if (securityResultsArea != null) {
+                securityResultsArea.setText(sb.toString());
+            }
             
             updateStatus("✅ Mode clair activé - Visibilité optimale");
             
@@ -1011,6 +1227,60 @@ public class AdvancedFeaturesController {
             integrationResultsArea.setText("❌ Erreur lors de la connexion logistique:\n\n" + e.getMessage());
             updateStatus("❌ Erreur lors de la connexion logistique");
         }
+    }
+    
+    @FXML
+    private void filterTable() {
+        // Filter is handled by setupSearchFilter listener
+    }
+    
+    @FXML
+    private void exportResults() {
+        try {
+            if (allTableData.isEmpty()) {
+                updateStatus("❌ Aucune donnée à exporter");
+                return;
+            }
+            
+            javafx.stage.FileChooser fileChooser = new javafx.stage.FileChooser();
+            fileChooser.setTitle("Exporter les résultats");
+            fileChooser.getExtensionFilters().add(
+                new javafx.stage.FileChooser.ExtensionFilter("CSV Files", "*.csv")
+            );
+            fileChooser.setInitialFileName("ai_results_" + java.time.LocalDate.now() + ".csv");
+            
+            javafx.stage.Window window = aiResultsTable.getScene().getWindow();
+            java.io.File file = fileChooser.showSaveDialog(window);
+            
+            if (file != null) {
+                try (java.io.FileWriter writer = new java.io.FileWriter(file)) {
+                    // Write header
+                    writer.append("Rang,Indicateur,Valeur,Confiance,Date,Recommandation,Facteurs\n");
+                    
+                    // Write data
+                    for (Map<String, String> row : allTableData) {
+                        writer.append(escapeCSV(row.getOrDefault("rank", ""))).append(",");
+                        writer.append(escapeCSV(row.getOrDefault("metric", ""))).append(",");
+                        writer.append(escapeCSV(row.getOrDefault("value", ""))).append(",");
+                        writer.append(escapeCSV(row.getOrDefault("confidence", ""))).append(",");
+                        writer.append(escapeCSV(row.getOrDefault("date", ""))).append(",");
+                        writer.append(escapeCSV(row.getOrDefault("insight", ""))).append(",");
+                        writer.append(escapeCSV(row.getOrDefault("factors", ""))).append("\n");
+                    }
+                }
+                updateStatus("✅ Résultats exportés avec succès: " + file.getName());
+            }
+        } catch (Exception e) {
+            updateStatus("❌ Erreur lors de l'export: " + e.getMessage());
+        }
+    }
+    
+    private String escapeCSV(String value) {
+        if (value == null) return "";
+        if (value.contains(",") || value.contains("\"") || value.contains("\n")) {
+            return "\"" + value.replace("\"", "\"\"") + "\"";
+        }
+        return value;
     }
     
     private void updateStatus(String message) {

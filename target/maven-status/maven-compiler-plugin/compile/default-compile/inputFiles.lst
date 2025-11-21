@@ -5,6 +5,7 @@
 /Users/mac/ste-habiba-desktop-java/src/main/java/com/warehouse/controller/AdvancedFeaturesController.java
 /Users/mac/ste-habiba-desktop-java/src/main/java/com/warehouse/controller/DashboardController.java
 /Users/mac/ste-habiba-desktop-java/src/main/java/com/warehouse/controller/InventoryController.java
+/Users/mac/ste-habiba-desktop-java/src/main/java/com/warehouse/controller/LicenseActivationController.java
 /Users/mac/ste-habiba-desktop-java/src/main/java/com/warehouse/controller/LoginController.java
 /Users/mac/ste-habiba-desktop-java/src/main/java/com/warehouse/controller/MattressDialogController.java
 /Users/mac/ste-habiba-desktop-java/src/main/java/com/warehouse/controller/MattressOverlayController.java
@@ -32,6 +33,7 @@
 /Users/mac/ste-habiba-desktop-java/src/main/java/com/warehouse/model/User.java
 /Users/mac/ste-habiba-desktop-java/src/main/java/com/warehouse/model/UserDAO.java
 /Users/mac/ste-habiba-desktop-java/src/main/java/com/warehouse/security/DataEncryption.java
+/Users/mac/ste-habiba-desktop-java/src/main/java/com/warehouse/security/LicenseManager.java
 /Users/mac/ste-habiba-desktop-java/src/main/java/com/warehouse/security/TwoFactorAuth.java
 /Users/mac/ste-habiba-desktop-java/src/main/java/com/warehouse/service/QuickStatsService.java
 /Users/mac/ste-habiba-desktop-java/src/main/java/com/warehouse/service/ThemeService.java
@@ -42,6 +44,7 @@
 /Users/mac/ste-habiba-desktop-java/src/main/java/com/warehouse/util/BackupManager.java
 /Users/mac/ste-habiba-desktop-java/src/main/java/com/warehouse/util/ErrorHandler.java
 /Users/mac/ste-habiba-desktop-java/src/main/java/com/warehouse/util/FirebaseBackupService.java
+/Users/mac/ste-habiba-desktop-java/src/main/java/com/warehouse/util/GenerateLicenseKey.java
 /Users/mac/ste-habiba-desktop-java/src/main/java/com/warehouse/util/InputValidator.java
 /Users/mac/ste-habiba-desktop-java/src/main/java/com/warehouse/util/NotificationSystem.java
 /Users/mac/ste-habiba-desktop-java/src/main/java/com/warehouse/util/PdfReportUtil.java

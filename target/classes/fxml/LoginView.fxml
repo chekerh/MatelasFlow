@@ -41,6 +41,10 @@
                                    styleClass="login-password-field"/>
                 </VBox>
 
+                <HBox spacing="8" alignment="CENTER_LEFT">
+                    <CheckBox fx:id="rememberUsernameCheckBox" text="Se souvenir du nom d'utilisateur" styleClass="login-checkbox"/>
+                </HBox>
+
                 <Label fx:id="errorLabel"
                        styleClass="login-error-label"/>
 

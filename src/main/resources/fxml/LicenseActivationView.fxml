@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+<?import javafx.scene.text.Text?>
+
+<VBox alignment="CENTER" spacing="20.0" styleClass="login-root" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.warehouse.controller.LicenseActivationController" stylesheets="@../css/modern.css">
+   <children>
+      <!-- Logo -->
+      <ImageView fitHeight="120.0" fitWidth="120.0" pickOnBounds="true" preserveRatio="true">
+         <image>
+            <Image url="@/images/SuperMousse.jpg" />
+         </image>
+      </ImageView>
+      
+      <!-- Title -->
+      <Text fill="#2c3e50" strokeType="OUTSIDE" strokeWidth="0.0" text="MatelasPro" textAlignment="CENTER" wrappingWidth="400.0">
+         <font>
+            <Font name="System Bold" size="32.0" />
+         </font>
+      </Text>
+      
+      <!-- Subtitle -->
+      <Text fill="#7f8c8d" strokeType="OUTSIDE" strokeWidth="0.0" text="Gestion d'Entrepôt STE Habiba" textAlignment="CENTER" wrappingWidth="400.0">
+         <font>
+            <Font size="16.0" />
+         </font>
+      </Text>
+      
+      <!-- Activation Panel -->
+      <VBox alignment="CENTER" spacing="15.0" styleClass="glass-panel">
+         <children>
+            <Text fill="#34495e" strokeType="OUTSIDE" strokeWidth="0.0" text="Activation de la licence" textAlignment="CENTER" wrappingWidth="350.0">
+               <font>
+                  <Font name="System Bold" size="20.0" />
+               </font>
+            </Text>
+            
+            <Text fill="#7f8c8d" strokeType="OUTSIDE" strokeWidth="0.0" text="Veuillez entrer votre clé d'activation pour continuer" textAlignment="CENTER" wrappingWidth="350.0">
+               <font>
+                  <Font size="12.0" />
+               </font>
+            </Text>
+            
+            <TextField fx:id="licenseKeyField" promptText="XXXX-XXXX-XXXX-XXXX-XXXX" styleClass="license-field">
+               <font>
+                  <Font size="14.0" />
+               </font>
+            </TextField>
+            
+            <Button fx:id="activateButton" onAction="#handleActivate" styleClass="activate-button" text="Activer">
+               <font>
+                  <Font size="14.0" />
+               </font>
+            </Button>
+            
+            <Label fx:id="statusLabel" styleClass="status-label" text="" textAlignment="CENTER" wrapText="true" />
+            
+         </children>
+         <padding>
+            <Insets bottom="30.0" left="30.0" right="30.0" top="30.0" />
+         </padding>
+      </VBox>
+      
+      <!-- Footer -->
+      <Text fill="#95a5a6" strokeType="OUTSIDE" strokeWidth="0.0" text="© 2024 STE Habiba - Tous droits réservés" textAlignment="CENTER" wrappingWidth="400.0">
+         <font>
+            <Font size="10.0" />
+         </font>
+      </Text>
+   </children>
+   <padding>
+      <Insets bottom="40.0" left="40.0" right="40.0" top="40.0" />
+   </padding>
+</VBox>
+

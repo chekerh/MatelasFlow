@@ -3,6 +3,7 @@ package com.warehouse.controller;
 import com.warehouse.model.Transaction;
 import com.warehouse.model.TransactionDAO;
 import com.warehouse.ui.SkeletonPane;
+import com.warehouse.ui.IconFactory;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -15,6 +16,8 @@ import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import javafx.application.Platform;
+import javafx.animation.PauseTransition;
+import javafx.util.Duration;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
@@ -55,6 +58,9 @@ public class TransactionsController {
     @FXML
     public void initialize() {
         transactionTable.setFixedCellSize(56);
+        // Use flexible resize policy for dynamic column sizing
+        transactionTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
+        
         dateColumn.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(cellData.getValue().getDate().toString()));
         mattressNameColumn.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(
             cellData.getValue().getMattressName() != null ? cellData.getValue().getMattressName() : "Inconnu"
@@ -70,21 +76,21 @@ public class TransactionsController {
                     setStyle("");
                     return;
                 }
-                String lower = item.toLowerCase(Locale.ROOT);
+                String lower = item.toLowerCase(Locale.ROOT).trim();
                 if (lower.startsWith("vente")) {
                     setText("💰 Vente");
                     setStyle("-fx-text-fill: #16a085; -fx-font-weight: bold;");
-                } else if (lower.startsWith("prêt") || lower.startsWith("pret")) {
+                } else if (lower.startsWith("prêt") || lower.startsWith("pret") || lower.contains("pret")) {
                     setText("📦 Prêt");
                     setStyle("-fx-text-fill: #2980b9; -fx-font-weight: bold;");
-                } else if (lower.startsWith("transfert")) {
+                } else if (lower.startsWith("transfert") || lower.contains("transfert")) {
                     setText("🚚 Transfert");
                     setStyle("-fx-text-fill: #8e44ad; -fx-font-weight: bold;");
-                } else if (lower.startsWith("retour")) {
-                    setText("🔄 Retour (retour de prêt)");
+                } else if (lower.startsWith("retour") || lower.contains("retour")) {
+                    setText("🔄 Retour");
                     setStyle("-fx-text-fill: #d35400; -fx-font-weight: bold;");
-                } else if (lower.startsWith("réception") || lower.startsWith("reception")) {
-                    setText("📥 Réception (nouveau stock)");
+                } else if (lower.startsWith("réception") || lower.startsWith("reception") || lower.contains("reception")) {
+                    setText("📥 Réception");
                     setStyle("-fx-text-fill: #27ae60; -fx-font-weight: bold;");
                 } else {
                     setText(item);
@@ -186,8 +192,27 @@ public class TransactionsController {
         expectedReturnDateColumn.setStyle("-fx-alignment: CENTER;");
         totalPriceColumn.setStyle("-fx-alignment: CENTER;");
 
-        transactionTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
-        bindColumnWidths();
+        // Set minimum widths for columns to ensure readability
+        addMattressColumn.setMinWidth(50);
+        addMattressColumn.setMaxWidth(50);
+        dateColumn.setMinWidth(100);
+        mattressNameColumn.setMinWidth(150);
+        quantityColumn.setMinWidth(70);
+        typeColumn.setMinWidth(120);
+        prixColumn.setMinWidth(100);
+        totalPriceColumn.setMinWidth(100);
+        storeOwnerNameColumn.setMinWidth(120);
+        notesColumn.setMinWidth(200);
+        expectedReturnDateColumn.setMinWidth(110);
+        
+        // Auto-size columns to fit content after table is rendered
+        Platform.runLater(() -> {
+            // Small delay to ensure table is fully rendered
+            PauseTransition pause = new PauseTransition(Duration.millis(100));
+            pause.setOnFinished(e -> autoResizeColumns());
+            pause.play();
+        });
+        
         transactionTable.setPlaceholder(tableSkeleton);
 
         // Wrap list in a FilteredList so we can change view per type
@@ -214,6 +239,12 @@ public class TransactionsController {
                 System.out.println("[TransactionsController] Transactions chargées: " + transactionList.size());
                 errorLabel.setText("");
                 applyViewModeFilter();
+                // Auto-resize after data is loaded
+                Platform.runLater(() -> {
+                    PauseTransition pause = new PauseTransition(Duration.millis(150));
+                    pause.setOnFinished(e -> autoResizeColumns());
+                    pause.play();
+                });
                 showSkeleton(false);
             }))
             .exceptionally(ex -> {
@@ -262,28 +293,186 @@ public class TransactionsController {
         String mode = viewModeComboBox != null ? viewModeComboBox.getValue() : "Toutes les transactions";
         if (mode == null || mode.isBlank() || "Toutes les transactions".equals(mode)) {
             filteredTransactions.setPredicate(t -> true);
+            // Show all columns when viewing all transactions
+            storeOwnerNameColumn.setVisible(true);
+            expectedReturnDateColumn.setVisible(true);
+            prixColumn.setVisible(true);
+            totalPriceColumn.setVisible(true);
         } else if ("Ventes".equals(mode)) {
-            filteredTransactions.setPredicate(t -> t.getType() != null && t.getType().toLowerCase().startsWith("vente"));
+            filteredTransactions.setPredicate(t -> isTransactionType(t, "vente"));
+            // For sales: show price columns, hide owner and return date
+            storeOwnerNameColumn.setVisible(false);
+            expectedReturnDateColumn.setVisible(false);
+            prixColumn.setVisible(true);
+            totalPriceColumn.setVisible(true);
         } else if ("Prêts".equals(mode)) {
-            filteredTransactions.setPredicate(t -> t.getType() != null && (t.getType().toLowerCase().startsWith("prêt") || t.getType().toLowerCase().startsWith("pret")));
+            filteredTransactions.setPredicate(t -> isTransactionType(t, "pret") || isTransactionType(t, "prêt"));
+            // For loans: show owner and return date, hide price columns
+            storeOwnerNameColumn.setVisible(true);
+            expectedReturnDateColumn.setVisible(true);
+            prixColumn.setVisible(false);
+            totalPriceColumn.setVisible(false);
         } else if ("Transferts".equals(mode)) {
-            filteredTransactions.setPredicate(t -> t.getType() != null && t.getType().toLowerCase().startsWith("transfert"));
+            filteredTransactions.setPredicate(t -> isTransactionType(t, "transfert"));
+            // For transfers: show owner, hide return date and price columns
+            storeOwnerNameColumn.setVisible(true);
+            expectedReturnDateColumn.setVisible(false);
+            prixColumn.setVisible(false);
+            totalPriceColumn.setVisible(false);
         } else if ("Retours / Réceptions".equals(mode)) {
-            filteredTransactions.setPredicate(t -> {
-                if (t.getType() == null) return false;
-                String lt = t.getType().toLowerCase();
-                return lt.startsWith("retour") || lt.startsWith("réception") || lt.startsWith("reception");
-            });
+            filteredTransactions.setPredicate(t -> isTransactionType(t, "retour") || isTransactionType(t, "reception") || isTransactionType(t, "réception"));
+            // For returns/receptions: show return date if applicable, hide price columns
+            storeOwnerNameColumn.setVisible(true);
+            expectedReturnDateColumn.setVisible(true);
+            prixColumn.setVisible(false);
+            totalPriceColumn.setVisible(false);
         } else {
             filteredTransactions.setPredicate(t -> true);
+            storeOwnerNameColumn.setVisible(true);
+            expectedReturnDateColumn.setVisible(true);
+            prixColumn.setVisible(true);
+            totalPriceColumn.setVisible(true);
         }
-
-        // Column visibility per mode (simulate dynamic columns)
-        boolean showOwner = "Prêts".equals(mode) || "Transferts".equals(mode);
-        boolean showReturnDate = "Prêts".equals(mode) || "Retours / Réceptions".equals(mode);
-
-        storeOwnerNameColumn.setVisible(showOwner);
-        expectedReturnDateColumn.setVisible(showReturnDate);
+        
+        // Auto-resize columns after visibility changes
+        Platform.runLater(() -> {
+            // Small delay to ensure table is fully rendered
+            PauseTransition pause = new PauseTransition(Duration.millis(100));
+            pause.setOnFinished(e -> autoResizeColumns());
+            pause.play();
+        });
+    }
+    
+    /**
+     * Robust transaction type checking that handles variations
+     */
+    private boolean isTransactionType(Transaction t, String type) {
+        if (t == null || t.getType() == null) return false;
+        String transactionType = t.getType().toLowerCase(Locale.ROOT).trim();
+        String searchType = type.toLowerCase(Locale.ROOT).trim();
+        
+        // Handle variations
+        if (searchType.equals("vente")) {
+            return transactionType.startsWith("vente");
+        } else if (searchType.equals("pret") || searchType.equals("prêt")) {
+            return transactionType.startsWith("prêt") || transactionType.startsWith("pret") || transactionType.contains("pret");
+        } else if (searchType.equals("transfert")) {
+            return transactionType.startsWith("transfert") || transactionType.contains("transfert");
+        } else if (searchType.equals("retour")) {
+            return transactionType.startsWith("retour") || transactionType.contains("retour");
+        } else if (searchType.equals("reception") || searchType.equals("réception")) {
+            return transactionType.startsWith("réception") || transactionType.startsWith("reception") || transactionType.contains("reception");
+        }
+        return transactionType.contains(searchType);
+    }
+    
+    /**
+     * Auto-resize columns to fit their content
+     */
+    private void autoResizeColumns() {
+        if (transactionTable == null || filteredTransactions == null) {
+            return;
+        }
+        
+        // Use the actual items from the table (which uses filteredTransactions)
+        ObservableList<Transaction> items = transactionTable.getItems();
+        if (items == null || items.isEmpty()) {
+            return;
+        }
+        
+        // Calculate optimal widths based on visible content
+        for (TableColumn<?, ?> column : transactionTable.getColumns()) {
+            if (column != null && column.isVisible()) {
+                double maxWidth = column.getMinWidth();
+                // Sample from visible items (check first 50 to avoid performance issues)
+                int sampleSize = Math.min(50, items.size());
+                for (int i = 0; i < sampleSize; i++) {
+                    Transaction t = items.get(i);
+                    if (t != null) {
+                        String content = getColumnContent(t, column);
+                        if (content != null && !content.isEmpty()) {
+                            // Estimate width based on character count (rough estimate: 7-8 pixels per character)
+                            double estimatedWidth = content.length() * 7.5 + 30; // Add padding
+                            maxWidth = Math.max(maxWidth, estimatedWidth);
+                        }
+                    }
+                }
+                // Set pref width but respect min/max constraints
+                double optimalWidth = Math.max(column.getMinWidth(), Math.min(maxWidth, 500));
+                column.setPrefWidth(optimalWidth);
+            }
+        }
+    }
+    
+    /**
+     * Get the string content for a column
+     */
+    private String getColumnContent(Transaction t, TableColumn<?, ?> column) {
+        if (column == dateColumn) {
+            return t.getDate().toString();
+        } else if (column == mattressNameColumn) {
+            return t.getMattressName() != null ? t.getMattressName() : "Inconnu";
+        } else if (column == quantityColumn) {
+            return String.valueOf(t.getQuantity());
+        } else if (column == typeColumn) {
+            return t.getType() != null ? t.getType() : "";
+        } else if (column == prixColumn) {
+            return String.format("%.2f DT", t.getPrix());
+        } else if (column == totalPriceColumn) {
+            return String.format("%.2f DT", t.getPrix() * t.getQuantity());
+        } else if (column == storeOwnerNameColumn) {
+            return t.getStoreOwnerName() != null ? t.getStoreOwnerName() : "";
+        } else if (column == notesColumn) {
+            // Get the formatted notes content
+            String type = t.getType() != null ? t.getType() : "";
+            String mattress = t.getMattressName() != null ? t.getMattressName() : "Matelas inconnu";
+            String owner = t.getStoreOwnerName() != null ? t.getStoreOwnerName() : "";
+            int qty = t.getQuantity();
+            double unitPrice = t.getPrix();
+            double total = unitPrice * qty;
+            
+            StringBuilder details = new StringBuilder();
+            String lowerType = type.toLowerCase(Locale.ROOT);
+            
+            if (lowerType.startsWith("vente")) {
+                details.append("Vente de ").append(qty).append(" x ").append(mattress)
+                    .append(" à ").append(String.format("%.2f DT", unitPrice))
+                    .append(" (Total: ").append(String.format("%.2f DT", total)).append(")");
+            } else if (lowerType.startsWith("prêt") || lowerType.startsWith("pret")) {
+                details.append("Prêt de ").append(qty).append(" x ").append(mattress);
+                if (!owner.isEmpty()) {
+                    details.append(" à ").append(owner);
+                }
+                if (t.getExpectedReturnDate() != null) {
+                    details.append(" (retour prévu le ").append(t.getExpectedReturnDate()).append(")");
+                }
+            } else if (lowerType.startsWith("transfert")) {
+                details.append("Transfert de ").append(qty).append(" x ").append(mattress);
+                if (!owner.isEmpty()) {
+                    details.append(" vers ").append(owner);
+                }
+            } else if (lowerType.startsWith("retour")) {
+                details.append("Retour en stock de ").append(qty).append(" x ").append(mattress);
+                if (!owner.isEmpty()) {
+                    details.append(" depuis ").append(owner);
+                }
+            } else if (lowerType.startsWith("réception") || lowerType.startsWith("reception")) {
+                details.append("Réception de ").append(qty).append(" x ").append(mattress)
+                    .append(" (stock augmenté)");
+            } else {
+                details.append(type).append(" - ").append(qty).append(" x ").append(mattress);
+            }
+            
+            String notes = t.getNotes();
+            if (notes != null && !notes.isBlank()) {
+                details.append(" – ").append(notes.trim());
+            }
+            
+            return details.toString();
+        } else if (column == expectedReturnDateColumn) {
+            return t.getExpectedReturnDate() != null ? t.getExpectedReturnDate().toString() : "";
+        }
+        return "";
     }
 
     @FXML
@@ -342,12 +531,20 @@ public class TransactionsController {
     }
 
     private class AddButtonCell extends TableCell<Transaction, Void> {
-        private final Button addButton = new Button("\uFF0B");
+        private final Button addButton = new Button();
 
         AddButtonCell() {
+            // Use icon instead of text
+            var plusIcon = IconFactory.svg("plus", 16);
+            addButton.setGraphic(plusIcon);
+            addButton.setText(null); // Remove any text
             addButton.getStyleClass().addAll("icon-button");
-            addButton.setStyle("-fx-font-weight: 700;");
-            addButton.setMaxWidth(Double.MAX_VALUE);
+            addButton.setMaxWidth(40);
+            addButton.setMinWidth(40);
+            addButton.setMaxHeight(40);
+            addButton.setMinHeight(40);
+            addButton.setPrefWidth(40);
+            addButton.setPrefHeight(40);
             addButton.setTooltip(new Tooltip("Ajouter un matelas (+1)"));
             addButton.setOnAction(event -> {
                 Transaction transaction = getTableView().getItems().get(getIndex());
@@ -487,21 +684,5 @@ public class TransactionsController {
         }
     }
 
-    private void bindColumnWidths() {
-        bindColumn(dateColumn, 0.12);
-        bindColumn(mattressNameColumn, 0.20);
-        bindColumn(quantityColumn, 0.08);
-        bindColumn(typeColumn, 0.10);
-        bindColumn(prixColumn, 0.10);
-        bindColumn(totalPriceColumn, 0.10);
-        bindColumn(storeOwnerNameColumn, 0.08);
-        bindColumn(notesColumn, 0.12);
-        bindColumn(expectedReturnDateColumn, 0.08);
-        bindColumn(addMattressColumn, 0.10);
-    }
-
-    private void bindColumn(TableColumn<?, ?> column, double percentage) {
-        if (column == null) return;
-        column.prefWidthProperty().bind(transactionTable.widthProperty().multiply(percentage));
-    }
+    // Removed bindColumnWidths - now using auto-resize
 } 

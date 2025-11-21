@@ -18,6 +18,8 @@ import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.application.Platform;
+import javafx.animation.PauseTransition;
+import javafx.util.Duration;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -47,8 +49,10 @@ public class InventoryController {
 
     @FXML
     public void initialize() {
+        // Use flexible resize policy for dynamic column sizing
         mattressTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
         mattressTable.setFixedCellSize(56);
+        
         typeColumn.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(cellData.getValue().getType()));
         sizeColumn.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(cellData.getValue().getSize()));
         brandColumn.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(
@@ -66,6 +70,14 @@ public class InventoryController {
         quantityColumn.setStyle("-fx-alignment: CENTER;");
         unitPriceColumn.setStyle("-fx-alignment: CENTER;");
         prixColumn.setStyle("-fx-alignment: CENTER;");
+        
+        // Set minimum widths for columns
+        typeColumn.setMinWidth(150);
+        sizeColumn.setMinWidth(120);
+        brandColumn.setMinWidth(150);
+        quantityColumn.setMinWidth(80);
+        unitPriceColumn.setMinWidth(140);
+        prixColumn.setMinWidth(140);
 
         mattressTable.setPlaceholder(tableSkeleton);
         mattressTable.setItems(mattressList);
@@ -100,6 +112,12 @@ public class InventoryController {
                 mattressList.setAll(list);
                 System.out.println("[InventoryController] Matelas chargés: " + mattressList.size());
                 errorLabel.setText("");
+                // Auto-resize after data is loaded
+                Platform.runLater(() -> {
+                    PauseTransition pause = new PauseTransition(Duration.millis(150));
+                    pause.setOnFinished(e -> autoResizeColumns());
+                    pause.play();
+                });
                 showSkeleton(false);
             }))
             .exceptionally(ex -> {
@@ -187,15 +205,56 @@ public class InventoryController {
     @FXML
     private void handleDelete() {
         Mattress selected = mattressTable.getSelectionModel().getSelectedItem();
-        if (selected != null) {
-            if (MattressDAO.deleteMattress(selected.getId())) {
-                loadMattresses();
-            } else {
-                errorLabel.setText("Échec de la suppression du matelas.");
-            }
-        } else {
+        if (selected == null) {
             errorLabel.setText("Aucun matelas sélectionné.");
+            return;
         }
+        
+        // Check if mattress has transactions (foreign key constraint will prevent deletion)
+        // Show confirmation dialog
+        javafx.scene.control.Alert confirmAlert = new javafx.scene.control.Alert(
+            javafx.scene.control.Alert.AlertType.CONFIRMATION
+        );
+        confirmAlert.setTitle("Supprimer le matelas");
+        confirmAlert.setHeaderText("Voulez-vous vraiment supprimer ce matelas ?");
+        confirmAlert.setContentText(
+            "Type: " + selected.getType() + "\n" +
+            "Taille: " + selected.getSize() + "\n" +
+            "Référence: " + selected.getReference() + "\n" +
+            "Quantité: " + selected.getQuantity() + "\n\n" +
+            "⚠️ Attention: Cette action est irréversible.\n" +
+            "Si ce matelas a des transactions associées, la suppression sera bloquée."
+        );
+        confirmAlert.initOwner(mattressTable.getScene().getWindow());
+        
+        confirmAlert.showAndWait().ifPresent(result -> {
+            if (result == javafx.scene.control.ButtonType.OK) {
+                try {
+                    if (MattressDAO.deleteMattress(selected.getId())) {
+                        loadMattresses();
+                        if (dashboardController != null) {
+                            dashboardController.showNotification("Matelas supprimé avec succès!", false);
+                        }
+                    } else {
+                        errorLabel.setText("Échec de la suppression. Le matelas peut avoir des transactions associées.");
+                        if (dashboardController != null) {
+                            dashboardController.showNotification(
+                                "Impossible de supprimer le matelas. Il existe probablement des transactions associées.", 
+                                true
+                            );
+                        }
+                    }
+                } catch (Exception e) {
+                    errorLabel.setText("Erreur lors de la suppression: " + e.getMessage());
+                    if (dashboardController != null) {
+                        dashboardController.showNotification(
+                            "Erreur lors de la suppression: " + e.getMessage(), 
+                            true
+                        );
+                    }
+                }
+            }
+        });
     }
 
     @FXML
@@ -270,5 +329,57 @@ public class InventoryController {
         if (MattressDAO.isSortOrderSupported()) {
             MattressDAO.updateSortOrder(mattressTable.getItems());
         }
+    }
+    
+    /**
+     * Auto-resize columns to fit their content
+     */
+    private void autoResizeColumns() {
+        if (mattressTable.getItems().isEmpty()) {
+            return;
+        }
+        
+        // Calculate optimal widths based on content
+        for (TableColumn<?, ?> column : mattressTable.getColumns()) {
+            if (column.isVisible()) {
+                double maxWidth = column.getMinWidth();
+                // Sample from items (check first 50 to avoid performance issues)
+                int sampleSize = Math.min(50, mattressList.size());
+                for (int i = 0; i < sampleSize; i++) {
+                    Mattress m = mattressList.get(i);
+                    if (m != null) {
+                        String content = getColumnContent(m, column);
+                        if (content != null && !content.isEmpty()) {
+                            // Estimate width based on character count (rough estimate: 7-8 pixels per character)
+                            double estimatedWidth = content.length() * 7.5 + 30; // Add padding
+                            maxWidth = Math.max(maxWidth, estimatedWidth);
+                        }
+                    }
+                }
+                // Set pref width but respect min/max constraints
+                double optimalWidth = Math.max(column.getMinWidth(), Math.min(maxWidth, 400));
+                column.setPrefWidth(optimalWidth);
+            }
+        }
+    }
+    
+    /**
+     * Get the string content for a column
+     */
+    private String getColumnContent(Mattress m, TableColumn<?, ?> column) {
+        if (column == typeColumn) {
+            return m.getType() != null ? m.getType() : "";
+        } else if (column == sizeColumn) {
+            return m.getSize() != null ? m.getSize() : "";
+        } else if (column == brandColumn) {
+            return m.getReference() != null ? m.getReference() : "";
+        } else if (column == quantityColumn) {
+            return String.valueOf(m.getQuantity());
+        } else if (column == unitPriceColumn) {
+            return String.format("%.2f DT", m.getUnitPrice());
+        } else if (column == prixColumn) {
+            return String.format("%.2f DT", m.getSalePrice());
+        }
+        return "";
     }
 } 

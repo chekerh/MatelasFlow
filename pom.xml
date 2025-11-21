@@ -166,10 +166,11 @@
                 <configuration>
                     <name>MatelasPro</name>
                     <appVersion>1.0.0</appVersion>
-                    <vendor>MatelasPro</vendor>
+                    <vendor>STE Habiba</vendor>
                     <destination>target/dist</destination>
                     <module>warehouse-mattress-app/com.warehouse.App</module>
                     <runtimeImage>target/image</runtimeImage>
+                    <icon>src/main/resources/images/SuperMousse.jpg</icon>
                     <javaOptions>
                         <option>--module-path</option>
                         <option>%JAVA_HOME%/lib</option>
@@ -179,6 +180,11 @@
                         <option>-Xmx1024m</option>
                         <option>-Xms256m</option>
                     </javaOptions>
+                    <macOptions>
+                        <macPackageIdentifier>com.stehabiba.matelaspro</macPackageIdentifier>
+                        <macPackageName>MatelasPro</macPackageName>
+                        <macPackageSigningPrefix>STE Habiba</macPackageSigningPrefix>
+                    </macOptions>
                     <winOptions>
                         <winDirChooser>true</winDirChooser>
                         <winMenu>true</winMenu>

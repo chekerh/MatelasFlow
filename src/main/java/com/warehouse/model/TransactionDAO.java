@@ -127,8 +127,9 @@ public class TransactionDAO {
                 stmt.close();
                 
                 if (success) {
-                    // CRITICAL: Update inventory as part of transaction
-                    updateInventoryForTransaction(conn, transaction, false);
+                    // NOTE: Inventory update is handled by database trigger 'update_stock_after_transaction'
+                    // The trigger runs AFTER INSERT and updates mattress quantity automatically
+                    // We don't need to update inventory here to avoid double updates
                     conn.commit();
                     logger.info("Transaction added successfully: type={}, mattressId={}, quantity={}", 
                         transaction.getType(), transaction.getMattressId(), transaction.getQuantity());
@@ -181,6 +182,16 @@ public class TransactionDAO {
                 }
                 logger.debug("Inventory updated: mattressId={}, quantity change={}, type={}", mattressId, -quantity, type);
             }
+            // Update quantity_sold for sales
+            if ("Vente".equals(type)) {
+                String soldSql = "UPDATE mattress SET quantity_sold = quantity_sold + ? WHERE id = ?";
+                try (PreparedStatement stmt = conn.prepareStatement(soldSql)) {
+                    stmt.setInt(1, quantity);
+                    stmt.setInt(2, mattressId);
+                    stmt.executeUpdate();
+                    logger.debug("Quantity sold updated: mattressId={}, quantity added={}", mattressId, quantity);
+                }
+            }
         } else if ("retour".equals(type) || "Réception".equals(type)) {
             // Increase stock for returns, receptions
             String sql = "UPDATE mattress SET quantity = quantity + ? WHERE id = ?";
@@ -188,6 +199,16 @@ public class TransactionDAO {
                 stmt.setInt(1, quantity);
                 stmt.setInt(2, mattressId);
                 stmt.executeUpdate();
+            }
+            // Update initial_stock for receptions
+            if ("Réception".equals(type)) {
+                String initialSql = "UPDATE mattress SET initial_stock = initial_stock + ? WHERE id = ?";
+                try (PreparedStatement stmt = conn.prepareStatement(initialSql)) {
+                    stmt.setInt(1, quantity);
+                    stmt.setInt(2, mattressId);
+                    stmt.executeUpdate();
+                    logger.debug("Initial stock updated: mattressId={}, quantity added={}", mattressId, quantity);
+                }
             }
         }
     }
@@ -279,6 +300,21 @@ public class TransactionDAO {
                 stmt.setInt(2, mattressId);
                 stmt.executeUpdate();
             }
+            // Revert quantity_sold for sales
+            if ("Vente".equals(type)) {
+                String soldSql = "UPDATE mattress SET quantity_sold = quantity_sold - ? WHERE id = ? AND quantity_sold >= ?";
+                try (PreparedStatement stmt = conn.prepareStatement(soldSql)) {
+                    stmt.setInt(1, quantity);
+                    stmt.setInt(2, mattressId);
+                    stmt.setInt(3, quantity);
+                    int updated = stmt.executeUpdate();
+                    if (updated == 0) {
+                        logger.warn("Cannot revert quantity_sold for mattress ID: {} - quantity_sold would become negative", mattressId);
+                    } else {
+                        logger.debug("Quantity sold reverted: mattressId={}, quantity removed={}", mattressId, quantity);
+                    }
+                }
+            }
         } else if ("retour".equals(type) || "Réception".equals(type)) {
             // Was increased, so decrease back (with safety check)
             String sql = "UPDATE mattress SET quantity = quantity - ? WHERE id = ? AND quantity >= ?";
@@ -286,7 +322,26 @@ public class TransactionDAO {
                 stmt.setInt(1, quantity);
                 stmt.setInt(2, mattressId);
                 stmt.setInt(3, quantity);
-                stmt.executeUpdate();
+                int updated = stmt.executeUpdate();
+                if (updated == 0) {
+                    logger.warn("Cannot revert inventory for mattress ID: {} - insufficient stock to revert quantity: {}", mattressId, quantity);
+                    // Note: We still proceed, but log the warning. The stock might have been partially used.
+                }
+            }
+            // Revert initial_stock for receptions
+            if ("Réception".equals(type)) {
+                String initialSql = "UPDATE mattress SET initial_stock = initial_stock - ? WHERE id = ? AND initial_stock >= ?";
+                try (PreparedStatement stmt = conn.prepareStatement(initialSql)) {
+                    stmt.setInt(1, quantity);
+                    stmt.setInt(2, mattressId);
+                    stmt.setInt(3, quantity);
+                    int updated = stmt.executeUpdate();
+                    if (updated == 0) {
+                        logger.warn("Cannot revert initial_stock for mattress ID: {} - initial_stock would become negative", mattressId);
+                    } else {
+                        logger.debug("Initial stock reverted: mattressId={}, quantity removed={}", mattressId, quantity);
+                    }
+                }
             }
         }
     }

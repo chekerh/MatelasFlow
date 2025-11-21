@@ -1,5 +1,7 @@
 package com.warehouse.util;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.io.*;
 import java.util.Properties;
 
@@ -8,8 +10,10 @@ import java.util.Properties;
  * Saves and loads the selected theme to/from a properties file.
  */
 public class ThemePreferences {
+    private static final Logger logger = LoggerFactory.getLogger(ThemePreferences.class);
     private static final String PREFERENCES_FILE = "theme_preferences.properties";
     private static final String THEME_KEY = "selected.theme";
+    private static final String DARK_MODE_KEY = "dark.mode.enabled";
     private static final String DEFAULT_THEME = "Original Layout";
     
     /**
@@ -29,8 +33,7 @@ public class ThemePreferences {
                 props.store(out, "Theme Preferences - MatelasPro");
             }
         } catch (IOException e) {
-            System.err.println("Error saving theme preference: " + e.getMessage());
-            e.printStackTrace();
+            logger.error("Error saving theme preference: {}", e.getMessage(), e);
         }
     }
     
@@ -51,7 +54,7 @@ public class ThemePreferences {
             String theme = props.getProperty(THEME_KEY, DEFAULT_THEME);
             return theme;
         } catch (IOException e) {
-            System.err.println("Error loading theme preference: " + e.getMessage());
+            logger.warn("Error loading theme preference: {}", e.getMessage());
             return DEFAULT_THEME;
         }
     }
@@ -72,6 +75,56 @@ public class ThemePreferences {
      */
     public static void resetTheme() {
         saveTheme(DEFAULT_THEME);
+    }
+    
+    /**
+     * Saves the dark mode state.
+     * @param enabled true if dark mode is enabled
+     */
+    public static void saveDarkMode(boolean enabled) {
+        Properties props = new Properties();
+        File prefsFile = getPreferencesFile();
+        
+        // Load existing preferences
+        if (prefsFile.exists()) {
+            try (FileInputStream in = new FileInputStream(prefsFile)) {
+                props.load(in);
+            } catch (IOException e) {
+                logger.warn("Error loading preferences: {}", e.getMessage());
+            }
+        }
+        
+        props.setProperty(DARK_MODE_KEY, String.valueOf(enabled));
+        
+        try {
+            prefsFile.getParentFile().mkdirs();
+            try (FileOutputStream out = new FileOutputStream(prefsFile)) {
+                props.store(out, "Theme Preferences - MatelasPro");
+            }
+        } catch (IOException e) {
+            logger.error("Error saving dark mode preference: {}", e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * Loads the saved dark mode state.
+     * @return true if dark mode is enabled, false otherwise
+     */
+    public static boolean loadDarkMode() {
+        Properties props = new Properties();
+        File prefsFile = getPreferencesFile();
+        
+        if (!prefsFile.exists()) {
+            return false;
+        }
+        
+        try (FileInputStream in = new FileInputStream(prefsFile)) {
+            props.load(in);
+            return Boolean.parseBoolean(props.getProperty(DARK_MODE_KEY, "false"));
+        } catch (IOException e) {
+            logger.warn("Error loading dark mode preference: {}", e.getMessage());
+            return false;
+        }
     }
 }
 

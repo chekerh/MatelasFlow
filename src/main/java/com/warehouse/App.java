@@ -1,11 +1,15 @@
 package com.warehouse;
 
+import com.warehouse.controller.LicenseActivationController;
 import com.warehouse.model.DBUtil;
+import com.warehouse.security.LicenseManager;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import org.slf4j.Logger;
@@ -16,6 +20,58 @@ public class App extends Application {
     
     @Override
     public void start(Stage primaryStage) throws Exception {
+        // IMPORTANT: Set icon BEFORE loading the scene for macOS dock
+        // Set application icon (dock/taskbar icon) - must be done early for macOS
+        setApplicationIcon(primaryStage);
+        
+        // Check license before showing login
+        if (!LicenseManager.checkLicense()) {
+            logger.info("No valid license found. Showing activation dialog...");
+            showLicenseActivation(primaryStage);
+            return;
+        }
+        
+        // License is valid, show login
+        showLoginView(primaryStage);
+        
+        logger.info("MatelasPro application started successfully");
+    }
+    
+    /**
+     * Shows the license activation dialog
+     */
+    private void showLicenseActivation(Stage primaryStage) throws Exception {
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/LicenseActivationView.fxml"));
+        Parent root = loader.load();
+        
+        LicenseActivationController controller = loader.getController();
+        controller.setStage(primaryStage);
+        
+        primaryStage.setTitle("MatelasPro - Activation de licence");
+        
+        // Prevent closing without license
+        primaryStage.setOnCloseRequest(e -> {
+            Alert alert = new Alert(AlertType.WARNING);
+            alert.setTitle("Activation requise");
+            alert.setHeaderText(null);
+            alert.setContentText("Une clé d'activation valide est requise pour utiliser l'application.");
+            alert.showAndWait();
+            e.consume(); // Prevent closing
+        });
+        
+        Scene scene = new Scene(root);
+        primaryStage.setScene(scene);
+        primaryStage.setResizable(false);
+        primaryStage.centerOnScreen();
+        primaryStage.show();
+        
+        logger.info("License activation dialog shown");
+    }
+    
+    /**
+     * Shows the login view
+     */
+    private void showLoginView(Stage primaryStage) throws Exception {
         java.net.URL loginView = App.class.getResource("/fxml/LoginView.fxml");
         if (loginView == null) {
             throw new IllegalStateException("LoginView.fxml resource not found in /fxml");
@@ -26,14 +82,6 @@ public class App extends Application {
         
         // Set application title
         primaryStage.setTitle("MatelasPro - Gestion d'Entrepôt STE Habiba");
-        
-        // Set application icon (taskbar icon)
-        try {
-            Image icon = new Image(getClass().getResourceAsStream("/images/SuperMousse.jpg"));
-            primaryStage.getIcons().add(icon);
-        } catch (Exception e) {
-            logger.warn("Application icon not found: {}", e.getMessage());
-        }
         
         // Handle application close - shutdown connection pool
         primaryStage.setOnCloseRequest(e -> {
@@ -48,7 +96,37 @@ public class App extends Application {
         primaryStage.setScene(scene);
         primaryStage.show();
         
-        logger.info("MatelasPro application started successfully");
+        logger.info("Login view shown");
+    }
+    
+    /**
+     * Sets the application icon for the dock/taskbar.
+     * This must be called early, before showing the stage, especially for macOS.
+     */
+    private void setApplicationIcon(Stage stage) {
+        try {
+            // Load the logo image - STE Habiba logo
+            java.io.InputStream iconStream = getClass().getResourceAsStream("/images/SuperMousse.jpg");
+            if (iconStream != null) {
+                // Load the image
+                Image icon = new Image(iconStream);
+                
+                // Clear any existing icons and add the new one
+                stage.getIcons().clear();
+                stage.getIcons().add(icon);
+                
+                // For macOS, the icon should now appear in the dock
+                if (System.getProperty("os.name").toLowerCase().contains("mac")) {
+                    logger.info("Application icon (STE Habiba logo) set for macOS dock");
+                } else {
+                    logger.info("Application icon (STE Habiba logo) set for taskbar");
+                }
+            } else {
+                logger.warn("Application icon stream is null - icon file not found");
+            }
+        } catch (Exception e) {
+            logger.error("Failed to load application icon (STE Habiba logo): {}", e.getMessage(), e);
+        }
     }
 
     public static void main(String[] args) {

@@ -1,6 +1,8 @@
 package com.warehouse.util;
 
 import com.warehouse.model.User;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.io.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -8,6 +10,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ActivityLogger {
+    private static final Logger logger = LoggerFactory.getLogger(ActivityLogger.class);
     private static final String LOG_FILE = "activity_log.txt";
     private static final String SUSPICIOUS_LOG_FILE = "suspicious_activities.txt";
     private static final Map<String, Integer> userActivityCount = new ConcurrentHashMap<>();
@@ -163,7 +166,7 @@ public class ActivityLogger {
              PrintWriter out = new PrintWriter(bw)) {
             out.println(content);
         } catch (IOException e) {
-            System.err.println("Erreur lors de l'écriture du log: " + e.getMessage());
+            logger.error("Erreur lors de l'écriture du log {}: {}", filename, e.getMessage(), e);
         }
     }
     
@@ -175,7 +178,7 @@ public class ActivityLogger {
                 activities.add(line);
             }
         } catch (IOException e) {
-            System.err.println("Erreur lors de la lecture des activités suspectes: " + e.getMessage());
+            logger.warn("Erreur lors de la lecture des activités suspectes: {}", e.getMessage());
         }
         return activities;
     }
@@ -202,7 +205,7 @@ public class ActivityLogger {
                 }
             }
         } catch (IOException e) {
-            System.err.println("Erreur lors de la lecture des activités récentes: " + e.getMessage());
+            logger.warn("Erreur lors de la lecture des activités récentes: {}", e.getMessage());
         }
         
         return activities;
@@ -220,7 +223,7 @@ public class ActivityLogger {
                 }
             }
         } catch (IOException e) {
-            System.err.println("Erreur lors de la génération du résumé: " + e.getMessage());
+            logger.warn("Erreur lors de la génération du résumé: {}", e.getMessage());
         }
         
         return summary;
