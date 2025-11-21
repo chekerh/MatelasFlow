@@ -14,11 +14,6 @@ import javafx.scene.Node;
 import javafx.event.ActionEvent;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.Background;
-import javafx.scene.layout.BackgroundImage;
-import javafx.scene.layout.BackgroundPosition;
-import javafx.scene.layout.BackgroundRepeat;
-import javafx.scene.layout.BackgroundSize;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
@@ -46,16 +41,7 @@ public class LoginController {
         } catch (Exception e) {
             System.out.println("Logo image not found: " + e.getMessage());
         }
-        // Set the background image for the root pane
-        try {
-            Image bg = new Image(getClass().getResource("/images/background.jpg").toExternalForm());
-            BackgroundImage bgi = new BackgroundImage(bg, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.CENTER, new BackgroundSize(1.0, 1.0, true, true, false, false));
-            if (rootContainer != null) {
-                rootContainer.setBackground(new Background(bgi));
-            }
-        } catch (Exception e) {
-            System.out.println("Background image not set: " + e.getMessage());
-        }
+        // Background image is now handled by CSS in modern.css (applies to all .root classes)
         // Set margin for the logo image
         if (logoImage != null) {
             VBox.setMargin(logoImage, new javafx.geometry.Insets(0, 0, 12, 0));

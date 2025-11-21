@@ -37,6 +37,16 @@ config.properties
 *.key
 *.pem
 
+# License files (stored in user home directory)
+# The license.dat file is stored at ~/.matelaspro/license.dat
+# This pattern prevents accidentally committing license keys in the codebase
+license.dat
+*.dat
+*.license
+
+# Security documentation (contains sensitive credentials)
+SECURITY_CREDENTIALS.md
+
 # PDF Reports
 *.pdf
 !docs/*.pdf

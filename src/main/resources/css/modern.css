@@ -36,18 +36,20 @@
 }
 
 .adv-section {
-    -fx-background-color: rgba(255,255,255,0.65);
-    -fx-border-color: rgba(255,255,255,0.45);
+    /* Increased opacity for better visibility against background */
+    -fx-background-color: rgba(255,255,255,0.92);
+    -fx-border-color: rgba(255,255,255,0.7);
     -fx-border-radius: 22;
     -fx-background-radius: 22;
-    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.12), 18, 0.35, 0, 6);
+    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.18), 20, 0.4, 0, 8);
     -fx-padding: 20;
 }
 
 .dark-mode .adv-section {
-    -fx-background-color: rgba(45,55,72,0.85);
-    -fx-border-color: rgba(255,255,255,0.15);
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 18, 0.35, 0, 6);
+    /* Increased opacity for better visibility in dark mode */
+    -fx-background-color: rgba(45,55,72,0.92);
+    -fx-border-color: rgba(255,255,255,0.25);
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.4), 20, 0.4, 0, 8);
 }
 
 .adv-section__title {
@@ -61,16 +63,18 @@
 }
 
 .advanced-console {
-    -fx-background-color: rgba(255,255,255,0.85);
-    -fx-border-color: rgba(255,255,255,0.45);
+    /* Increased opacity for better visibility against background */
+    -fx-background-color: rgba(255,255,255,0.95);
+    -fx-border-color: rgba(255,255,255,0.7);
     -fx-border-radius: 20;
     -fx-background-radius: 20;
     -fx-padding: 0;
 }
 
 .dark-mode .advanced-console {
-    -fx-background-color: rgba(45,55,72,0.9);
-    -fx-border-color: rgba(255,255,255,0.15);
+    /* Increased opacity for better visibility in dark mode */
+    -fx-background-color: rgba(45,55,72,0.92);
+    -fx-border-color: rgba(255,255,255,0.25);
 }
 
 .advanced-console .text-area,
@@ -85,18 +89,20 @@
 }
 
 .advanced-table {
-    -fx-background-color: rgba(255,255,255,0.75);
-    -fx-border-color: rgba(255,255,255,0.45);
+    /* Increased opacity for better visibility against background */
+    -fx-background-color: rgba(255,255,255,0.95);
+    -fx-border-color: rgba(255,255,255,0.7);
     -fx-border-radius: 18;
     -fx-background-radius: 18;
     -fx-padding: 8;
-    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.12), 16, 0.4, 0, 8);
+    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.18), 20, 0.5, 0, 10);
 }
 
 .dark-mode .advanced-table {
-    -fx-background-color: rgba(45,55,72,0.85);
-    -fx-border-color: rgba(255,255,255,0.15);
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 16, 0.4, 0, 8);
+    /* Increased opacity for better visibility in dark mode */
+    -fx-background-color: rgba(45,55,72,0.92);
+    -fx-border-color: rgba(255,255,255,0.25);
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.4), 20, 0.5, 0, 10);
 }
 
 .advanced-table .column-header-background {
@@ -213,6 +219,12 @@
 }
 /* Modern French UI for Login Screen */
 .root {
+    /* Background image - always visible, not affected by themes */
+    -fx-background-image: url("/images/background.jpg");
+    -fx-background-repeat: stretch;
+    -fx-background-position: center center;
+    -fx-background-size: cover;
+    
     /* Frosted glass base */
     -fx-color-background: #fbfdff;
     -fx-color-background-alt: #f4f8ff;
@@ -235,7 +247,8 @@
     -fx-glass-border: rgba(255,255,255,0.35);
     -fx-glass-border-strong: rgba(255,255,255,0.68);
     -fx-button-text: #f9fcff;
-    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, #fdfefe 0%, #f5f8ff 45%, #ecf2ff 100%);
+    /* Overlay gradient for better contrast - semi-transparent so background shows through */
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, rgba(253,254,254,0.4) 0%, rgba(245,248,255,0.35) 45%, rgba(236,242,255,0.4) 100%);
     -fx-font-family: 'Inter', 'Segoe UI', 'Helvetica Neue', 'Arial', sans-serif;
     -fx-text-fill: -fx-color-text-primary;
 }
@@ -291,15 +304,16 @@
     -fx-background-color: linear-gradient(to bottom, derive(-fx-color-danger, -6%), -fx-color-danger);
 }
 
-/* iOS-like glass containers */
+/* iOS-like glass containers - semi-transparent so background shows through */
 .dashboard-top, .nav-panel, .content-area {
+    /* Increased opacity for better visibility against background */
     -fx-background-color: linear-gradient(to bottom,
-        -fx-glass-surface-strong,
-        rgba(255,255,255,0.55));
+        rgba(255,255,255,0.88),
+        rgba(255,255,255,0.92));
     -fx-background-radius: 28;
     -fx-border-color: -fx-glass-border-strong;
     -fx-border-radius: 28;
-    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.12), 26, 0.45, 0, 14);
+    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.18), 28, 0.5, 0, 16);
 }
 .dashboard-top { -fx-background-radius: 0 0 32 32; }
 .content-area { -fx-background-radius: 34; -fx-padding: 30; }
@@ -310,12 +324,13 @@
 }
 
 .quick-card {
-    -fx-background-color: rgba(255,255,255,0.35);
-    -fx-border-color: rgba(255,255,255,0.45);
+    /* Increased opacity for better visibility against background */
+    -fx-background-color: rgba(255,255,255,0.88);
+    -fx-border-color: rgba(255,255,255,0.7);
     -fx-border-radius: 18;
     -fx-background-radius: 18;
     -fx-padding: 16 20;
-    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.08), 18, 0.45, 0, 8);
+    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.15), 20, 0.5, 0, 10);
 }
 
 .quick-card__title {
@@ -407,36 +422,52 @@
     -fx-opacity: 0.95;
 }
 
-/* Dashboard specific styling – soft macOS-like gradient */
+/* Dashboard specific styling – background image with overlay */
 .root.dashboard {
-    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, #e8ecf4 0%, #dde3ee 50%, #d5dbea 100%);
-    -fx-background-image: null;
+    /* Keep background image visible, add semi-transparent overlay */
+    -fx-background-image: url("/images/background.jpg");
+    -fx-background-repeat: stretch;
+    -fx-background-position: center center;
+    -fx-background-size: cover;
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, rgba(232,236,244,0.3) 0%, rgba(221,227,238,0.25) 50%, rgba(213,219,234,0.3) 100%);
 }
 
-/* Dark mode styles */
+/* Dark mode styles - keep background image with darker overlay */
 .root.dark-mode {
-    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, #14161d 0%, #101118 100%);
+    /* Keep background image, add darker overlay for dark mode */
+    -fx-background-image: url("/images/background.jpg");
+    -fx-background-repeat: stretch;
+    -fx-background-position: center center;
+    -fx-background-size: cover;
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, rgba(20,22,29,0.6) 0%, rgba(16,17,24,0.65) 100%);
 }
 
 .root.dashboard.dark-mode {
-    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, #14161d 0%, #101118 100%);
+    /* Keep background image, add darker overlay for dark mode dashboard */
+    -fx-background-image: url("/images/background.jpg");
+    -fx-background-repeat: stretch;
+    -fx-background-position: center center;
+    -fx-background-size: cover;
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, rgba(20,22,29,0.6) 0%, rgba(16,17,24,0.65) 100%);
 }
 
 /* Dashboard top section – translucent “glass” strip */
 .dashboard-top {
+    /* Increased opacity for better visibility against background */
     -fx-background-color: linear-gradient(from 0% 0% to 100% 100%,
-        rgba(255,255,255,0.82) 0%,
-        rgba(255,255,255,0.62) 50%,
-        rgba(255,255,255,0.78) 100%);
-    -fx-border-color: rgba(255,255,255,0.45);
+        rgba(255,255,255,0.92) 0%,
+        rgba(255,255,255,0.88) 50%,
+        rgba(255,255,255,0.9) 100%);
+    -fx-border-color: rgba(255,255,255,0.65);
     -fx-border-width: 0 0 1 0;
     -fx-background-radius: 0 0 32 32;
     -fx-padding: 18 32;
-    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.12), 24, 0.45, 0, 12);
+    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.18), 24, 0.5, 0, 12);
 }
 
 .dashboard-top.dark-mode {
-    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, rgba(26,26,46,0.95) 0%, rgba(22,33,62,0.85) 100%);
+    /* Increased opacity for better visibility in dark mode */
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, rgba(26,26,46,0.92) 0%, rgba(22,33,62,0.88) 100%);
     -fx-border-color: transparent;
 }
 
@@ -600,7 +631,8 @@
 }
 
 .login-card {
-    -fx-background-color: rgba(255,255,255,0.70);
+    /* Increased opacity for better visibility against background */
+    -fx-background-color: rgba(255,255,255,0.95);
     -fx-background-radius: 26;
     -fx-padding: 36 48;
     -fx-spacing: 18;
@@ -962,12 +994,13 @@
 }
 
 .table-view {
-    -fx-background-color: -fx-color-surface;
+    /* Increased opacity for better visibility against background */
+    -fx-background-color: rgba(255,255,255,0.95);
     -fx-border-color: -fx-color-border;
     -fx-background-radius: 16;
     -fx-border-radius: 16;
     -fx-padding: 0;
-    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.05), 16, 0.4, 0, 8);
+    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.15), 20, 0.5, 0, 10);
     -fx-font-size: 14px;
 }
 
@@ -1025,7 +1058,9 @@
     -fx-effect: dropshadow(gaussian, rgba(15,31,61,0.18), 14, 0.35, 0, 6);
 }
 
+/* Dashboard content - make transparent so background shows */
 .dashboard-content {
+    -fx-background-color: transparent;
     -fx-pref-width: 100%;
     -fx-pref-height: 100%;
 }
@@ -1078,19 +1113,21 @@
     -fx-pref-width: 400px;
     -fx-max-width: 400px;
     -fx-min-width: 320px;
-    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.9) 100%);
+    /* Increased opacity for better visibility against background */
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.9) 100%);
     -fx-background-radius: 24;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 20, 0.2, 0, 6);
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 22, 0.3, 0, 8);
     -fx-padding: 32 0 32 0;
-    -fx-border-color: rgba(128,128,128,0.4);
+    -fx-border-color: rgba(128,128,128,0.5);
     -fx-border-width: 1;
     -fx-border-radius: 24;
 }
 
 #navBox.centered.dark-mode {
-    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, rgba(45,55,72,0.95) 0%, rgba(26,32,44,0.9) 100%);
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 20, 0.2, 0, 6);
-    -fx-border-color: rgba(74,85,104,0.3);
+    /* Increased opacity for better visibility in dark mode */
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, rgba(45,55,72,0.92) 0%, rgba(26,32,44,0.9) 100%);
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.4), 22, 0.3, 0, 8);
+    -fx-border-color: rgba(74,85,104,0.5);
 }
 
 #navBox.left {
@@ -1098,19 +1135,21 @@
     -fx-pref-width: 220px;
     -fx-max-width: 220px;
     -fx-min-width: 220px;
-    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.9) 100%);
+    /* Increased opacity for better visibility against background */
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.9) 100%);
     -fx-background-radius: 24;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 16, 0.2, 0, 4);
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 18, 0.25, 0, 6);
     -fx-padding: 32 0 32 0;
-    -fx-border-color: rgba(128,128,128,0.4);
+    -fx-border-color: rgba(128,128,128,0.5);
     -fx-border-width: 1;
     -fx-border-radius: 24;
 }
 
 #navBox.left.dark-mode {
-    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, rgba(45,55,72,0.95) 0%, rgba(26,32,44,0.9) 100%);
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 16, 0.2, 0, 4);
-    -fx-border-color: rgba(74,85,104,0.3);
+    /* Increased opacity for better visibility in dark mode */
+    -fx-background-color: linear-gradient(from 0% 0% to 100% 100%, rgba(45,55,72,0.92) 0%, rgba(26,32,44,0.9) 100%);
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.4), 18, 0.25, 0, 6);
+    -fx-border-color: rgba(74,85,104,0.5);
 }
 
 /* Navigation buttons */
@@ -1190,25 +1229,30 @@
 
 /* Table and CRUD polish */
 .table-view {
-    -fx-background-color: -fx-color-surface;
+    /* Increased opacity for better visibility against background */
+    -fx-background-color: rgba(255,255,255,0.95);
     -fx-border-color: -fx-color-border;
     -fx-background-radius: 16;
     -fx-border-radius: 16;
     -fx-font-size: 15px;
+    -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.15), 20, 0.5, 0, 10);
 }
 
 .table-view.dark-mode {
-    -fx-background-color: rgba(45,55,72,0.9);
+    /* Increased opacity for better visibility in dark mode */
+    -fx-background-color: rgba(45,55,72,0.92);
     -fx-border-color: transparent;
 }
 
 .table-view .column-header-background {
-    -fx-background-color: -fx-color-surface-alt;
+    /* Increased opacity for better visibility */
+    -fx-background-color: rgba(245,248,255,0.98);
     -fx-background-radius: 16 16 0 0;
 }
 
 .table-view .column-header-background.dark-mode {
-    -fx-background-color: rgba(45,55,72,0.9);
+    /* Increased opacity for better visibility in dark mode */
+    -fx-background-color: rgba(45,55,72,0.95);
 }
 
 .table-view .column-header {
@@ -1253,19 +1297,23 @@
 }
 
 .table-view .table-row-cell:odd {
-    -fx-background-color: -fx-color-surface;
+    /* Increased opacity for better visibility */
+    -fx-background-color: rgba(255,255,255,0.95);
 }
 
 .table-view .table-row-cell:odd.dark-mode {
-    -fx-background-color: rgba(45,55,72,0.85);
+    /* Increased opacity for better visibility in dark mode */
+    -fx-background-color: rgba(45,55,72,0.9);
 }
 
 .table-view .table-row-cell:even {
-    -fx-background-color: -fx-color-surface-alt;
+    /* Slightly different shade for alternating rows */
+    -fx-background-color: rgba(250,250,250,0.95);
 }
 
 .table-view .table-row-cell:even.dark-mode {
-    -fx-background-color: rgba(45,55,72,0.8);
+    /* Increased opacity for better visibility in dark mode */
+    -fx-background-color: rgba(45,55,72,0.88);
 }
 
 .tooltip {
