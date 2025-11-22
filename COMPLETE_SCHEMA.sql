@@ -41,7 +41,6 @@ CREATE TABLE IF NOT EXISTS mattress (
     initial_stock INT NOT NULL DEFAULT 0 COMMENT 'Stock initial reçu',
     quantity_sold INT NOT NULL DEFAULT 0 COMMENT 'Quantité totale vendue',
     unit_price DECIMAL(10,2) NOT NULL DEFAULT 0 COMMENT 'Prix d''achat unitaire',
-    prix DECIMAL(10,2) NOT NULL COMMENT 'Prix de vente',
     sort_order INT NOT NULL DEFAULT 0 COMMENT 'Ordre d''affichage personnalisé',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -59,13 +58,13 @@ CREATE TABLE IF NOT EXISTS mattress (
 -- Update initial_stock for existing records
 UPDATE mattress SET initial_stock = quantity WHERE initial_stock = 0 AND quantity > 0;
 
--- Insert sample mattresses
-INSERT INTO mattress (type, size, reference, quantity, initial_stock, quantity_sold, unit_price, prix, sort_order) VALUES
-('Mousse', '90x190', 'SuperMousse', 50, 50, 0, 1200.00, 1500.00, 1),
-('Ressort', '140x190', 'SuperMousse', 30, 30, 0, 2000.00, 2500.00, 2),
-('Latex', '160x200', 'SuperMousse', 20, 20, 0, 3000.00, 3500.00, 3),
-('Mousse', '120x190', 'SuperMousse', 40, 40, 0, 1500.00, 1800.00, 4),
-('Ressort', '180x200', 'SuperMousse', 15, 15, 0, 3200.00, 4000.00, 5)
+-- Insert sample mattresses (prix removed - price is set per transaction)
+INSERT INTO mattress (type, size, reference, quantity, initial_stock, quantity_sold, unit_price, sort_order) VALUES
+('Mousse', '90x190', 'SuperMousse', 50, 50, 0, 1200.00, 1),
+('Ressort', '140x190', 'SuperMousse', 30, 30, 0, 2000.00, 2),
+('Latex', '160x200', 'SuperMousse', 20, 20, 0, 3000.00, 3),
+('Mousse', '120x190', 'SuperMousse', 40, 40, 0, 1500.00, 4),
+('Ressort', '180x200', 'SuperMousse', 15, 15, 0, 3200.00, 5)
 ON DUPLICATE KEY UPDATE id=id;
 
 -- ============================================================================
@@ -171,6 +170,7 @@ LEFT JOIN store_owner s ON t.store_owner_id = s.id
 JOIN users u ON t.user_id = u.id;
 
 -- View: Inventory summary with sales tracking
+-- Note: prix (sale price) removed from mattress - price is set per transaction
 CREATE OR REPLACE VIEW inventory_summary AS
 SELECT 
     m.id,
@@ -181,14 +181,14 @@ SELECT
     m.initial_stock,
     m.quantity_sold,
     m.unit_price,
-    m.prix AS sale_price,
-    m.quantity * m.prix AS total_value,
+    m.quantity * m.unit_price AS total_cost,
     COALESCE(SUM(CASE WHEN t.type = 'Vente' THEN t.quantity ELSE 0 END), 0) AS total_sold_transactions,
     COALESCE(SUM(CASE WHEN t.type = 'Prêt' THEN t.quantity ELSE 0 END), 0) AS total_lent,
+    COALESCE(AVG(CASE WHEN t.type = 'Vente' THEN t.prix ELSE NULL END), 0) AS avg_sale_price,
     m.updated_at AS last_updated
 FROM mattress m
 LEFT JOIN transaction t ON m.id = t.mattress_id
-GROUP BY m.id, m.type, m.size, m.reference, m.quantity, m.initial_stock, m.quantity_sold, m.unit_price, m.prix, m.updated_at;
+GROUP BY m.id, m.type, m.size, m.reference, m.quantity, m.initial_stock, m.quantity_sold, m.unit_price, m.updated_at;
 
 -- ============================================================================
 -- STORED PROCEDURES (Performance optimization)
@@ -392,6 +392,15 @@ FROM information_schema.COLUMNS
 WHERE TABLE_SCHEMA = 'warehouse_db' 
 AND TABLE_NAME = 'transaction'
 ORDER BY ORDINAL_POSITION;
+
+-- ============================================================================
+-- MIGRATION: Remove prix column from mattress table
+-- ============================================================================
+-- Note: The prix (sale price) column has been removed from the mattress table.
+-- Price is now set per transaction in the transaction table (varies by client/time).
+-- If you have an existing database with the prix column, run REMOVE_PRIX_COLUMN.sql
+-- to migrate your existing database.
+-- ============================================================================
 
 -- ============================================================================
 -- COMPLETION MESSAGE

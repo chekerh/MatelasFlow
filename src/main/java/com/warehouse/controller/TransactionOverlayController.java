@@ -396,14 +396,8 @@ public class TransactionOverlayController {
                 }
                 
                 // Additional validation for sales
-                if ("Vente".equals(typeForDB)) {
-                    // Check if selling price is reasonable (not too low compared to original price)
-                    double originalPrice = selectedMattress.getPrix();
-                    if (prix < originalPrice * 0.5) {
-                        showAlert("Attention", "Le prix de vente est très bas par rapport au prix original (" + String.format("%.2f", originalPrice) + " DT). Voulez-vous continuer ?", AlertType.WARNING);
-                        // Note: In a real application, you might want to add a confirmation dialog here
-                    }
-                }
+                // Note: Price validation removed - price is now variable per transaction and client
+                // Each transaction can have its own price based on client agreement and market conditions
             }
             
             // Validate reception
@@ -574,8 +568,11 @@ public class TransactionOverlayController {
         Mattress mattress = resolveMattressFromDisplay(displayValue);
         if (mattress != null) {
             unitPriceField.setText(String.format("%.2f", mattress.getUnitPrice()));
+            // Sale price is now set per transaction, not auto-filled from mattress
+            // User must enter the price for each transaction (variable per client/time)
             if (!salePriceField.isDisabled()) {
-                salePriceField.setText(String.format("%.2f", mattress.getSalePrice()));
+                salePriceField.clear();
+                salePriceField.setPromptText("Entrer le prix de vente pour cette transaction");
             }
         } else {
             unitPriceField.clear();

@@ -14,7 +14,6 @@
     <ScrollPane fitToWidth="true" fitToHeight="true" hbarPolicy="AS_NEEDED" vbarPolicy="AS_NEEDED" styleClass="table-scroll">
         <TableView fx:id="transactionTable" prefHeight="400" minWidth="1100" styleClass="transactions-table">
             <columns>
-                <TableColumn fx:id="addMattressColumn" text="" prefWidth="50" sortable="false" />
                 <TableColumn fx:id="dateColumn" text="Date" prefWidth="130" />
                 <TableColumn fx:id="mattressNameColumn" text="Matelas" prefWidth="220"/>
                 <TableColumn fx:id="quantityColumn" text="Quantité" prefWidth="90" />
@@ -30,6 +29,9 @@
     <HBox spacing="14" alignment="CENTER" styleClass="toolbar">
         <Button fx:id="addButton" text="Ajouter une transaction" onAction="#handleAdd">
             <tooltip><Tooltip text="Ajouter une transaction"/></tooltip>
+        </Button>
+        <Button fx:id="editButton" text="Modifier" onAction="#handleEdit">
+            <tooltip><Tooltip text="Modifier la transaction sélectionnée"/></tooltip>
         </Button>
         <Button fx:id="refreshButton" text="Rafraîchir" onAction="#handleRefresh">
             <tooltip><Tooltip text="Rafraîchir la liste"/></tooltip>

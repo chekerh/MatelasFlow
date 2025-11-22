@@ -6,12 +6,18 @@
     <ScrollPane fitToWidth="true" fitToHeight="true" hbarPolicy="AS_NEEDED" vbarPolicy="AS_NEEDED" styleClass="table-scroll">
         <TableView fx:id="mattressTable" prefHeight="400" minWidth="900">
             <columns>
-                <TableColumn fx:id="typeColumn" text="Type" prefWidth="200" />
-                <TableColumn fx:id="sizeColumn" text="Taille" prefWidth="140" />
-                <TableColumn fx:id="brandColumn" text="Référence" prefWidth="200" />
-                <TableColumn fx:id="quantityColumn" text="Quantité" prefWidth="120" />
-                <TableColumn fx:id="unitPriceColumn" text="Prix unitaire (DT)" prefWidth="140" />
-                <TableColumn fx:id="prixColumn" text="Prix de vente (DT)" prefWidth="140" />
+                <!-- 1. Product Identification (What is it?) -->
+                <TableColumn fx:id="typeColumn" text="Type" prefWidth="170" />
+                <TableColumn fx:id="sizeColumn" text="Taille" prefWidth="110" />
+                <TableColumn fx:id="brandColumn" text="Référence" prefWidth="190" />
+                
+                <!-- 2. Stock Flow (Initial → Current → Sold) -->
+                <TableColumn fx:id="initialStockColumn" text="Stock initial" prefWidth="140" />
+                <TableColumn fx:id="quantityColumn" text="Quantité actuelle" prefWidth="160" />
+                <TableColumn fx:id="quantitySoldColumn" text="Quantité vendue" prefWidth="150" />
+                
+                <!-- 3. Financial Information (Cost only) -->
+                <TableColumn fx:id="totalCostColumn" text="Valeur stock (DT)" prefWidth="170" />
             </columns>
         </TableView>
     </ScrollPane>

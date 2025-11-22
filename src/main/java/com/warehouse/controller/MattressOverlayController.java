@@ -17,7 +17,6 @@ public class MattressOverlayController {
     @FXML private TextField referenceField;
     @FXML private TextField quantityField;
     @FXML private TextField unitPriceField;
-    @FXML private TextField salePriceField;
     @FXML private Label dialogTitle;
     
     private Mattress mattress;
@@ -54,7 +53,6 @@ public class MattressOverlayController {
         // Add input validation for numeric fields
         setupNumericValidation(quantityField, true); // Integer only
         setupNumericValidation(unitPriceField, false); // Decimal allowed
-        setupNumericValidation(salePriceField, false); // Decimal allowed
     }
     
     /**
@@ -101,7 +99,6 @@ public class MattressOverlayController {
             referenceField.setText(mattress.getReference());
             quantityField.setText(String.valueOf(mattress.getQuantity()));
             unitPriceField.setText(String.valueOf(mattress.getUnitPrice()));
-            salePriceField.setText(String.valueOf(mattress.getSalePrice()));
         } else {
             dialogTitle.setText("Ajouter un matelas");
             typeComboBox.setValue("Mousse");
@@ -112,7 +109,6 @@ public class MattressOverlayController {
             referenceField.clear();
             quantityField.clear();
             unitPriceField.clear();
-            salePriceField.clear();
         }
     }
     
@@ -125,7 +121,6 @@ public class MattressOverlayController {
             String reference = referenceField.getText().trim();
             String quantityStr = quantityField.getText().trim();
             String unitPriceStr = unitPriceField.getText().trim();
-            String salePriceStr = salePriceField.getText().trim();
             
             // Validation
             InputValidator.ValidationResult referenceValidation = InputValidator.validateLength(reference, "La référence", InputValidator.MAX_REFERENCE_LENGTH);
@@ -146,24 +141,22 @@ public class MattressOverlayController {
                 return;
             }
             
-            if (type == null || type.isEmpty() || size.isEmpty() || reference.isEmpty() || quantityStr.isEmpty() || unitPriceStr.isEmpty() || salePriceStr.isEmpty()) {
+            if (type == null || type.isEmpty() || size.isEmpty() || reference.isEmpty() || quantityStr.isEmpty() || unitPriceStr.isEmpty()) {
                 showAlert("Erreur", "Tous les champs obligatoires doivent être remplis.", AlertType.ERROR);
                 return;
             }
             
             int quantity;
             double unitPrice;
-            double salePrice;
             try {
                 quantity = Integer.parseInt(quantityStr);
                 unitPrice = Double.parseDouble(unitPriceStr);
-                salePrice = Double.parseDouble(salePriceStr);
-                if (quantity < 0 || unitPrice < 0 || salePrice < 0) {
-                    showAlert("Erreur", "La quantité et les prix doivent être positifs.", AlertType.ERROR);
+                if (quantity < 0 || unitPrice < 0) {
+                    showAlert("Erreur", "La quantité et le prix unitaire doivent être positifs.", AlertType.ERROR);
                     return;
                 }
             } catch (NumberFormatException e) {
-                showAlert("Erreur", "La quantité et les prix doivent être des nombres valides.", AlertType.ERROR);
+                showAlert("Erreur", "La quantité et le prix unitaire doivent être des nombres valides.", AlertType.ERROR);
                 return;
             }
             
@@ -174,10 +167,11 @@ public class MattressOverlayController {
                 mattress.setReference(reference);
                 mattress.setQuantity(quantity);
                 mattress.setUnitPrice(unitPrice);
-                mattress.setSalePrice(salePrice);
+                // Note: salePrice is now set per transaction, not per mattress
                 success = MattressDAO.updateMattress(mattress);
             } else {
-                Mattress newMattress = new Mattress(type, size, reference, quantity, unitPrice, salePrice);
+                // Create mattress without sale price (it will be set per transaction)
+                Mattress newMattress = new Mattress(type, size, reference, quantity, unitPrice, 0.0);
                 success = MattressDAO.addMattress(newMattress);
             }
             

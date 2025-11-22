@@ -79,3 +79,8 @@
 [2025-11-21 21:30:43] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
 [2025-11-21 21:47:52] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
 [2025-11-21 21:54:14] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
+[2025-11-21 22:10:18] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
+[2025-11-21 22:15:41] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
+[2025-11-21 22:21:48] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
+[2025-11-21 22:22:03] cheker (admin) - Ajout de matelas: Ouverture de l'interface d'ajout de matelas
+[2025-11-22 08:12:47] cheker (employé) - Tentative de connexion échouée: Tentative échouée

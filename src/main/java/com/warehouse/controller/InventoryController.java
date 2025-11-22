@@ -29,8 +29,9 @@ public class InventoryController {
     @FXML private TableColumn<Mattress, String> sizeColumn;
     @FXML private TableColumn<Mattress, String> brandColumn;
     @FXML private TableColumn<Mattress, Integer> quantityColumn;
-    @FXML private TableColumn<Mattress, Double> unitPriceColumn;
-    @FXML private TableColumn<Mattress, Double> prixColumn;
+    @FXML private TableColumn<Mattress, Double> totalCostColumn;
+    @FXML private TableColumn<Mattress, Integer> quantitySoldColumn;
+    @FXML private TableColumn<Mattress, Integer> initialStockColumn;
     @FXML private Button addButton;
     @FXML private Button editButton;
     @FXML private Button deleteButton;
@@ -59,25 +60,32 @@ public class InventoryController {
             cellData.getValue().getReference()
         ));
         quantityColumn.setCellValueFactory(cellData -> new javafx.beans.property.SimpleIntegerProperty(cellData.getValue().getQuantity()).asObject());
-        unitPriceColumn.setCellValueFactory(cellData -> new SimpleDoubleProperty(cellData.getValue().getUnitPrice()).asObject());
-        prixColumn.setCellValueFactory(cellData -> new SimpleDoubleProperty(cellData.getValue().getSalePrice()).asObject());
+        // Total cost = current quantity * unit price
+        totalCostColumn.setCellValueFactory(cellData -> {
+            Mattress m = cellData.getValue();
+            double totalCost = m.getQuantity() * m.getUnitPrice();
+            return new SimpleDoubleProperty(totalCost).asObject();
+        });
+        quantitySoldColumn.setCellValueFactory(cellData -> new javafx.beans.property.SimpleIntegerProperty(cellData.getValue().getQuantitySold()).asObject());
+        initialStockColumn.setCellValueFactory(cellData -> new javafx.beans.property.SimpleIntegerProperty(cellData.getValue().getInitialStock()).asObject());
         
-        unitPriceColumn.setCellFactory(column -> createPriceCell());
-        prixColumn.setCellFactory(column -> createPriceCell());
+        totalCostColumn.setCellFactory(column -> createPriceCell());
         typeColumn.setStyle("-fx-alignment: CENTER-LEFT;");
         sizeColumn.setStyle("-fx-alignment: CENTER;");
         brandColumn.setStyle("-fx-alignment: CENTER-LEFT;");
         quantityColumn.setStyle("-fx-alignment: CENTER;");
-        unitPriceColumn.setStyle("-fx-alignment: CENTER;");
-        prixColumn.setStyle("-fx-alignment: CENTER;");
+        totalCostColumn.setStyle("-fx-alignment: CENTER;");
+        quantitySoldColumn.setStyle("-fx-alignment: CENTER;");
+        initialStockColumn.setStyle("-fx-alignment: CENTER;");
         
-        // Set minimum widths for columns
-        typeColumn.setMinWidth(150);
-        sizeColumn.setMinWidth(120);
-        brandColumn.setMinWidth(150);
-        quantityColumn.setMinWidth(80);
-        unitPriceColumn.setMinWidth(140);
-        prixColumn.setMinWidth(140);
+        // Set minimum widths for columns - adjusted to fit header text and content
+        typeColumn.setMinWidth(150);              // "Type" header + content (e.g., "Mousse", "Ressort")
+        sizeColumn.setMinWidth(100);              // "Taille" header + content (e.g., "90x190")
+        brandColumn.setMinWidth(160);             // "Référence" header + content (brand names)
+        initialStockColumn.setMinWidth(130);      // "Stock initial" header + numbers
+        quantityColumn.setMinWidth(150);          // "Quantité actuelle" header + numbers
+        quantitySoldColumn.setMinWidth(140);      // "Quantité vendue" header + numbers
+        totalCostColumn.setMinWidth(160);         // "Valeur stock (DT)" header + formatted price (e.g., "15000.00 DT")
 
         mattressTable.setPlaceholder(tableSkeleton);
         mattressTable.setItems(mattressList);
@@ -375,10 +383,12 @@ public class InventoryController {
             return m.getReference() != null ? m.getReference() : "";
         } else if (column == quantityColumn) {
             return String.valueOf(m.getQuantity());
-        } else if (column == unitPriceColumn) {
-            return String.format("%.2f DT", m.getUnitPrice());
-        } else if (column == prixColumn) {
-            return String.format("%.2f DT", m.getSalePrice());
+        } else if (column == totalCostColumn) {
+            return String.format("%.2f DT", m.getQuantity() * m.getUnitPrice());
+        } else if (column == quantitySoldColumn) {
+            return String.valueOf(m.getQuantitySold());
+        } else if (column == initialStockColumn) {
+            return String.valueOf(m.getInitialStock());
         }
         return "";
     }

@@ -30,9 +30,6 @@
             
             <Label text="💰 Prix unitaire (DT):" GridPane.columnIndex="0" GridPane.rowIndex="4" style="-fx-font-weight: bold;"/>
             <TextField fx:id="unitPriceField" promptText="Coût d'achat" GridPane.columnIndex="1" GridPane.rowIndex="4"/>
-
-            <Label text="💵 Prix de vente (DT):" GridPane.columnIndex="0" GridPane.rowIndex="5" style="-fx-font-weight: bold;"/>
-            <TextField fx:id="salePriceField" promptText="Prix de vente" GridPane.columnIndex="1" GridPane.rowIndex="5"/>
         </GridPane>
     </VBox>
     

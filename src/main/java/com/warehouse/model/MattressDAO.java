@@ -37,6 +37,7 @@ public class MattressDAO {
             boolean hasQuantitySold = columnExists(conn, "mattress", "quantity_sold");
             
             // Build SELECT clause based on available columns
+            // Note: prix (sale price) removed from mattress - price is set per transaction
             StringBuilder selectClause = new StringBuilder("SELECT id, type AS mattress_type, size AS mattress_size, reference AS mattress_reference, quantity, ");
             if (hasInitialStock) {
                 selectClause.append("initial_stock, ");
@@ -48,7 +49,7 @@ public class MattressDAO {
             } else {
                 selectClause.append("0 AS quantity_sold, ");
             }
-            selectClause.append("unit_price, prix");
+            selectClause.append("unit_price");
             if (includeSortOrder) {
                 selectClause.append(", sort_order");
             }
@@ -62,6 +63,7 @@ public class MattressDAO {
             try (Statement stmt = conn.createStatement();
                  ResultSet rs = stmt.executeQuery(selectClause.toString())) {
                 while (rs.next()) {
+                    // Prix (sale price) is now 0.0 - price is set per transaction, not per mattress
                     mattresses.add(new Mattress(
                         rs.getInt("id"),
                         rs.getString("mattress_type"),
@@ -71,7 +73,7 @@ public class MattressDAO {
                         rs.getInt("initial_stock"),
                         rs.getInt("quantity_sold"),
                         rs.getDouble("unit_price"),
-                        rs.getDouble("prix"),
+                        0.0, // salePrice removed - price is set per transaction
                         includeSortOrder ? rs.getInt("sort_order") : rs.getInt("id")
                     ));
                 }
@@ -98,6 +100,7 @@ public class MattressDAO {
             boolean hasQuantitySold = columnExists(conn, "mattress", "quantity_sold");
             
             // Build SQL based on available columns
+            // Note: prix (sale price) removed - price is set per transaction, not per mattress
             StringBuilder sql = new StringBuilder("INSERT INTO mattress (type, size, reference, quantity, ");
             if (hasInitialStock) {
                 sql.append("initial_stock, ");
@@ -105,14 +108,14 @@ public class MattressDAO {
             if (hasQuantitySold) {
                 sql.append("quantity_sold, ");
             }
-            sql.append("unit_price, prix, sort_order) VALUES (?, ?, ?, ?, ");
+            sql.append("unit_price, sort_order) VALUES (?, ?, ?, ?, ");
             if (hasInitialStock) {
                 sql.append("?, ");
             }
             if (hasQuantitySold) {
                 sql.append("?, ");
             }
-            sql.append("?, ?, ?)");
+            sql.append("?, ?)");
             
             try (PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
                 int paramIndex = 1;
@@ -127,7 +130,6 @@ public class MattressDAO {
                     stmt.setInt(paramIndex++, mattress.getQuantitySold());
                 }
                 stmt.setDouble(paramIndex++, mattress.getUnitPrice());
-                stmt.setDouble(paramIndex++, mattress.getSalePrice());
                 stmt.setInt(paramIndex, getNextSortOrder(conn, "mattress"));
                 
                 boolean success = stmt.executeUpdate() > 0;
@@ -153,6 +155,7 @@ public class MattressDAO {
             boolean hasQuantitySold = columnExists(conn, "mattress", "quantity_sold");
             
             // Build SQL based on available columns
+            // Note: prix (sale price) removed - price is set per transaction, not per mattress
             StringBuilder sql = new StringBuilder("UPDATE mattress SET type=?, size=?, reference=?, quantity=?, ");
             if (hasInitialStock) {
                 sql.append("initial_stock=?, ");
@@ -160,7 +163,7 @@ public class MattressDAO {
             if (hasQuantitySold) {
                 sql.append("quantity_sold=?, ");
             }
-            sql.append("unit_price=?, prix=? WHERE id=?");
+            sql.append("unit_price=? WHERE id=?");
             
             try (PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
                 int paramIndex = 1;
@@ -175,7 +178,7 @@ public class MattressDAO {
                     stmt.setInt(paramIndex++, mattress.getQuantitySold());
                 }
                 stmt.setDouble(paramIndex++, mattress.getUnitPrice());
-                stmt.setDouble(paramIndex++, mattress.getSalePrice());
+                // Note: prix is no longer updated - price is set per transaction
                 stmt.setInt(paramIndex, mattress.getId());
                 
                 boolean success = stmt.executeUpdate() > 0;
@@ -255,7 +258,10 @@ public class MattressDAO {
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     boolean hasInitialStock = columnExists(conn, "mattress", "initial_stock");
+                    boolean hasQuantitySold = columnExists(conn, "mattress", "quantity_sold");
                     int initialStock = hasInitialStock ? rs.getInt("initial_stock") : rs.getInt("quantity");
+                    int quantitySold = hasQuantitySold ? rs.getInt("quantity_sold") : 0;
+                    // Prix (sale price) removed - price is set per transaction, not per mattress
                     return new Mattress(
                         rs.getInt("id"),
                         rs.getString("type"),
@@ -263,8 +269,9 @@ public class MattressDAO {
                         rs.getString("reference"),
                         rs.getInt("quantity"),
                         initialStock,
+                        quantitySold,
                         rs.getDouble("unit_price"),
-                        rs.getDouble("prix"),
+                        0.0, // salePrice - price is set per transaction
                         rs.getInt("sort_order")
                     );
                 }

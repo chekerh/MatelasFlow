@@ -3,7 +3,6 @@ package com.warehouse.controller;
 import com.warehouse.model.Transaction;
 import com.warehouse.model.TransactionDAO;
 import com.warehouse.ui.SkeletonPane;
-import com.warehouse.ui.IconFactory;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -34,8 +33,8 @@ public class TransactionsController {
     @FXML private TableColumn<Transaction, String> notesColumn;
     @FXML private TableColumn<Transaction, String> expectedReturnDateColumn;
     @FXML private TableColumn<Transaction, String> totalPriceColumn;
-    @FXML private TableColumn<Transaction, Void> addMattressColumn;
     @FXML private Button addButton;
+    @FXML private Button editButton;
     @FXML private Button refreshButton;
     @FXML private Button pdfReportButton;
     @FXML private Button deleteButton;
@@ -193,8 +192,6 @@ public class TransactionsController {
         totalPriceColumn.setStyle("-fx-alignment: CENTER;");
 
         // Set minimum widths for columns to ensure readability
-        addMattressColumn.setMinWidth(50);
-        addMattressColumn.setMaxWidth(50);
         dateColumn.setMinWidth(100);
         mattressNameColumn.setMinWidth(150);
         quantityColumn.setMinWidth(70);
@@ -220,7 +217,6 @@ public class TransactionsController {
         transactionTable.setItems(filteredTransactions);
 
         setupViewModeComboBox();
-        setupAddMatressColumn();
         if (TransactionDAO.isSortOrderSupported()) {
             enableRowReordering();
         } else {
@@ -523,46 +519,6 @@ public class TransactionsController {
         }
     }
 
-    private void setupAddMatressColumn() {
-        if (addMattressColumn == null) {
-            return;
-        }
-        addMattressColumn.setCellFactory(col -> new AddButtonCell());
-    }
-
-    private class AddButtonCell extends TableCell<Transaction, Void> {
-        private final Button addButton = new Button();
-
-        AddButtonCell() {
-            // Use icon instead of text
-            var plusIcon = IconFactory.svg("plus", 16);
-            addButton.setGraphic(plusIcon);
-            addButton.setText(null); // Remove any text
-            addButton.getStyleClass().addAll("icon-button");
-            addButton.setMaxWidth(40);
-            addButton.setMinWidth(40);
-            addButton.setMaxHeight(40);
-            addButton.setMinHeight(40);
-            addButton.setPrefWidth(40);
-            addButton.setPrefHeight(40);
-            addButton.setTooltip(new Tooltip("Ajouter un matelas (+1)"));
-            addButton.setOnAction(event -> {
-                Transaction transaction = getTableView().getItems().get(getIndex());
-                increaseTransactionQuantity(transaction);
-            });
-        }
-
-        @Override
-        protected void updateItem(Void item, boolean empty) {
-            super.updateItem(item, empty);
-            if (empty || getTableRow() == null || getTableRow().getItem() == null) {
-                setGraphic(null);
-            } else {
-                setGraphic(addButton);
-            }
-        }
-    }
-
     private void confirmAndDelete(Transaction transaction) {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Supprimer la transaction");
@@ -574,6 +530,10 @@ public class TransactionsController {
             if (result == ButtonType.OK) {
                 if (TransactionDAO.deleteTransaction(transaction.getId())) {
                     loadTransactions();
+                    // CRITICAL: Refresh inventory to show updated quantities after deletion
+                    if (dashboardController != null) {
+                        dashboardController.refreshInventory();
+                    }
                 } else {
                     errorLabel.setText("Impossible de supprimer la transaction.");
                 }
@@ -591,27 +551,30 @@ public class TransactionsController {
         confirmAndDelete(selected);
     }
 
-    private void increaseTransactionQuantity(Transaction transaction) {
-        if (transaction == null) {
+    @FXML
+    private void handleEdit() {
+        Transaction selected = transactionTable.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            errorLabel.setText("Aucune transaction sélectionnée.");
             return;
         }
         try {
-            transaction.setQuantity(transaction.getQuantity() + 1);
-            boolean success = TransactionDAO.updateTransaction(transaction);
-            // Note: Inventory is automatically updated by TransactionDAO.updateTransaction()
-            if (success) {
-                loadTransactions();
-                // Refresh inventory if available
-                if (dashboardController != null) {
-                    dashboardController.refreshInventory();
-                }
-                errorLabel.setText("Quantité augmentée.");
-            } else {
-                errorLabel.setText("Impossible d'ajouter le matelas.");
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/TransactionOverlay.fxml"));
+            Parent overlayRoot = loader.load();
+            TransactionOverlayController controller = loader.getController();
+            
+            // Set up the controller
+            controller.setDashboardController(dashboardController);
+            controller.setTransactionsController(this);
+            controller.setTransaction(selected); // Edit mode
+            
+            // Show the overlay
+            if (dashboardController != null) {
+                dashboardController.showOverlay(overlayRoot);
             }
         } catch (Exception e) {
             e.printStackTrace();
-            errorLabel.setText("Erreur lors de l'ajout.");
+            errorLabel.setText("Erreur lors de l'ouverture du dialogue de modification.");
         }
     }
 

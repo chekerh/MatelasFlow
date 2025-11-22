@@ -46,6 +46,7 @@ license.dat
 
 # Security documentation (contains sensitive credentials)
 SECURITY_CREDENTIALS.md
+DEPLOYMENT_GUIDE.md
 
 # PDF Reports
 *.pdf
