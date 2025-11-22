@@ -33,7 +33,6 @@ activity_log.txt
 # Firebase & Security
 src/main/resources/firebase-key.json
 firebase-key.json
-config.properties
 *.key
 *.pem
 
@@ -69,3 +68,36 @@ hs_err_pid*
 [Dd]esktop.ini
 $RECYCLE.BIN/
 *.lnk
+
+# License & Activation Files
+license.dat
+*.license
+.matelaspro/
+~/.matelaspro/
+
+# Application Logs & Activity Files
+suspicious_activities.txt
+
+# Environment & Configuration Files
+.env
+.env.local
+.env.*.local
+config.properties
+!src/main/resources/config.properties.template
+
+# Maven Wrapper (if used)
+.mvn/wrapper/maven-wrapper.jar
+.mvn/wrapper/maven-wrapper.properties
+
+# Package Files (distribution)
+*.zip
+*.tar.gz
+*.rar
+
+# JavaFX Runtime Images
+target/image/
+target/dist/
+target/app/
+target/*.exe
+target/*.dmg
+target/*.pkg

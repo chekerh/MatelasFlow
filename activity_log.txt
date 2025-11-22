@@ -77,3 +77,15 @@
 [2025-11-21 14:54:15] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
 [2025-11-21 14:54:25] cheker (admin) - Ajout de matelas: Ouverture de l'interface d'ajout de matelas
 [2025-11-21 21:30:43] cheker (admin) - Connexion réussie: Connexion depuis mac@Mac OS X
+[2025-11-22 10:02:18] aymen (employé) - Tentative de connexion échouée: Tentative échouée
+[2025-11-22 10:02:18] aymen (employé) - Tentative de connexion échouée: Tentative échouée
+[2025-11-22 10:02:30] aymen (admin) - Connexion réussie: Connexion depuis aymou@Windows 11
+[2025-11-22 10:02:46] aymen (admin) - Ajout de matelas: Ouverture de l'interface d'ajout de matelas
+[2025-11-22 10:02:56] aymen (admin) - Ajout de matelas: Ouverture de l'interface d'ajout de matelas
+[2025-11-22 10:03:04] aymen (admin) - Ajout de matelas: Ouverture de l'interface d'ajout de matelas
+[2025-11-22 10:11:36] aymen (admin) - Connexion réussie: Connexion depuis aymou@Windows 11
+[2025-11-22 10:16:10] admin (employé) - Tentative de connexion échouée: Tentative échouée
+[2025-11-22 10:16:59] aymen (admin) - Connexion réussie: Connexion depuis aymou@Windows 11
+[2025-11-22 10:17:34] aymen (admin) - Ajout de matelas: Ouverture de l'interface d'ajout de matelas
+[2025-11-22 10:20:27] aymen (employé) - Tentative de connexion échouée: Tentative échouée
+[2025-11-22 10:20:36] aymen (admin) - Connexion réussie: Connexion depuis aymou@Windows 11
