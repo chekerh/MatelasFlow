@@ -37,6 +37,15 @@ public final class SchemaMigrator {
         // Add quantity_sold column to track total quantity sold
         ensureColumn(conn, "mattress", "quantity_sold",
             "ALTER TABLE `mattress` ADD COLUMN `quantity_sold` INT NOT NULL DEFAULT 0 AFTER `initial_stock`");
+        // Make prix column nullable if it exists (prix is only used in transactions, not in inventory)
+        if (columnExists(conn, "mattress", "prix")) {
+            try (Statement stmt = conn.createStatement()) {
+                stmt.executeUpdate("ALTER TABLE `mattress` MODIFY COLUMN `prix` DECIMAL(10,2) NULL COMMENT 'Prix de vente (non utilisé dans l\\'inventaire, seulement dans les transactions)'");
+            } catch (SQLException e) {
+                // Ignore if modification fails (might already be nullable or other issue)
+                System.err.println("Note: Could not modify prix column (may already be nullable): " + e.getMessage());
+            }
+        }
         // If initial_stock is 0 but quantity > 0, set initial_stock = quantity (for existing data)
         try (Statement stmt = conn.createStatement()) {
             stmt.executeUpdate("UPDATE `mattress` SET initial_stock = quantity WHERE initial_stock = 0 AND quantity > 0");

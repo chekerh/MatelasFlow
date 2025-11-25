@@ -9,18 +9,17 @@ public class Mattress {
     private int initialStock;
     private int quantitySold;
     private double unitPrice;
-    private double salePrice;
     private int sortOrder;
 
-    public Mattress(int id, String type, String size, String reference, int quantity, double unitPrice, double salePrice, int sortOrder) {
-        this(id, type, size, reference, quantity, quantity, 0, unitPrice, salePrice, sortOrder);
+    public Mattress(int id, String type, String size, String reference, int quantity, double unitPrice, int sortOrder) {
+        this(id, type, size, reference, quantity, quantity, 0, unitPrice, sortOrder);
     }
     
-    public Mattress(int id, String type, String size, String reference, int quantity, int initialStock, double unitPrice, double salePrice, int sortOrder) {
-        this(id, type, size, reference, quantity, initialStock, 0, unitPrice, salePrice, sortOrder);
+    public Mattress(int id, String type, String size, String reference, int quantity, int initialStock, double unitPrice, int sortOrder) {
+        this(id, type, size, reference, quantity, initialStock, 0, unitPrice, sortOrder);
     }
     
-    public Mattress(int id, String type, String size, String reference, int quantity, int initialStock, int quantitySold, double unitPrice, double salePrice, int sortOrder) {
+    public Mattress(int id, String type, String size, String reference, int quantity, int initialStock, int quantitySold, double unitPrice, int sortOrder) {
         this.id = id;
         this.type = type;
         this.size = size;
@@ -29,12 +28,11 @@ public class Mattress {
         this.initialStock = initialStock;
         this.quantitySold = quantitySold;
         this.unitPrice = unitPrice;
-        this.salePrice = salePrice;
         this.sortOrder = sortOrder;
     }
 
-    public Mattress(String type, String size, String reference, int quantity, double unitPrice, double salePrice) {
-        this(0, type, size, reference, quantity, quantity, 0, unitPrice, salePrice, 0);
+    public Mattress(String type, String size, String reference, int quantity, double unitPrice) {
+        this(0, type, size, reference, quantity, quantity, 0, unitPrice, 0);
     }
 
     public int getId() { return id; }
@@ -45,8 +43,7 @@ public class Mattress {
     public int getInitialStock() { return initialStock; }
     public int getQuantitySold() { return quantitySold; }
     public double getUnitPrice() { return unitPrice; }
-    public double getSalePrice() { return salePrice; }
-    public double getPrix() { return salePrice; } // backward compatibility
+    public double getTotalPrice() { return unitPrice * quantity; } // Total value = unit price * quantity
     public int getSortOrder() { return sortOrder; }
 
     public void setId(int id) { this.id = id; }
@@ -57,7 +54,5 @@ public class Mattress {
     public void setInitialStock(int initialStock) { this.initialStock = initialStock; }
     public void setQuantitySold(int quantitySold) { this.quantitySold = quantitySold; }
     public void setUnitPrice(double unitPrice) { this.unitPrice = unitPrice; }
-    public void setSalePrice(double salePrice) { this.salePrice = salePrice; }
-    public void setPrix(double prix) { this.salePrice = prix; }
     public void setSortOrder(int sortOrder) { this.sortOrder = sortOrder; }
 }

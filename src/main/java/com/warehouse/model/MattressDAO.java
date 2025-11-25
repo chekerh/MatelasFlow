@@ -10,6 +10,14 @@ import java.util.List;
 public class MattressDAO {
     private static final Logger logger = LoggerFactory.getLogger(MattressDAO.class);
     private static volatile boolean SORT_ORDER_SUPPORTED = true;
+    private static String lastError = null;
+    
+    /**
+     * Get the last error message from add/update operations
+     */
+    public static String getLastError() {
+        return lastError;
+    }
 
     public static List<Mattress> getAllMattresses() {
         boolean trySortOrder = SORT_ORDER_SUPPORTED;
@@ -48,7 +56,7 @@ public class MattressDAO {
             } else {
                 selectClause.append("0 AS quantity_sold, ");
             }
-            selectClause.append("unit_price, prix");
+            selectClause.append("unit_price");
             if (includeSortOrder) {
                 selectClause.append(", sort_order");
             }
@@ -71,7 +79,6 @@ public class MattressDAO {
                         rs.getInt("initial_stock"),
                         rs.getInt("quantity_sold"),
                         rs.getDouble("unit_price"),
-                        rs.getDouble("prix"),
                         includeSortOrder ? rs.getInt("sort_order") : rs.getInt("id")
                     ));
                 }
@@ -92,12 +99,17 @@ public class MattressDAO {
     }
 
     public static boolean addMattress(Mattress mattress) {
+        lastError = null;
         try (Connection conn = DBUtil.getConnection()) {
             // Check if columns exist
             boolean hasInitialStock = columnExists(conn, "mattress", "initial_stock");
             boolean hasQuantitySold = columnExists(conn, "mattress", "quantity_sold");
+            boolean hasPrix = columnExists(conn, "mattress", "prix");
+            boolean hasSortOrder = SORT_ORDER_SUPPORTED && columnExists(conn, "mattress", "sort_order");
             
             // Build SQL based on available columns
+            // Note: prix (sale price) is NOT used in inventory, but we include it as NULL if column exists
+            //       (prix is only used in transactions, not in inventory - only unit_price is used here)
             StringBuilder sql = new StringBuilder("INSERT INTO mattress (type, size, reference, quantity, ");
             if (hasInitialStock) {
                 sql.append("initial_stock, ");
@@ -105,14 +117,32 @@ public class MattressDAO {
             if (hasQuantitySold) {
                 sql.append("quantity_sold, ");
             }
-            sql.append("unit_price, prix, sort_order) VALUES (?, ?, ?, ?, ");
+            sql.append("unit_price");
+            // Include prix as NULL if column exists (required for old schema compatibility)
+            if (hasPrix) {
+                sql.append(", prix");
+            }
+            if (hasSortOrder) {
+                sql.append(", sort_order");
+            }
+            sql.append(") VALUES (?, ?, ?, ?, ");
             if (hasInitialStock) {
                 sql.append("?, ");
             }
             if (hasQuantitySold) {
                 sql.append("?, ");
             }
-            sql.append("?, ?, ?)");
+            sql.append("?");
+            // Include NULL for prix if column exists
+            if (hasPrix) {
+                sql.append(", NULL");
+            }
+            if (hasSortOrder) {
+                sql.append(", ?");
+            }
+            sql.append(")");
+            
+            logger.debug("Executing SQL: {}", sql.toString());
             
             try (PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
                 int paramIndex = 1;
@@ -127,21 +157,153 @@ public class MattressDAO {
                     stmt.setInt(paramIndex++, mattress.getQuantitySold());
                 }
                 stmt.setDouble(paramIndex++, mattress.getUnitPrice());
-                stmt.setDouble(paramIndex++, mattress.getSalePrice());
-                stmt.setInt(paramIndex, getNextSortOrder(conn, "mattress"));
+                // Note: prix is NOT set here - it's set to NULL in SQL (prix is only used in transactions)
+                if (hasSortOrder) {
+                    int sortOrder = 0;
+                    try {
+                        sortOrder = getNextSortOrder(conn, "mattress");
+                    } catch (SQLException e) {
+                        // If getNextSortOrder fails (e.g., column doesn't exist), disable sort_order support
+                        if (isUnknownColumn(e, "sort_order")) {
+                            SORT_ORDER_SUPPORTED = false;
+                            logger.warn("sort_order column not available, disabling sort order support");
+                        }
+                        // Use 0 as default sort order if we can't get the next one
+                        sortOrder = 0;
+                    }
+                    stmt.setInt(paramIndex++, sortOrder);
+                }
                 
-                boolean success = stmt.executeUpdate() > 0;
+                int rowsAffected = stmt.executeUpdate();
+                boolean success = rowsAffected > 0;
                 if (success) {
+                    lastError = null;
                     logger.info("Mattress added successfully: type={}, size={}, reference={}, quantity={}, initialStock={}, quantitySold={}", 
                         mattress.getType(), mattress.getSize(), mattress.getReference(), mattress.getQuantity(), 
                         mattress.getInitialStock(), mattress.getQuantitySold());
                 } else {
+                    lastError = "Aucune ligne affectée par l'insertion.";
                     logger.warn("Failed to add mattress: no rows affected");
                 }
                 return success;
             }
         } catch (SQLException e) {
-            logger.error("Error adding mattress: {}", e.getMessage(), e);
+            String errorMsg = e.getMessage();
+            lastError = errorMsg != null ? errorMsg : "Erreur SQL inconnue";
+            logger.error("Error adding mattress: SQL State={}, Error Code={}, Message={}", 
+                e.getSQLState(), e.getErrorCode(), errorMsg, e);
+            
+            // Check if it's an unknown column error for sort_order
+            if (isUnknownColumn(e, "sort_order")) {
+                SORT_ORDER_SUPPORTED = false;
+                logger.warn("sort_order column not found, disabling sort order support and retrying");
+                // Retry without sort_order
+                return addMattressWithoutSortOrder(mattress);
+            }
+            
+            // Check for common database errors and provide helpful messages
+            if (errorMsg != null) {
+                if (errorMsg.contains("Field 'prix' doesn't have a default value") || 
+                    (errorMsg.contains("prix") && errorMsg.contains("doesn't have a default value"))) {
+                    lastError = "Erreur: La colonne 'prix' n'a pas de valeur par défaut. " +
+                               "Le système va automatiquement rendre cette colonne nullable au prochain démarrage. " +
+                               "Redémarrez l'application pour appliquer la correction automatique.";
+                    logger.error("Missing 'prix' default value - SchemaMigrator should fix this on next startup");
+                    // Try to fix it now
+                    try {
+                        try (Connection fixConn = DBUtil.getConnection()) {
+                            try (Statement fixStmt = fixConn.createStatement()) {
+                                fixStmt.executeUpdate("ALTER TABLE `mattress` MODIFY COLUMN `prix` DECIMAL(10,2) NULL");
+                                logger.info("Fixed: Made prix column nullable");
+                            }
+                        }
+                    } catch (SQLException fixException) {
+                        logger.warn("Could not auto-fix prix column: {}", fixException.getMessage());
+                    }
+                } else if (errorMsg.contains("Connection") || errorMsg.contains("Communications link failure")) {
+                    lastError = "Impossible de se connecter à la base de données. Vérifiez que XAMPP MySQL est démarré.";
+                } else if (errorMsg.contains("Unknown database")) {
+                    lastError = "Base de données 'warehouse_db' introuvable. Créez-la d'abord.";
+                } else if (errorMsg.contains("Table") && errorMsg.contains("doesn't exist")) {
+                    lastError = "Table 'mattress' introuvable. Exécutez le script de création de schéma.";
+                } else if (errorMsg.contains("Access denied")) {
+                    lastError = "Accès refusé à la base de données. Vérifiez les identifiants (utilisateur/mot de passe).";
+                } else if (errorMsg.contains("Duplicate entry")) {
+                    lastError = "Une entrée avec cette référence existe déjà.";
+                }
+            }
+            
+            return false;
+        }
+    }
+    
+    /**
+     * Helper method to retry adding mattress without sort_order column
+     */
+    private static boolean addMattressWithoutSortOrder(Mattress mattress) {
+        lastError = null;
+        try (Connection conn = DBUtil.getConnection()) {
+            boolean hasInitialStock = columnExists(conn, "mattress", "initial_stock");
+            boolean hasQuantitySold = columnExists(conn, "mattress", "quantity_sold");
+            boolean hasPrix = columnExists(conn, "mattress", "prix");
+            
+            // Note: prix (sale price) is NOT used in inventory, but we include it as NULL if column exists
+            StringBuilder sql = new StringBuilder("INSERT INTO mattress (type, size, reference, quantity, ");
+            if (hasInitialStock) {
+                sql.append("initial_stock, ");
+            }
+            if (hasQuantitySold) {
+                sql.append("quantity_sold, ");
+            }
+            sql.append("unit_price");
+            if (hasPrix) {
+                sql.append(", prix");
+            }
+            sql.append(") VALUES (?, ?, ?, ?, ");
+            if (hasInitialStock) {
+                sql.append("?, ");
+            }
+            if (hasQuantitySold) {
+                sql.append("?, ");
+            }
+            sql.append("?");
+            if (hasPrix) {
+                sql.append(", NULL");
+            }
+            sql.append(")");
+            
+            logger.debug("Retrying SQL (without sort_order): {}", sql.toString());
+            
+            try (PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
+                int paramIndex = 1;
+                stmt.setString(paramIndex++, mattress.getType());
+                stmt.setString(paramIndex++, mattress.getSize());
+                stmt.setString(paramIndex++, mattress.getReference());
+                stmt.setInt(paramIndex++, mattress.getQuantity());
+                if (hasInitialStock) {
+                    stmt.setInt(paramIndex++, mattress.getInitialStock() > 0 ? mattress.getInitialStock() : mattress.getQuantity());
+                }
+                if (hasQuantitySold) {
+                    stmt.setInt(paramIndex++, mattress.getQuantitySold());
+                }
+                stmt.setDouble(paramIndex++, mattress.getUnitPrice());
+                
+                int rowsAffected = stmt.executeUpdate();
+                boolean success = rowsAffected > 0;
+                if (success) {
+                    lastError = null;
+                    logger.info("Mattress added successfully (without sort_order): type={}, size={}, reference={}, quantity={}", 
+                        mattress.getType(), mattress.getSize(), mattress.getReference(), mattress.getQuantity());
+                } else {
+                    lastError = "Aucune ligne affectée par l'insertion (retry).";
+                }
+                return success;
+            }
+        } catch (SQLException retryException) {
+            String errorMsg = retryException.getMessage();
+            lastError = errorMsg != null ? errorMsg : "Erreur SQL lors de la nouvelle tentative";
+            logger.error("Error adding mattress (retry without sort_order): SQL State={}, Error Code={}, Message={}", 
+                retryException.getSQLState(), retryException.getErrorCode(), errorMsg, retryException);
             return false;
         }
     }
@@ -160,7 +322,7 @@ public class MattressDAO {
             if (hasQuantitySold) {
                 sql.append("quantity_sold=?, ");
             }
-            sql.append("unit_price=?, prix=? WHERE id=?");
+            sql.append("unit_price=? WHERE id=?");
             
             try (PreparedStatement stmt = conn.prepareStatement(sql.toString())) {
                 int paramIndex = 1;
@@ -175,7 +337,6 @@ public class MattressDAO {
                     stmt.setInt(paramIndex++, mattress.getQuantitySold());
                 }
                 stmt.setDouble(paramIndex++, mattress.getUnitPrice());
-                stmt.setDouble(paramIndex++, mattress.getSalePrice());
                 stmt.setInt(paramIndex, mattress.getId());
                 
                 boolean success = stmt.executeUpdate() > 0;
@@ -256,6 +417,8 @@ public class MattressDAO {
                 if (rs.next()) {
                     boolean hasInitialStock = columnExists(conn, "mattress", "initial_stock");
                     int initialStock = hasInitialStock ? rs.getInt("initial_stock") : rs.getInt("quantity");
+                    boolean hasQuantitySold = columnExists(conn, "mattress", "quantity_sold");
+                    int quantitySold = hasQuantitySold ? rs.getInt("quantity_sold") : 0;
                     return new Mattress(
                         rs.getInt("id"),
                         rs.getString("type"),
@@ -263,8 +426,8 @@ public class MattressDAO {
                         rs.getString("reference"),
                         rs.getInt("quantity"),
                         initialStock,
+                        quantitySold,
                         rs.getDouble("unit_price"),
-                        rs.getDouble("prix"),
                         rs.getInt("sort_order")
                     );
                 }

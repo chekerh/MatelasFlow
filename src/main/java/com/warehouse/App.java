@@ -25,13 +25,30 @@ public class App extends Application {
         setApplicationIcon(primaryStage);
         
         // Check license before showing login
-        if (!LicenseManager.checkLicense()) {
+        boolean licenseValid = false;
+        try {
+            licenseValid = LicenseManager.checkLicense();
+            logger.info("License check result: {}", licenseValid);
+            // Also log to console for debugging .exe issues
+            System.out.println("License check result: " + licenseValid);
+            System.out.println("License file path: " + com.warehouse.security.LicenseManager.getLicensePath());
+        } catch (Exception e) {
+            logger.error("Error checking license: {}", e.getMessage(), e);
+            System.err.println("ERROR checking license: " + e.getMessage());
+            e.printStackTrace();
+            licenseValid = false;
+        }
+        
+        if (!licenseValid) {
             logger.info("No valid license found. Showing activation dialog...");
+            System.out.println("No valid license - showing activation dialog");
             showLicenseActivation(primaryStage);
             return;
         }
         
         // License is valid, show login
+        logger.info("License valid - showing login view");
+        System.out.println("License valid - showing login");
         showLoginView(primaryStage);
         
         logger.info("MatelasPro application started successfully");
@@ -86,9 +103,19 @@ public class App extends Application {
         // Handle application close - shutdown connection pool
         primaryStage.setOnCloseRequest(e -> {
             logger.info("Application shutting down...");
-            DBUtil.shutdown();
-            Platform.exit();
-            System.exit(0);
+            System.out.println("Closing application...");
+            
+            // Shutdown database connections in background thread to avoid blocking
+            new Thread(() -> {
+                try {
+                    DBUtil.shutdown();
+                } catch (Exception ex) {
+                    logger.error("Error during shutdown: {}", ex.getMessage());
+                } finally {
+                    Platform.exit();
+                    System.exit(0);
+                }
+            }).start();
         });
         
         // Create scene and set initial state

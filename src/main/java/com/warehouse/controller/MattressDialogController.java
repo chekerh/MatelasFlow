@@ -11,7 +11,6 @@ public class MattressDialogController {
     @FXML private TextField referenceField;
     @FXML private TextField unitPriceField;
     @FXML private TextField quantityField;
-    @FXML private TextField prixField;
     @FXML private Button okButton;
     @FXML private Button cancelButton;
     @FXML private Label errorLabel;
@@ -36,7 +35,6 @@ public class MattressDialogController {
             referenceField.setText(mattress.getReference());
             unitPriceField.setText(String.valueOf(mattress.getUnitPrice()));
             quantityField.setText(String.valueOf(mattress.getQuantity()));
-            prixField.setText(String.valueOf(mattress.getSalePrice()));
         }
     }
 
@@ -54,31 +52,27 @@ public class MattressDialogController {
         String reference = referenceField.getText();
         String unitPriceStr = unitPriceField.getText();
         String quantityStr = quantityField.getText();
-        String prixStr = prixField.getText();
-        if (type.isEmpty() || size.isEmpty() || reference.isEmpty() || unitPriceStr.isEmpty() || quantityStr.isEmpty() || prixStr.isEmpty()) {
+        if (type.isEmpty() || size.isEmpty() || reference.isEmpty() || unitPriceStr.isEmpty() || quantityStr.isEmpty()) {
             errorLabel.setText("Tous les champs sont obligatoires.");
             return;
         }
         int quantity;
-        double prix;
         double unitPrice;
         try {
             unitPrice = Double.parseDouble(unitPriceStr);
             quantity = Integer.parseInt(quantityStr);
-            prix = Double.parseDouble(prixStr);
         } catch (NumberFormatException e) {
             errorLabel.setText("Quantité et prix doivent être des nombres.");
             return;
         }
         if (mattress == null) {
-            mattress = new Mattress(type, size, reference, quantity, unitPrice, prix);
+            mattress = new Mattress(type, size, reference, quantity, unitPrice);
         } else {
             mattress.setType(type);
             mattress.setSize(size);
             mattress.setReference(reference);
             mattress.setUnitPrice(unitPrice);
             mattress.setQuantity(quantity);
-            mattress.setSalePrice(prix);
         }
         okClicked = true;
         ((Stage) okButton.getScene().getWindow()).close();

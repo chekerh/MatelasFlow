@@ -24,7 +24,6 @@ public class TransactionOverlayController {
     @FXML private ComboBox<String> typeComboBox;
     @FXML private ComboBox<String> mattressComboBox;
     @FXML private TextField quantityField;
-    @FXML private TextField unitPriceField;
     @FXML private TextField salePriceField;
     @FXML private TextField totalPriceField;
     @FXML private ComboBox<String> storeOwnerComboBox;
@@ -68,12 +67,9 @@ public class TransactionOverlayController {
         // Add input validation for numeric fields
         setupNumericValidation(quantityField, true); // Integer only
         setupNumericValidation(salePriceField, false); // Decimal allowed
-        setupNumericValidation(unitPriceField, false); // Decimal allowed (though read-only)
         
         quantityField.textProperty().addListener((obs, oldVal, newVal) -> updateTotalPrice());
         salePriceField.textProperty().addListener((obs, oldVal, newVal) -> updateTotalPrice());
-        mattressComboBox.valueProperty().addListener((obs, oldVal, newVal) -> populatePricesForSelection(newVal));
-        unitPriceField.setEditable(false);
         totalPriceField.setEditable(false);
     }
     
@@ -139,11 +135,11 @@ public class TransactionOverlayController {
                 String reference = (mattress.getReference() == null || mattress.getReference().isBlank())
                     ? "Réf inconnue"
                     : mattress.getReference();
-                String mattressString = "🛏️ " + mattress.getType() + " - " + reference;
+                String size = (mattress.getSize() == null || mattress.getSize().isBlank())
+                    ? "Taille inconnue"
+                    : mattress.getSize();
+                String mattressString = "🛏️ " + mattress.getType() + " - " + size + " - " + reference;
                 mattressComboBox.setValue(mattressString);
-                populatePricesForSelection(mattressString);
-            } else {
-                unitPriceField.clear();
             }
             
             if (transaction != null) {
@@ -173,7 +169,6 @@ public class TransactionOverlayController {
             // Then set default values
             typeComboBox.setValue("💰 Vente");
             quantityField.clear();
-            unitPriceField.clear();
             salePriceField.clear();
             totalPriceField.clear();
             notesField.clear();
@@ -227,7 +222,10 @@ public class TransactionOverlayController {
             String reference = (mattress.getReference() == null || mattress.getReference().isBlank())
                 ? "Réf inconnue"
                 : mattress.getReference();
-            mattressNames.add("🛏️ " + mattress.getType() + " - " + reference);
+            String size = (mattress.getSize() == null || mattress.getSize().isBlank())
+                ? "Taille inconnue"
+                : mattress.getSize();
+            mattressNames.add("🛏️ " + mattress.getType() + " - " + size + " - " + reference);
         }
         mattressComboBox.setItems(mattressNames);
         
@@ -397,10 +395,10 @@ public class TransactionOverlayController {
                 
                 // Additional validation for sales
                 if ("Vente".equals(typeForDB)) {
-                    // Check if selling price is reasonable (not too low compared to original price)
-                    double originalPrice = selectedMattress.getPrix();
-                    if (prix < originalPrice * 0.5) {
-                        showAlert("Attention", "Le prix de vente est très bas par rapport au prix original (" + String.format("%.2f", originalPrice) + " DT). Voulez-vous continuer ?", AlertType.WARNING);
+                    // Check if selling price is reasonable (not too low compared to unit price)
+                    double unitPrice = selectedMattress.getUnitPrice();
+                    if (prix < unitPrice * 0.5) {
+                        showAlert("Attention", "Le prix de vente est très bas par rapport au prix d'achat (" + String.format("%.2f", unitPrice) + " DT). Voulez-vous continuer ?", AlertType.WARNING);
                         // Note: In a real application, you might want to add a confirmation dialog here
                     }
                 }
@@ -571,18 +569,8 @@ public class TransactionOverlayController {
     }
 
     private void populatePricesForSelection(String displayValue) {
-        Mattress mattress = resolveMattressFromDisplay(displayValue);
-        if (mattress != null) {
-            unitPriceField.setText(String.format("%.2f", mattress.getUnitPrice()));
-            if (!salePriceField.isDisabled()) {
-                salePriceField.setText(String.format("%.2f", mattress.getSalePrice()));
-            }
-        } else {
-            unitPriceField.clear();
-            if (!salePriceField.isDisabled()) {
-                salePriceField.clear();
-            }
-        }
+        // No longer populating unit price field since it's removed
+        // Sale price field is manually entered by user
         updateTotalPrice();
     }
 
@@ -600,24 +588,95 @@ public class TransactionOverlayController {
         if (mattressString == null || mattressString.trim().isEmpty()) {
             return null;
         }
+        
         String mattressInfo = mattressString.trim();
-        if (mattressInfo.contains(" ")) {
-            int firstSpace = mattressInfo.indexOf(" ");
-            mattressInfo = mattressInfo.substring(firstSpace + 1).trim();
-        }
-        String[] parts = mattressInfo.split(" - ");
-        String mattressType = parts[0].trim();
-        String referencePart = parts.length > 1 ? parts[1].trim() : "";
-
-        List<Mattress> allMattresses = MattressDAO.getAllMattresses();
-        for (Mattress mattress : allMattresses) {
-            String reference = mattress.getReference() == null ? "" : mattress.getReference().trim();
-            if (mattress.getType().equalsIgnoreCase(mattressType) &&
-                (referencePart.isEmpty() || reference.equalsIgnoreCase(referencePart) ||
-                 ("Réf inconnue".equals(referencePart) && reference.isEmpty()))) {
-                return mattress;
+        
+        // Remove emoji if present - emoji can vary in length, so find it and remove
+        int emojiIndex = mattressInfo.indexOf("🛏️");
+        if (emojiIndex >= 0) {
+            // Remove emoji and any following spaces
+            mattressInfo = mattressInfo.substring(emojiIndex + 2).trim();
+            // Remove any remaining leading spaces
+            while (mattressInfo.startsWith(" ")) {
+                mattressInfo = mattressInfo.substring(1).trim();
             }
         }
+        
+        // Format: "Type - Size - Reference"
+        // Split by " - " to get the three parts
+        String[] parts = mattressInfo.split(" - ");
+        
+        List<Mattress> allMattresses = MattressDAO.getAllMattresses();
+        
+        if (parts.length >= 3) {
+            // New format with size: "Type - Size - Reference"
+            String mattressType = parts[0].trim();
+            String sizePart = parts[1].trim();
+            String referencePart = parts[2].trim();
+
+            for (Mattress mattress : allMattresses) {
+                String reference = mattress.getReference() == null || mattress.getReference().isBlank() 
+                    ? "" 
+                    : mattress.getReference().trim();
+                String size = mattress.getSize() == null || mattress.getSize().isBlank() 
+                    ? "" 
+                    : mattress.getSize().trim();
+                String type = mattress.getType() == null ? "" : mattress.getType().trim();
+                
+                // Match type
+                if (!type.equalsIgnoreCase(mattressType)) {
+                    continue;
+                }
+                
+                // Match size (handle "Taille inconnue" placeholder)
+                boolean sizeMatches = sizePart.isEmpty() || 
+                                    size.equalsIgnoreCase(sizePart) || 
+                                    ("Taille inconnue".equalsIgnoreCase(sizePart) && size.isEmpty());
+                
+                // Match reference (handle "Réf inconnue" placeholder)
+                boolean referenceMatches = referencePart.isEmpty() || 
+                                         reference.equalsIgnoreCase(referencePart) ||
+                                         ("Réf inconnue".equalsIgnoreCase(referencePart) && reference.isEmpty());
+                
+                // If all match, return the mattress
+                if (sizeMatches && referenceMatches) {
+                    return mattress;
+                }
+            }
+        } else if (parts.length == 2) {
+            // Fallback: old format "Type - Reference" (without size)
+            String mattressType = parts[0].trim();
+            String referencePart = parts[1].trim();
+            
+            for (Mattress mattress : allMattresses) {
+                String reference = mattress.getReference() == null || mattress.getReference().isBlank() 
+                    ? "" 
+                    : mattress.getReference().trim();
+                String type = mattress.getType() == null ? "" : mattress.getType().trim();
+                
+                if (type.equalsIgnoreCase(mattressType) && 
+                    (reference.equalsIgnoreCase(referencePart) || 
+                     ("Réf inconnue".equalsIgnoreCase(referencePart) && reference.isEmpty()))) {
+                    return mattress;
+                }
+            }
+        }
+        
+        // Last resort: try to find by reference only (if it's unique enough)
+        if (parts.length >= 3) {
+            String referencePart = parts[2].trim();
+            if (!referencePart.isEmpty() && !"Réf inconnue".equalsIgnoreCase(referencePart)) {
+                for (Mattress mattress : allMattresses) {
+                    String reference = mattress.getReference() == null || mattress.getReference().isBlank() 
+                        ? "" 
+                        : mattress.getReference().trim();
+                    if (reference.equalsIgnoreCase(referencePart)) {
+                        return mattress;
+                    }
+                }
+            }
+        }
+        
         return null;
     }
 } 

@@ -121,12 +121,12 @@ public class DemandPredictor {
                 if ("Vente".equals(transaction.getType())) {
                     Mattress mattress = MattressDAO.getMattressById(transaction.getMattressId());
                     if (mattress != null) {
-                        double priceRatio = transaction.getPrix() / mattress.getPrix();
+                        double priceRatio = transaction.getPrix() / mattress.getUnitPrice();
                         if (priceRatio < 0.3) {
                             frauds.add(new FraudDetection(
                                 "Vente à prix suspect",
                                 "Transaction ID: " + transaction.getId(),
-                                "Prix de vente: " + transaction.getPrix() + "€, Prix original: " + mattress.getPrix() + "€",
+                                "Prix de vente: " + transaction.getPrix() + "€, Prix d'achat: " + mattress.getUnitPrice() + "€",
                                 "HIGH"
                             ));
                         }

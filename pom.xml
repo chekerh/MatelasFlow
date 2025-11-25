@@ -180,7 +180,10 @@
                 </executions>
             </plugin>
             
-            <!-- Plugin pour créer l'exécutable -->
+            <!-- Plugin pour créer l'exécutable Windows .exe -->
+            <!-- Note: This plugin has issues with 'exe' type. Use build-exe.bat instead for now. -->
+            <!-- Plugin is commented out - use build-exe.bat script for reliable .exe creation -->
+            <!--
             <plugin>
                 <groupId>org.panteleyev</groupId>
                 <artifactId>jpackage-maven-plugin</artifactId>
@@ -190,42 +193,17 @@
                     <appVersion>1.0.0</appVersion>
                     <vendor>STE Habiba</vendor>
                     <destination>target/dist</destination>
-                    <module>warehouse-mattress-app/com.warehouse.App</module>
-                    <runtimeImage>target/image</runtimeImage>
-                    <icon>src/main/resources/images/SuperMousse.jpg</icon>
+                    <input>target</input>
+                    <mainJar>warehouse-mattress-app-1.0-SNAPSHOT.jar</mainJar>
+                    <mainClass>com.warehouse.App</mainClass>
                     <javaOptions>
-                        <option>--module-path</option>
-                        <option>%JAVA_HOME%/lib</option>
-                        <option>--add-modules</option>
-                        <option>javafx.controls,javafx.fxml,javafx.graphics,javafx.base</option>
                         <option>-Dfile.encoding=UTF-8</option>
                         <option>-Xmx1024m</option>
                         <option>-Xms256m</option>
                     </javaOptions>
-                    <macOptions>
-                        <macPackageIdentifier>com.stehabiba.matelaspro</macPackageIdentifier>
-                        <macPackageName>MatelasPro</macPackageName>
-                        <macPackageSigningPrefix>STE Habiba</macPackageSigningPrefix>
-                    </macOptions>
-                    <winOptions>
-                        <winDirChooser>true</winDirChooser>
-                        <winMenu>true</winMenu>
-                        <winShortcut>true</winShortcut>
-                    </winOptions>
                 </configuration>
-                <executions>
-                    <execution>
-                        <id>win</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>jpackage</goal>
-                        </goals>
-                        <configuration>
-                            <type>exe</type>
-                        </configuration>
-                    </execution>
-                </executions>
             </plugin>
+            -->
         </plugins>
     </build>
 </project>

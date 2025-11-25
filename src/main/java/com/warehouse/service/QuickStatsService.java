@@ -28,6 +28,7 @@ public class QuickStatsService {
         public int lowStock;
         public long pendingReturns;
         public double todayRevenue;
+        public double todayNetProfit;
     }
     
     /**
@@ -67,8 +68,27 @@ public class QuickStatsService {
                     .mapToDouble(t -> t.getPrix() * t.getQuantity())
                     .sum();
                 
-                logger.debug("Quick stats calculated: lowStock={}, pendingReturns={}, todayRevenue={}", 
-                    stats.lowStock, stats.pendingReturns, stats.todayRevenue);
+                // Calculate today's net profit (revenue - cost)
+                // Net profit = (sale price - unit price) * quantity for each sale
+                stats.todayNetProfit = transactions.stream()
+                    .filter(t -> t.getType() != null && 
+                                t.getType().toLowerCase(Locale.ROOT).startsWith("vente"))
+                    .filter(t -> t.getDate() != null && 
+                                t.getDate().toLocalDate().equals(LocalDate.now()))
+                    .mapToDouble(t -> {
+                        // Get the mattress to find unit price
+                        Mattress mattress = MattressDAO.getMattressById(t.getMattressId());
+                        if (mattress != null) {
+                            double salePrice = t.getPrix();
+                            double unitPrice = mattress.getUnitPrice();
+                            return (salePrice - unitPrice) * t.getQuantity();
+                        }
+                        return 0.0;
+                    })
+                    .sum();
+                
+                logger.debug("Quick stats calculated: lowStock={}, pendingReturns={}, todayRevenue={}, todayNetProfit={}", 
+                    stats.lowStock, stats.pendingReturns, stats.todayRevenue, stats.todayNetProfit);
                 
                 return stats;
             } catch (Exception e) {
@@ -88,7 +108,8 @@ public class QuickStatsService {
                                          Label lowStockSubLabel,
                                          Label pendingReturnsValueLabel,
                                          Label pendingReturnsSubLabel,
-                                         Label todayRevenueValueLabel) {
+                                         Label todayRevenueValueLabel,
+                                         Label todayNetProfitValueLabel) {
         if (quickActionsBar == null) {
             return;
         }
@@ -109,6 +130,9 @@ public class QuickStatsService {
             if (todayRevenueValueLabel != null) {
                 todayRevenueValueLabel.setText(String.format(Locale.ROOT, "%.2f DT", stats.todayRevenue));
             }
+            if (todayNetProfitValueLabel != null) {
+                todayNetProfitValueLabel.setText(String.format(Locale.ROOT, "%.2f DT", stats.todayNetProfit));
+            }
             
             quickActionsBar.setManaged(true);
             quickActionsBar.setVisible(true);
@@ -123,7 +147,8 @@ public class QuickStatsService {
                                        Label lowStockSubLabel,
                                        Label pendingReturnsValueLabel,
                                        Label pendingReturnsSubLabel,
-                                       Label todayRevenueValueLabel) {
+                                       Label todayRevenueValueLabel,
+                                       Label todayNetProfitValueLabel) {
         if (quickActionsBar == null) {
             return;
         }
@@ -135,7 +160,7 @@ public class QuickStatsService {
         // Calculate and update
         calculateStats().thenAccept(stats -> 
             updateQuickStatsUI(stats, quickActionsBar, lowStockValueLabel, 
-                lowStockSubLabel, pendingReturnsValueLabel, pendingReturnsSubLabel, todayRevenueValueLabel)
+                lowStockSubLabel, pendingReturnsValueLabel, pendingReturnsSubLabel, todayRevenueValueLabel, todayNetProfitValueLabel)
         ).exceptionally(ex -> {
             logger.error("Error refreshing quick stats: {}", ex.getMessage(), ex);
             Platform.runLater(() -> {

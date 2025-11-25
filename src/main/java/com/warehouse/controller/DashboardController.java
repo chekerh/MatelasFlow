@@ -67,6 +67,7 @@ public class DashboardController {
     @FXML private Label pendingReturnsValueLabel;
     @FXML private Label pendingReturnsSubLabel;
     @FXML private Label todayRevenueValueLabel;
+    @FXML private Label todayNetProfitValueLabel;
     
     private String currentUser;
     private String currentRole;
@@ -219,7 +220,8 @@ public class DashboardController {
             lowStockSubLabel,
             pendingReturnsValueLabel,
             pendingReturnsSubLabel,
-            todayRevenueValueLabel
+            todayRevenueValueLabel,
+            todayNetProfitValueLabel
         );
     }
     

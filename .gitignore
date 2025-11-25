@@ -94,10 +94,47 @@ config.properties
 *.tar.gz
 *.rar
 
-# JavaFX Runtime Images
+# JavaFX Runtime Images & Build Artifacts
 target/image/
 target/dist/
 target/app/
+target/javafx-runtime/
+target/javafx-lib-temp/
 target/*.exe
 target/*.dmg
 target/*.pkg
+target/output.txt
+target/error.txt
+
+# Build Scripts (Personal/Development Scripts)
+build-*.ps1
+build-*.bat
+test-*.ps1
+create-icon*.ps1
+create-icon*.bat
+
+# Temporary Documentation Files
+BUILD_*.md
+FIX_*.md
+GIT_PUSH_CHECKLIST.md
+README_EXE.md
+INSTALL_*.md
+QUICK_FIX_*.md
+BUILD_SUCCESS_*.md
+BUILD_COMPLETE.md
+DEPLOYMENT_GUIDE.md
+LICENSE_ACTIVATION_GUIDE.md
+PHPMYADMIN_IMPORT_GUIDE.md
+SECURITY_CREDENTIALS.md
+
+# Temporary SQL Fix Files
+FIX_*.sql
+
+# Empty/Test Directories
+matress/
+
+# Backup and Cache Files
+*.cache
+*.old
+*_backup
+*_old

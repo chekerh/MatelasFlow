@@ -18,11 +18,9 @@
             <TextField fx:id="referenceField" promptText="Entrez la référence" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
             <Label text="💰 Prix unitaire (DT):" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
             <TextField fx:id="unitPriceField" promptText="Entrez le coût" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
-            <Label text="💵 Prix de vente (DT):" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
-            <TextField fx:id="prixField" promptText="Entrez le prix de vente" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
-            <Label text="🔢 Quantité:" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
-            <TextField fx:id="quantityField" promptText="Entrez la quantité" GridPane.rowIndex="5" GridPane.columnIndex="1"/>
-            <HBox spacing="18" alignment="CENTER" GridPane.rowIndex="6" GridPane.columnIndex="0" GridPane.columnSpan="2">
+            <Label text="🔢 Quantité:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+            <TextField fx:id="quantityField" promptText="Entrez la quantité" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+            <HBox spacing="18" alignment="CENTER" GridPane.rowIndex="5" GridPane.columnIndex="0" GridPane.columnSpan="2">
                 <Button fx:id="okButton" text="✔ Valider">
                     <tooltip><Tooltip text="Valider"/></tooltip>
                 </Button>
@@ -30,7 +28,7 @@
                     <tooltip><Tooltip text="Annuler"/></tooltip>
                 </Button>
             </HBox>
-            <Label fx:id="errorLabel" styleClass="errorLabel" GridPane.rowIndex="7" GridPane.columnIndex="0" GridPane.columnSpan="2"/>
+            <Label fx:id="errorLabel" styleClass="errorLabel" GridPane.rowIndex="6" GridPane.columnIndex="0" GridPane.columnSpan="2"/>
         </GridPane>
     </center>
 </BorderPane> 

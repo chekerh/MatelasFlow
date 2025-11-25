@@ -30,7 +30,7 @@ public class InventoryController {
     @FXML private TableColumn<Mattress, String> brandColumn;
     @FXML private TableColumn<Mattress, Integer> quantityColumn;
     @FXML private TableColumn<Mattress, Double> unitPriceColumn;
-    @FXML private TableColumn<Mattress, Double> prixColumn;
+    @FXML private TableColumn<Mattress, Double> totalPriceColumn;
     @FXML private Button addButton;
     @FXML private Button editButton;
     @FXML private Button deleteButton;
@@ -60,16 +60,16 @@ public class InventoryController {
         ));
         quantityColumn.setCellValueFactory(cellData -> new javafx.beans.property.SimpleIntegerProperty(cellData.getValue().getQuantity()).asObject());
         unitPriceColumn.setCellValueFactory(cellData -> new SimpleDoubleProperty(cellData.getValue().getUnitPrice()).asObject());
-        prixColumn.setCellValueFactory(cellData -> new SimpleDoubleProperty(cellData.getValue().getSalePrice()).asObject());
+        totalPriceColumn.setCellValueFactory(cellData -> new SimpleDoubleProperty(cellData.getValue().getTotalPrice()).asObject());
         
         unitPriceColumn.setCellFactory(column -> createPriceCell());
-        prixColumn.setCellFactory(column -> createPriceCell());
+        totalPriceColumn.setCellFactory(column -> createPriceCell());
         typeColumn.setStyle("-fx-alignment: CENTER-LEFT;");
         sizeColumn.setStyle("-fx-alignment: CENTER;");
         brandColumn.setStyle("-fx-alignment: CENTER-LEFT;");
         quantityColumn.setStyle("-fx-alignment: CENTER;");
         unitPriceColumn.setStyle("-fx-alignment: CENTER;");
-        prixColumn.setStyle("-fx-alignment: CENTER;");
+        totalPriceColumn.setStyle("-fx-alignment: CENTER;");
         
         // Set minimum widths for columns
         typeColumn.setMinWidth(150);
@@ -77,7 +77,7 @@ public class InventoryController {
         brandColumn.setMinWidth(150);
         quantityColumn.setMinWidth(80);
         unitPriceColumn.setMinWidth(140);
-        prixColumn.setMinWidth(140);
+        totalPriceColumn.setMinWidth(140);
 
         mattressTable.setPlaceholder(tableSkeleton);
         mattressTable.setItems(mattressList);
@@ -377,8 +377,8 @@ public class InventoryController {
             return String.valueOf(m.getQuantity());
         } else if (column == unitPriceColumn) {
             return String.format("%.2f DT", m.getUnitPrice());
-        } else if (column == prixColumn) {
-            return String.format("%.2f DT", m.getSalePrice());
+        } else if (column == totalPriceColumn) {
+            return String.format("%.2f DT", m.getTotalPrice());
         }
         return "";
     }

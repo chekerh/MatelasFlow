@@ -1,5 +1,6 @@
 package com.warehouse.controller;
 
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ComboBox;
@@ -17,7 +18,6 @@ public class MattressOverlayController {
     @FXML private TextField referenceField;
     @FXML private TextField quantityField;
     @FXML private TextField unitPriceField;
-    @FXML private TextField salePriceField;
     @FXML private Label dialogTitle;
     
     private Mattress mattress;
@@ -49,12 +49,31 @@ public class MattressOverlayController {
             if (!isOther) {
                 customTypeField.clear();
             }
+            
+            // Update size field based on mattress type
+            if ("Mousse".equals(newVal)) {
+                // Pre-fill with template format: ***/*** => **/** (**)
+                // Only set if field is empty or contains the old template
+                String currentText = sizeField.getText();
+                if (currentText == null || currentText.trim().isEmpty() || 
+                    currentText.contains("***") || currentText.contains("**")) {
+                    sizeField.setText("***/*** => **/** (**)");
+                    // Select all text so user can immediately start typing
+                    sizeField.selectAll();
+                }
+                sizeField.setPromptText("Format: longueur/largeur => densité1/densité2 ( hauteur )");
+            } else {
+                // Clear size field for other types
+                if (sizeField.getText() != null && sizeField.getText().contains("***")) {
+                    sizeField.clear();
+                }
+                sizeField.setPromptText("Ex: 90x200, 140x190...");
+            }
         });
         
         // Add input validation for numeric fields
         setupNumericValidation(quantityField, true); // Integer only
         setupNumericValidation(unitPriceField, false); // Decimal allowed
-        setupNumericValidation(salePriceField, false); // Decimal allowed
     }
     
     /**
@@ -98,21 +117,32 @@ public class MattressOverlayController {
                 customTypeField.setText(type);
             }
             sizeField.setText(mattress.getSize());
+            // Update placeholder based on current type
+            if ("Mousse".equals(type)) {
+                sizeField.setPromptText("Format: longueur/largeur => densité1/densité2 ( hauteur )");
+            } else {
+                sizeField.setPromptText("Ex: 90x200, 140x190...");
+            }
             referenceField.setText(mattress.getReference());
             quantityField.setText(String.valueOf(mattress.getQuantity()));
             unitPriceField.setText(String.valueOf(mattress.getUnitPrice()));
-            salePriceField.setText(String.valueOf(mattress.getSalePrice()));
         } else {
             dialogTitle.setText("Ajouter un matelas");
             typeComboBox.setValue("Mousse");
             customTypeField.clear();
             customTypeField.setVisible(false);
             customTypeField.setManaged(false);
-            sizeField.clear();
+            // Pre-fill size field with template for Mousse type
+            sizeField.setText("***/*** => **/** (**)");
+            sizeField.setPromptText("Format: longueur/largeur => densité1/densité2 ( hauteur )");
+            // Select all so user can immediately start typing
+            Platform.runLater(() -> {
+                sizeField.selectAll();
+                sizeField.requestFocus();
+            });
             referenceField.clear();
             quantityField.clear();
             unitPriceField.clear();
-            salePriceField.clear();
         }
     }
     
@@ -125,7 +155,6 @@ public class MattressOverlayController {
             String reference = referenceField.getText().trim();
             String quantityStr = quantityField.getText().trim();
             String unitPriceStr = unitPriceField.getText().trim();
-            String salePriceStr = salePriceField.getText().trim();
             
             // Validation
             InputValidator.ValidationResult referenceValidation = InputValidator.validateLength(reference, "La référence", InputValidator.MAX_REFERENCE_LENGTH);
@@ -146,24 +175,22 @@ public class MattressOverlayController {
                 return;
             }
             
-            if (type == null || type.isEmpty() || size.isEmpty() || reference.isEmpty() || quantityStr.isEmpty() || unitPriceStr.isEmpty() || salePriceStr.isEmpty()) {
+            if (type == null || type.isEmpty() || size.isEmpty() || reference.isEmpty() || quantityStr.isEmpty() || unitPriceStr.isEmpty()) {
                 showAlert("Erreur", "Tous les champs obligatoires doivent être remplis.", AlertType.ERROR);
                 return;
             }
             
             int quantity;
             double unitPrice;
-            double salePrice;
             try {
                 quantity = Integer.parseInt(quantityStr);
                 unitPrice = Double.parseDouble(unitPriceStr);
-                salePrice = Double.parseDouble(salePriceStr);
-                if (quantity < 0 || unitPrice < 0 || salePrice < 0) {
-                    showAlert("Erreur", "La quantité et les prix doivent être positifs.", AlertType.ERROR);
+                if (quantity < 0 || unitPrice < 0) {
+                    showAlert("Erreur", "La quantité et le prix doivent être positifs.", AlertType.ERROR);
                     return;
                 }
             } catch (NumberFormatException e) {
-                showAlert("Erreur", "La quantité et les prix doivent être des nombres valides.", AlertType.ERROR);
+                showAlert("Erreur", "La quantité et le prix doivent être des nombres valides.", AlertType.ERROR);
                 return;
             }
             
@@ -174,10 +201,9 @@ public class MattressOverlayController {
                 mattress.setReference(reference);
                 mattress.setQuantity(quantity);
                 mattress.setUnitPrice(unitPrice);
-                mattress.setSalePrice(salePrice);
                 success = MattressDAO.updateMattress(mattress);
             } else {
-                Mattress newMattress = new Mattress(type, size, reference, quantity, unitPrice, salePrice);
+                Mattress newMattress = new Mattress(type, size, reference, quantity, unitPrice);
                 success = MattressDAO.addMattress(newMattress);
             }
             
@@ -200,16 +226,29 @@ public class MattressOverlayController {
                     );
                 }
             } else {
-                // Show error notification
+                // Show error notification with detailed error message from DAO
+                String daoError = MattressDAO.getLastError();
+                String errorMsg = "Échec de l'opération.";
+                if (daoError != null && !daoError.isEmpty()) {
+                    errorMsg += " " + daoError;
+                } else {
+                    errorMsg += " Veuillez réessayer.";
+                }
+                
                 if (dashboardController != null) {
-                    dashboardController.showNotification("Échec de l'opération. Veuillez réessayer.", true);
+                    dashboardController.showNotification(errorMsg, true);
+                } else {
+                    showAlert("Erreur", errorMsg + "\n\nVérifiez que:\n- XAMPP MySQL est démarré\n- La base de données 'warehouse_db' existe\n- Les identifiants sont corrects", AlertType.ERROR);
                 }
             }
             
         } catch (Exception e) {
             e.printStackTrace();
+            String errorMsg = "Une erreur inattendue s'est produite: " + (e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName());
             if (dashboardController != null) {
-                dashboardController.showNotification("Une erreur inattendue s'est produite: " + e.getMessage(), true);
+                dashboardController.showNotification(errorMsg, true);
+            } else {
+                showAlert("Erreur", errorMsg, AlertType.ERROR);
             }
         }
     }

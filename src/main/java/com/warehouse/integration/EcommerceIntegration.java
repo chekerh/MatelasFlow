@@ -102,7 +102,7 @@ public class EcommerceIntegration {
         return String.format(
             "{\"name\":\"%s\",\"price\":%.2f,\"stock\":%d,\"description\":\"%s - %s\"}",
             mattress.getType(),
-            mattress.getPrix(),
+            mattress.getUnitPrice(),
             mattress.getQuantity(),
             mattress.getReference(),
             mattress.getSize()
@@ -117,7 +117,7 @@ public class EcommerceIntegration {
             "{\"product_id\":\"%d\",\"stock\":%d,\"price\":%.2f}",
             mattress.getId(),
             mattress.getQuantity(),
-            mattress.getPrix()
+            mattress.getUnitPrice()
         );
     }
     

@@ -381,9 +381,29 @@ public class AdvancedFeaturesController {
                     .mapToDouble(t -> t.getPrix() * t.getQuantity())
                     .sum();
                 
+                // Calculate total cost and profit
+                double totalCost = 0;
+                double totalProfit = 0;
+                for (Transaction t : allTransactions) {
+                    if ("Vente".equals(t.getType())) {
+                        Mattress mattress = MattressDAO.getMattressById(t.getMattressId());
+                        if (mattress != null) {
+                            double cost = mattress.getUnitPrice() * t.getQuantity();
+                            totalCost += cost;
+                            totalProfit += (t.getPrix() * t.getQuantity() - cost);
+                        }
+                    }
+                }
+                
                 sb.append("💰 RÉSULTATS FINANCIERS:\n");
                 sb.append("─────────────────────────\n");
-                sb.append("• Chiffre d'affaires total: ").append(String.format("%.2f", totalRevenue)).append("€\n");
+                sb.append("• Chiffre d'affaires total: ").append(String.format("%.2f", totalRevenue)).append(" DT\n");
+                sb.append("• Coût total d'achat: ").append(String.format("%.2f", totalCost)).append(" DT\n");
+                sb.append("• Bénéfice net total: ").append(String.format("%.2f", totalProfit)).append(" DT\n");
+                if (totalRevenue > 0) {
+                    double profitMargin = (totalProfit / totalRevenue) * 100;
+                    sb.append("• Marge bénéficiaire moyenne: ").append(String.format("%.2f", profitMargin)).append("%\n");
+                }
                 sb.append("• Nombre total de transactions: ").append(allTransactions.size()).append("\n");
                 sb.append("• Ventes: ").append(totalSales).append("\n");
                 sb.append("• Retours: ").append(totalReturns).append("\n");
@@ -1093,7 +1113,8 @@ public class AdvancedFeaturesController {
             sb.append("───────────────────────────────────\n");
             for (Mattress mattress : mattresses) {
                 sb.append("• ").append(mattress.getType()).append(" (").append(mattress.getSize()).append(")\n");
-                sb.append("  - Prix: ").append(String.format("%.2f", mattress.getPrix())).append("€\n");
+                sb.append("  - Prix unitaire: ").append(String.format("%.2f", mattress.getUnitPrice())).append("€\n");
+                sb.append("  - Prix total: ").append(String.format("%.2f", mattress.getTotalPrice())).append("€\n");
                 sb.append("  - Stock: ").append(mattress.getQuantity()).append(" unités\n");
                 sb.append("  - Statut: Synchronisé ✅\n\n");
             }

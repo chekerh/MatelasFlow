@@ -84,6 +84,11 @@
                             <Label fx:id="todayRevenueValueLabel" text="0 DT" styleClass="quick-card__value"/>
                             <Label text="Ventes enregistrées aujourd'hui" styleClass="quick-card__subtitle"/>
                         </VBox>
+                        <VBox styleClass="quick-card" spacing="4">
+                            <Label text="Bénéfice net du jour" styleClass="quick-card__title"/>
+                            <Label fx:id="todayNetProfitValueLabel" text="0 DT" styleClass="quick-card__value"/>
+                            <Label text="Profit après coûts d'achat" styleClass="quick-card__subtitle"/>
+                        </VBox>
                     </HBox>
                     
                     <!-- Main Content -->

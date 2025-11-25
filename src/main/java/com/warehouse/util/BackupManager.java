@@ -183,7 +183,8 @@ public class BackupManager {
                 mattressMap.put("size", m.getSize());
                 mattressMap.put("reference", m.getReference());
                 mattressMap.put("quantity", m.getQuantity());
-                mattressMap.put("prix", m.getPrix());
+                mattressMap.put("unit_price", m.getUnitPrice());
+                mattressMap.put("total_price", m.getTotalPrice());
                 mattressList.add(mattressMap);
             }
             data.put("mattresses", mattressList);

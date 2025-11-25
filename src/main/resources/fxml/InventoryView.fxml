@@ -11,7 +11,7 @@
                 <TableColumn fx:id="brandColumn" text="Référence" prefWidth="200" />
                 <TableColumn fx:id="quantityColumn" text="Quantité" prefWidth="120" />
                 <TableColumn fx:id="unitPriceColumn" text="Prix unitaire (DT)" prefWidth="140" />
-                <TableColumn fx:id="prixColumn" text="Prix de vente (DT)" prefWidth="140" />
+                <TableColumn fx:id="totalPriceColumn" text="Prix total (DT)" prefWidth="140" />
             </columns>
         </TableView>
     </ScrollPane>
