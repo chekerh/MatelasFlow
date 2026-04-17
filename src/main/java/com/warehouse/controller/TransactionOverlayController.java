@@ -3,6 +3,8 @@ package com.warehouse.controller;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.control.Alert;
@@ -15,10 +17,16 @@ import com.warehouse.model.StoreOwner;
 import com.warehouse.model.StoreOwnerDAO;
 import com.warehouse.model.User;
 import com.warehouse.model.UserDAO;
+import com.warehouse.model.PackItem;
+import com.warehouse.model.PackItemDAO;
 import com.warehouse.util.InputValidator;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.ArrayList;
+import java.sql.SQLException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 
 public class TransactionOverlayController {
     @FXML private ComboBox<String> typeComboBox;
@@ -33,8 +41,21 @@ public class TransactionOverlayController {
     @FXML private VBox lendingFieldsBox;
     @FXML private VBox destinationBox;
     @FXML private VBox returnFieldsBox;
+    @FXML private VBox packFieldsBox;
+    @FXML private VBox packItemsContainer;
+    @FXML private TextField packTotalPriceField;
+    @FXML private ComboBox<String> packMattressSelector;
     @FXML private ComboBox<String> returnFromComboBox;
     @FXML private Label dialogTitle;
+    @FXML private Label mattressLabel;
+    @FXML private Label quantityLabel;
+    @FXML private Label salePriceLabel;
+    @FXML private Label totalPriceLabel;
+    @FXML private Label storeOwnerLabel;
+    @FXML private Label notesLabel;
+    
+    // Pack items list
+    private java.util.List<PackItemRow> packItemRows = new java.util.ArrayList<>();
     
     private Transaction transaction;
     private boolean isEditMode = false;
@@ -132,10 +153,10 @@ public class TransactionOverlayController {
             // Set mattress value by finding the matching string
             Mattress mattress = (transaction != null) ? MattressDAO.getMattressById(transaction.getMattressId()) : null;
             if (mattress != null) {
-                String reference = (mattress.getReference() == null || mattress.getReference().isBlank())
+                String reference = (mattress.getReference() == null || mattress.getReference().trim().isEmpty())
                     ? "Réf inconnue"
                     : mattress.getReference();
-                String size = (mattress.getSize() == null || mattress.getSize().isBlank())
+                String size = (mattress.getSize() == null || mattress.getSize().trim().isEmpty())
                     ? "Taille inconnue"
                     : mattress.getSize();
                 String mattressString = "🛏️ " + mattress.getType() + " - " + size + " - " + reference;
@@ -186,7 +207,8 @@ public class TransactionOverlayController {
             "📦 Prêt", 
             "🚚 Transfert",
             "🔄 retour",
-            "📥 Réception"
+            "📥 Réception",
+            "📦 Pack"
         );
         typeComboBox.setItems(transactionTypes);
         
@@ -219,10 +241,10 @@ public class TransactionOverlayController {
         List<Mattress> mattresses = MattressDAO.getAllMattresses();
         ObservableList<String> mattressNames = FXCollections.observableArrayList();
         for (Mattress mattress : mattresses) {
-            String reference = (mattress.getReference() == null || mattress.getReference().isBlank())
+            String reference = (mattress.getReference() == null || mattress.getReference().trim().isEmpty())
                 ? "Réf inconnue"
                 : mattress.getReference();
-            String size = (mattress.getSize() == null || mattress.getSize().isBlank())
+            String size = (mattress.getSize() == null || mattress.getSize().trim().isEmpty())
                 ? "Taille inconnue"
                 : mattress.getSize();
             mattressNames.add("🛏️ " + mattress.getType() + " - " + size + " - " + reference);
@@ -244,41 +266,231 @@ public class TransactionOverlayController {
     
     private void updateFieldsForType() {
         String selectedType = typeComboBox.getValue();
+        if (selectedType == null) return;
+        
+        // Reset all fields visibility
+        boolean isVente = "💰 Vente".equals(selectedType);
+        boolean isPret = "📦 Prêt".equals(selectedType);
+        boolean isTransfert = "🚚 Transfert".equals(selectedType);
+        boolean isRetour = "🔄 retour".equals(selectedType);
+        boolean isReception = "📥 Réception".equals(selectedType);
+        boolean isPack = "📦 Pack".equals(selectedType);
+        
+        // Vente (Sale): Show mattress, quantity, price, total, notes
+        // Hide: store owner, return date, destination
+        // Pack: Show pack fields, price total, notes
+        // Hide: regular mattress, quantity, price per unit
+        // Prêt (Loan): Show mattress, quantity, store owner, return date, notes
+        // Hide: price fields
+        // Transfert: Show mattress, quantity, store owner, destination, notes
+        // Hide: price fields, return date
+        // Retour: Show mattress, quantity, return from, notes
+        // Hide: price fields, store owner (destination)
+        // Réception: Show mattress, quantity, notes
+        // Hide: price fields, store owner, return date
+        
+        // Common fields: Type (always visible), Notes (always visible)
+        // Show/hide mattress selection based on type
+        boolean showRegularMattress = !isPack;
+        if (mattressLabel != null) mattressLabel.setVisible(showRegularMattress);
+        mattressComboBox.setVisible(showRegularMattress);
+        
+        // Show quantity for all types except pack (pack has its own quantity management)
+        boolean showQuantity = !isPack;
+        if (quantityLabel != null) quantityLabel.setVisible(showQuantity);
+        quantityField.setVisible(showQuantity);
+        
+        boolean showPriceFields = (isVente || isPack);
+        if (salePriceLabel != null) salePriceLabel.setVisible(showPriceFields && !isPack);
+        salePriceField.setVisible(showPriceFields && !isPack);
+        if (totalPriceLabel != null) totalPriceLabel.setVisible(showPriceFields && !isPack);
+        totalPriceField.setVisible(showPriceFields && !isPack);
+        
+        boolean showStoreOwner = (isPret || isTransfert);
+        if (storeOwnerLabel != null) storeOwnerLabel.setVisible(showStoreOwner);
+        storeOwnerComboBox.setVisible(showStoreOwner);
+        
+        // Show/hide pack fields
+        packFieldsBox.setVisible(isPack);
         
         // Show/hide lending fields
-        lendingFieldsBox.setVisible("📦 Prêt".equals(selectedType));
+        lendingFieldsBox.setVisible(isPret);
         
         // Show/hide destination fields
-        destinationBox.setVisible("🚚 Transfert".equals(selectedType));
+        destinationBox.setVisible(isTransfert);
         
         // Show/hide return fields
-        returnFieldsBox.setVisible("🔄 retour".equals(selectedType));
+        returnFieldsBox.setVisible(isRetour);
+        
+        // For pack type, hide regular mattress selection and initialize pack selector
+        if (isPack) {
+            mattressComboBox.setDisable(true);
+            quantityField.setDisable(true);
+            salePriceField.setDisable(true);
+            packTotalPriceField.setDisable(false);
+            
+            // Initialize pack mattress selector for automatic product detection
+            if (packMattressSelector != null) {
+                initializePackMattressSelector();
+                packMattressSelector.setDisable(false);
+            }
+        } else {
+            mattressComboBox.setDisable(false);
+            quantityField.setDisable(false);
+            salePriceField.setDisable(false);
+            // Clear pack items when switching away from pack type
+            packItemRows.clear();
+            packItemsContainer.getChildren().clear();
+            if (packMattressSelector != null) {
+                packMattressSelector.getItems().clear();
+                packMattressSelector.setDisable(true);
+            }
+        }
         
         // Enable/disable store owner based on transaction type
-        if ("📦 Prêt".equals(selectedType) || "🚚 Transfert".equals(selectedType)) {
+        if (isPret || isTransfert) {
             storeOwnerComboBox.setDisable(false);
             storeOwnerComboBox.setPromptText("Sélectionner un propriétaire");
-        } else if ("💰 Vente".equals(selectedType)) {
+        } else {
             storeOwnerComboBox.setDisable(true);
-            storeOwnerComboBox.setPromptText("Non applicable pour les ventes");
-        } else if ("🔄 retour".equals(selectedType)) {
-            storeOwnerComboBox.setDisable(true);
-            storeOwnerComboBox.setPromptText("Non applicable pour les retours");
-        } else if ("📥 Réception".equals(selectedType)) {
-            storeOwnerComboBox.setDisable(true);
-            storeOwnerComboBox.setPromptText("Non applicable pour les réceptions");
+            if (isVente) {
+                storeOwnerComboBox.setPromptText("Non applicable pour les ventes");
+            } else if (isRetour) {
+                storeOwnerComboBox.setPromptText("Non applicable pour les retours");
+            } else if (isReception) {
+                storeOwnerComboBox.setPromptText("Non applicable pour les réceptions");
+            } else if (isPack) {
+                storeOwnerComboBox.setPromptText("Non applicable pour les packs");
+            }
         }
         
         // Set price field behavior
-        if ("🔄 retour".equals(selectedType) || "📥 Réception".equals(selectedType)) {
+        if (isRetour || isReception) {
             salePriceField.setText("0");
             salePriceField.setDisable(true);
             salePriceField.setPromptText("Prix automatiquement mis à zéro");
-        } else {
+        } else if (!isPack) {
             salePriceField.setDisable(false);
             salePriceField.setPromptText("Prix de vente");
         }
         populatePricesForSelection(mattressComboBox.getValue());
+    }
+    
+    /**
+     * Handle pack transaction - creates transaction and pack items
+     */
+    private void handlePackTransaction(String typeForDB, int userId) {
+        try {
+            // Validate pack items
+            if (packItemRows.isEmpty()) {
+                showAlert("Erreur", "Veuillez ajouter au moins un matelas au pack.", AlertType.ERROR);
+                return;
+            }
+            
+            // Collect valid pack items
+            List<PackItem> packItems = new ArrayList<>();
+            for (PackItemRow row : packItemRows) {
+                if (!row.isValid()) {
+                    showAlert("Erreur", "Veuillez compléter tous les champs du pack (matelas et quantité).", AlertType.ERROR);
+                    return;
+                }
+                packItems.add(new PackItem(0, row.getMattressId(), row.getQuantity()));
+            }
+            
+            if (packItems.isEmpty()) {
+                showAlert("Erreur", "Aucun matelas valide dans le pack.", AlertType.ERROR);
+                return;
+            }
+            
+            // Get pack total price
+            String packPriceStr = packTotalPriceField.getText().trim();
+            if (packPriceStr.isEmpty()) {
+                showAlert("Erreur", "Veuillez entrer le prix total du pack.", AlertType.ERROR);
+                return;
+            }
+            
+            double packPrice;
+            try {
+                packPrice = Double.parseDouble(packPriceStr);
+                if (packPrice <= 0) {
+                    showAlert("Erreur", "Le prix du pack doit être positif.", AlertType.ERROR);
+                    return;
+                }
+            } catch (NumberFormatException e) {
+                showAlert("Erreur", "Le prix du pack doit être un nombre valide.", AlertType.ERROR);
+                return;
+            }
+            
+            // Check stock availability for all pack items
+            for (PackItem item : packItems) {
+                Mattress mattress = MattressDAO.getMattressById(item.getMattressId());
+                if (mattress == null) {
+                    showAlert("Erreur", "Matelas introuvable dans la base de données.", AlertType.ERROR);
+                    return;
+                }
+                if (mattress.getQuantity() < item.getQuantity()) {
+                    showAlert("Erreur", "Stock insuffisant pour " + mattress.getType() + " - " + mattress.getSize() + ". Disponible: " + mattress.getQuantity(), AlertType.ERROR);
+                    return;
+                }
+            }
+            
+            // Get notes
+            String notes = notesField.getText().trim();
+            String finalNotes = "Pack - " + packItems.size() + " article(s)";
+            if (!notes.isEmpty()) {
+                finalNotes += " - " + notes;
+            }
+            
+            // Create transaction using first mattress as placeholder
+            int firstMattressId = packItems.get(0).getMattressId();
+            int totalQuantity = packItems.stream().mapToInt(PackItem::getQuantity).sum();
+            
+            // For pack transactions, quantity should be 1 (one pack), not sum of items
+            Transaction packTransaction = new Transaction(
+                LocalDateTime.now(),
+                firstMattressId, // Placeholder mattress ID
+                1,               // Quantity is 1 (one pack)
+                typeForDB,
+                null,            // No store owner for packs
+                userId,
+                packPrice,       // Total pack price
+                finalNotes,
+                null             // No return date
+            );
+            
+            // Save transaction and get ID
+            int transactionId = TransactionDAO.addTransactionAndGetId(packTransaction);
+            if (transactionId <= 0) {
+                showAlert("Erreur", "Échec de la création de la transaction.", AlertType.ERROR);
+                return;
+            }
+            
+            // Save pack items
+            // Note: Database triggers will automatically update inventory for each mattress in the pack
+            boolean packItemsSaved = PackItemDAO.addPackItems(transactionId, packItems);
+            if (!packItemsSaved) {
+                showAlert("Erreur", "Échec de l'enregistrement des articles du pack.", AlertType.ERROR);
+                return;
+            }
+            
+            // Success - refresh and close
+            if (transactionsController != null) {
+                transactionsController.loadTransactions();
+            }
+            if (inventoryController != null) {
+                inventoryController.loadMattresses();
+            }
+            if (dashboardController != null) {
+                dashboardController.hideOverlay();
+                dashboardController.showNotification("Pack ajouté avec succès!", false);
+            }
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            if (dashboardController != null) {
+                dashboardController.showNotification("Une erreur inattendue s'est produite: " + e.getMessage(), true);
+            }
+        }
     }
     
     @FXML
@@ -298,7 +510,7 @@ public class TransactionOverlayController {
             String typeForDB = type;
             if (type.startsWith("💰 ")) {
                 typeForDB = "Vente";
-            } else if (type.startsWith("📦 ")) {
+            } else if (type.startsWith("📦 ") && !"📦 Pack".equals(type)) {
                 typeForDB = "Prêt";
             } else if (type.startsWith("🚚 ")) {
                 typeForDB = "Transfert";
@@ -306,6 +518,22 @@ public class TransactionOverlayController {
                 typeForDB = "retour";
             } else if (type.startsWith("📥 ")) {
                 typeForDB = "Réception";
+            } else if ("📦 Pack".equals(type)) {
+                typeForDB = "Pack";
+            }
+            
+            // Get default user ID (needed for both pack and regular transactions)
+            List<User> users = UserDAO.getAllUsers();
+            int userId = users.isEmpty() ? -1 : users.get(0).getId();
+            if (userId == -1) {
+                showAlert("Erreur", "Aucun utilisateur trouvé dans la base de données.", AlertType.ERROR);
+                return;
+            }
+            
+            // Handle Pack transactions specially
+            if ("Pack".equals(typeForDB)) {
+                handlePackTransaction(typeForDB, userId);
+                return;
             }
             
             String mattressString = mattressComboBox.getValue();
@@ -455,14 +683,6 @@ public class TransactionOverlayController {
                     }
                     return;
                 }
-            }
-            
-            // Get default user ID
-            List<User> users = UserDAO.getAllUsers();
-            int userId = users.isEmpty() ? -1 : users.get(0).getId();
-            if (userId == -1) {
-                showAlert("Erreur", "Aucun utilisateur trouvé dans la base de données.", AlertType.ERROR);
-                return;
             }
             
             // Prepare notes field
@@ -615,10 +835,10 @@ public class TransactionOverlayController {
             String referencePart = parts[2].trim();
 
             for (Mattress mattress : allMattresses) {
-                String reference = mattress.getReference() == null || mattress.getReference().isBlank() 
+                String reference = mattress.getReference() == null || mattress.getReference().trim().isEmpty() 
                     ? "" 
                     : mattress.getReference().trim();
-                String size = mattress.getSize() == null || mattress.getSize().isBlank() 
+                String size = mattress.getSize() == null || mattress.getSize().trim().isEmpty() 
                     ? "" 
                     : mattress.getSize().trim();
                 String type = mattress.getType() == null ? "" : mattress.getType().trim();
@@ -649,7 +869,7 @@ public class TransactionOverlayController {
             String referencePart = parts[1].trim();
             
             for (Mattress mattress : allMattresses) {
-                String reference = mattress.getReference() == null || mattress.getReference().isBlank() 
+                String reference = mattress.getReference() == null || mattress.getReference().trim().isEmpty() 
                     ? "" 
                     : mattress.getReference().trim();
                 String type = mattress.getType() == null ? "" : mattress.getType().trim();
@@ -667,7 +887,7 @@ public class TransactionOverlayController {
             String referencePart = parts[2].trim();
             if (!referencePart.isEmpty() && !"Réf inconnue".equalsIgnoreCase(referencePart)) {
                 for (Mattress mattress : allMattresses) {
-                    String reference = mattress.getReference() == null || mattress.getReference().isBlank() 
+                    String reference = mattress.getReference() == null || mattress.getReference().trim().isEmpty() 
                         ? "" 
                         : mattress.getReference().trim();
                     if (reference.equalsIgnoreCase(referencePart)) {
@@ -678,5 +898,179 @@ public class TransactionOverlayController {
         }
         
         return null;
+    }
+    
+    /**
+     * Initialize pack mattress selector with all available mattresses
+     */
+    private void initializePackMattressSelector() {
+        if (packMattressSelector == null) return;
+        
+        List<Mattress> mattresses = MattressDAO.getAllMattresses();
+        ObservableList<String> mattressNames = FXCollections.observableArrayList();
+        for (Mattress mattress : mattresses) {
+            String reference = (mattress.getReference() == null || mattress.getReference().trim().isEmpty())
+                ? "Réf inconnue"
+                : mattress.getReference();
+            String size = (mattress.getSize() == null || mattress.getSize().trim().isEmpty())
+                ? "Taille inconnue"
+                : mattress.getSize();
+            mattressNames.add("🛏️ " + mattress.getType() + " - " + size + " - " + reference);
+        }
+        packMattressSelector.setItems(mattressNames);
+    }
+    
+    /**
+     * Handle when a mattress is selected from pack selector - automatically add to pack
+     */
+    @FXML
+    private void handlePackMattressSelected() {
+        if (packMattressSelector == null || packMattressSelector.getValue() == null) {
+            return;
+        }
+        
+        String selectedMattress = packMattressSelector.getValue();
+        // Automatically add to pack
+        addMattressToPack(selectedMattress);
+        // Clear selection so user can select again
+        packMattressSelector.setValue(null);
+    }
+    
+    /**
+     * Quick add button - adds selected mattress from pack selector to pack
+     */
+    @FXML
+    private void handleQuickAddPackItem() {
+        if (packMattressSelector == null || packMattressSelector.getValue() == null) {
+            showAlert("Attention", "Veuillez sélectionner un matelas d'abord.", AlertType.WARNING);
+            return;
+        }
+        
+        String selectedMattress = packMattressSelector.getValue();
+        addMattressToPack(selectedMattress);
+        packMattressSelector.setValue(null);
+    }
+    
+    /**
+     * Add a mattress to the pack (check if already exists, if so increment quantity)
+     */
+    private void addMattressToPack(String mattressDisplayString) {
+        // Resolve mattress from display string
+        Mattress mattress = resolveMattressFromDisplay(mattressDisplayString);
+        if (mattress == null) {
+            showAlert("Erreur", "Impossible de trouver le matelas sélectionné.", AlertType.ERROR);
+            return;
+        }
+        
+        // Check if mattress already exists in pack - if so, increment quantity
+        for (PackItemRow row : packItemRows) {
+            if (row.getMattressId() == mattress.getId()) {
+                // Already in pack, increment quantity
+                int currentQty = row.getQuantity();
+                row.setQuantity(currentQty + 1);
+                return;
+            }
+        }
+        
+        // Not in pack yet, add new row
+        PackItemRow row = new PackItemRow();
+        row.setMattress(mattress, mattressDisplayString);
+        packItemRows.add(row);
+        packItemsContainer.getChildren().add(row.getRoot());
+    }
+    
+    /**
+     * Handle adding a new pack item row (manual)
+     */
+    @FXML
+    private void handleAddPackItem() {
+        PackItemRow row = new PackItemRow();
+        packItemRows.add(row);
+        packItemsContainer.getChildren().add(row.getRoot());
+    }
+    
+    /**
+     * Remove a pack item row
+     */
+    private void removePackItem(PackItemRow row) {
+        packItemRows.remove(row);
+        packItemsContainer.getChildren().remove(row.getRoot());
+    }
+    
+    /**
+     * Inner class representing a pack item row in the UI
+     */
+    private class PackItemRow {
+        private HBox root;
+        private ComboBox<String> mattressCombo;
+        private TextField quantityField;
+        private Button removeButton;
+        private int mattressId;
+        
+        public PackItemRow() {
+            root = new HBox(8);
+            root.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+            root.setStyle("-fx-padding: 4;");
+            
+            mattressCombo = new ComboBox<>();
+            List<Mattress> mattresses = MattressDAO.getAllMattresses();
+            ObservableList<String> mattressNames = FXCollections.observableArrayList();
+            for (Mattress mattress : mattresses) {
+                String reference = (mattress.getReference() == null || mattress.getReference().trim().isEmpty())
+                    ? "Réf inconnue"
+                    : mattress.getReference();
+                String size = (mattress.getSize() == null || mattress.getSize().trim().isEmpty())
+                    ? "Taille inconnue"
+                    : mattress.getSize();
+                mattressNames.add("🛏️ " + mattress.getType() + " - " + size + " - " + reference);
+            }
+            mattressCombo.setItems(mattressNames);
+            mattressCombo.setPrefWidth(350);
+            mattressCombo.setMaxWidth(Double.MAX_VALUE);
+            HBox.setHgrow(mattressCombo, javafx.scene.layout.Priority.ALWAYS);
+            
+            mattressCombo.valueProperty().addListener((obs, oldVal, newVal) -> {
+                if (newVal != null) {
+                    Mattress mattress = resolveMattressFromDisplay(newVal);
+                    mattressId = (mattress != null) ? mattress.getId() : 0;
+                }
+            });
+            
+            quantityField = new TextField();
+            quantityField.setPromptText("Qté");
+            quantityField.setPrefWidth(60);
+            setupNumericValidation(quantityField, true);
+            
+            removeButton = new Button("✖");
+            removeButton.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white;");
+            removeButton.setOnAction(e -> removePackItem(this));
+            
+            root.getChildren().addAll(mattressCombo, quantityField, removeButton);
+        }
+        
+        public HBox getRoot() { return root; }
+        public int getMattressId() { return mattressId; }
+        public int getQuantity() {
+            try {
+                String qty = quantityField.getText().trim();
+                return qty.isEmpty() ? 1 : Integer.parseInt(qty);
+            } catch (NumberFormatException e) {
+                return 1;
+            }
+        }
+        
+        public void setQuantity(int quantity) {
+            quantityField.setText(String.valueOf(quantity));
+        }
+        
+        public void setMattress(Mattress mattress, String displayString) {
+            mattressId = mattress.getId();
+            mattressCombo.setValue(displayString);
+            quantityField.setText("1");
+        }
+        
+        public boolean isValid() {
+            return mattressId > 0 && getQuantity() > 0;
+        }
     }
 } 

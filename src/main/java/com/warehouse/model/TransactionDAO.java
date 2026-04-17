@@ -49,7 +49,9 @@ public class TransactionDAO {
         String orderClause = includeSortOrder ? "ORDER BY t.sort_order ASC, t.date DESC" : "ORDER BY t.date DESC";
         String sql = "SELECT t.id, t.date, t.mattress_id, t.quantity, t.type, t.store_owner_id, " +
             "t.user_id, t.prix, t.notes, " + expectedColumn + ", " + sortColumn + ", " +
-            "m.type AS mattress_name, s.name AS store_owner_name " +
+            "m.type AS mattress_type, m.size AS mattress_size, m.reference AS mattress_reference, " +
+            "CONCAT(COALESCE(m.size, ''), ' - ', COALESCE(m.reference, 'Réf inconnue')) AS mattress_name, " +
+            "s.name AS store_owner_name " +
             "FROM transaction t " +
             "LEFT JOIN mattress m ON m.id = t.mattress_id " +
             "LEFT JOIN store_owner s ON s.id = t.store_owner_id " +
@@ -78,7 +80,7 @@ public class TransactionDAO {
         return transactions;
     }
 
-    public static boolean addTransaction(Transaction transaction) {
+    public static int addTransactionAndGetId(Transaction transaction) {
         boolean includeSort = SORT_ORDER_SUPPORTED;
         boolean includeExpected = EXPECTED_RETURN_SUPPORTED;
 
@@ -96,7 +98,7 @@ public class TransactionDAO {
         try (Connection conn = DBUtil.getConnection()) {
             conn.setAutoCommit(false);
             try {
-                PreparedStatement stmt = conn.prepareStatement(sql);
+                PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
                 stmt.setTimestamp(1, Timestamp.valueOf(transaction.getDate()));
                 stmt.setInt(2, transaction.getMattressId());
                 stmt.setInt(3, transaction.getQuantity());
@@ -123,45 +125,52 @@ public class TransactionDAO {
                     stmt.setInt(paramIndex, getNextSortOrder(conn, "transaction"));
                 }
                 
-                boolean success = stmt.executeUpdate() > 0;
-                stmt.close();
+                int rowsAffected = stmt.executeUpdate();
                 
-                if (success) {
-                    // NOTE: Inventory update is handled by database trigger 'update_stock_after_transaction'
-                    // The trigger runs AFTER INSERT and updates mattress quantity automatically
-                    // We don't need to update inventory here to avoid double updates
-                    conn.commit();
-                    logger.info("Transaction added successfully: type={}, mattressId={}, quantity={}", 
-                        transaction.getType(), transaction.getMattressId(), transaction.getQuantity());
-                    return true;
-                } else {
-                    conn.rollback();
-                    logger.warn("Failed to add transaction: no rows affected");
-                    return false;
+                if (rowsAffected > 0) {
+                    // Get generated ID
+                    try (ResultSet rs = stmt.getGeneratedKeys()) {
+                        if (rs.next()) {
+                            int transactionId = rs.getInt(1);
+                            // NOTE: Inventory update is handled by database trigger 'update_stock_after_transaction'
+                            conn.commit();
+                            logger.info("Transaction added successfully: id={}, type={}, mattressId={}, quantity={}", 
+                                transactionId, transaction.getType(), transaction.getMattressId(), transaction.getQuantity());
+                            return transactionId;
+                        }
+                    }
                 }
+                conn.rollback();
+                logger.warn("Failed to add transaction: no rows affected");
+                return -1;
             } catch (SQLException e) {
                 conn.rollback();
                 if (includeSort && isUnknownColumn(e, "sort_order")) {
                     SORT_ORDER_SUPPORTED = false;
                     System.err.println("[TransactionDAO] Échec lors de l'écriture de sort_order – nouvelle tentative sans la colonne.");
-                    return addTransaction(transaction);
+                    return addTransactionAndGetId(transaction);
                 }
                 if (includeExpected && isUnknownColumn(e, "expected_return_date")) {
                     EXPECTED_RETURN_SUPPORTED = false;
                     System.err.println("[TransactionDAO] Échec lors de l'écriture de expected_return_date – nouvelle tentative sans la colonne.");
-                    return addTransaction(transaction);
+                    return addTransactionAndGetId(transaction);
                 }
                 throw e;
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            return false;
+            return -1;
         }
+    }
+    
+    public static boolean addTransaction(Transaction transaction) {
+        return addTransactionAndGetId(transaction) > 0;
     }
     
     /**
      * Updates inventory based on transaction type
      * Called internally to ensure inventory stays in sync
+     * Note: Pack transactions are handled by database triggers on pack_items
      */
     private static void updateInventoryForTransaction(Connection conn, Transaction transaction, boolean isEdit) throws SQLException {
         String type = transaction.getType();
@@ -192,6 +201,10 @@ public class TransactionDAO {
                     logger.debug("Quantity sold updated: mattressId={}, quantity added={}", mattressId, quantity);
                 }
             }
+        } else if ("Pack".equals(type)) {
+            // Pack transactions are handled by database triggers on pack_items
+            // This method is called for consistency but pack inventory is managed by triggers
+            logger.debug("Pack transaction inventory handled by database triggers");
         } else if ("retour".equals(type) || "Réception".equals(type)) {
             // Increase stock for returns, receptions
             String sql = "UPDATE mattress SET quantity = quantity + ? WHERE id = ?";
@@ -285,6 +298,7 @@ public class TransactionDAO {
     
     /**
      * Reverts inventory changes for a transaction (used when editing/deleting)
+     * For Pack transactions, reverts inventory for all pack items
      */
     private static void revertInventoryForTransaction(Connection conn, Transaction transaction) throws SQLException {
         String type = transaction.getType();
@@ -315,6 +329,41 @@ public class TransactionDAO {
                     }
                 }
             }
+        } else if ("Pack".equals(type)) {
+            // For Pack transactions, revert inventory for each pack item
+            String packItemsSql = "SELECT mattress_id, quantity FROM pack_items WHERE transaction_id = ?";
+            try (PreparedStatement stmt = conn.prepareStatement(packItemsSql)) {
+                stmt.setInt(1, transaction.getId());
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        int packMattressId = rs.getInt("mattress_id");
+                        int packQuantity = rs.getInt("quantity");
+                        
+                        // Revert quantity (increase back)
+                        String revertSql = "UPDATE mattress SET quantity = quantity + ? WHERE id = ?";
+                        try (PreparedStatement revertStmt = conn.prepareStatement(revertSql)) {
+                            revertStmt.setInt(1, packQuantity);
+                            revertStmt.setInt(2, packMattressId);
+                            revertStmt.executeUpdate();
+                        }
+                        
+                        // Revert quantity_sold (decrease)
+                        String soldSql = "UPDATE mattress SET quantity_sold = quantity_sold - ? WHERE id = ? AND quantity_sold >= ?";
+                        try (PreparedStatement soldStmt = conn.prepareStatement(soldSql)) {
+                            soldStmt.setInt(1, packQuantity);
+                            soldStmt.setInt(2, packMattressId);
+                            soldStmt.setInt(3, packQuantity);
+                            int updated = soldStmt.executeUpdate();
+                            if (updated == 0) {
+                                logger.warn("Cannot revert quantity_sold for pack mattress ID: {} - quantity_sold would become negative", packMattressId);
+                            } else {
+                                logger.debug("Pack quantity sold reverted: mattressId={}, quantity removed={}", packMattressId, packQuantity);
+                            }
+                        }
+                    }
+                }
+            }
+            logger.debug("Pack transaction inventory reverted for transaction ID: {}", transaction.getId());
         } else if ("retour".equals(type) || "Réception".equals(type)) {
             // Was increased, so decrease back (with safety check)
             String sql = "UPDATE mattress SET quantity = quantity - ? WHERE id = ? AND quantity >= ?";
@@ -352,7 +401,8 @@ public class TransactionDAO {
     private static Transaction getTransactionById(int id) {
         String sql = "SELECT t.id, t.date, t.mattress_id, t.quantity, t.type, t.store_owner_id, " +
             "t.user_id, t.prix, t.notes, t.expected_return_date, t.sort_order, " +
-            "m.type AS mattress_name, s.name AS store_owner_name " +
+            "CONCAT(COALESCE(m.size, ''), ' - ', COALESCE(m.reference, 'Réf inconnue')) AS mattress_name, " +
+            "s.name AS store_owner_name " +
             "FROM transaction t " +
             "LEFT JOIN mattress m ON m.id = t.mattress_id " +
             "LEFT JOIN store_owner s ON s.id = t.store_owner_id " +

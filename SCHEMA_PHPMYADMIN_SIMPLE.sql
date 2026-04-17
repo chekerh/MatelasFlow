@@ -279,6 +279,7 @@ DROP TRIGGER IF EXISTS check_stock_before_transaction$$
 DROP TRIGGER IF EXISTS log_user_login$$
 
 -- Trigger: Update mattress quantity after transaction
+-- Note: Pack transactions are handled by a separate trigger on pack_items
 CREATE TRIGGER update_stock_after_transaction
 AFTER INSERT ON transaction
 FOR EACH ROW
@@ -303,10 +304,73 @@ BEGIN
             SET initial_stock = initial_stock + NEW.quantity
             WHERE id = NEW.mattress_id;
         END IF;
+    -- Pack transactions are handled by update_stock_after_pack_item trigger
+    END IF;
+END$$
+
+-- Trigger: Update inventory when pack items are added (for Pack transactions)
+DROP TRIGGER IF EXISTS update_stock_after_pack_item$$
+CREATE TRIGGER update_stock_after_pack_item
+AFTER INSERT ON pack_items
+FOR EACH ROW
+BEGIN
+    DECLARE transaction_type VARCHAR(50);
+    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
+    BEGIN
+        -- Log error but don't fail the insert
+        -- The Java code will handle inventory update as fallback
+    END;
+    
+    -- Get the transaction type
+    SELECT type INTO transaction_type
+    FROM transaction
+    WHERE id = NEW.transaction_id;
+    
+    -- Only process if this is a Pack transaction (case-insensitive)
+    IF transaction_type = 'Pack' OR UPPER(transaction_type) = 'PACK' THEN
+        -- Decrease stock for each mattress in the pack
+        UPDATE mattress 
+        SET quantity = quantity - NEW.quantity
+        WHERE id = NEW.mattress_id
+        AND quantity >= NEW.quantity;  -- Safety check to prevent negative
+        
+        -- Update quantity_sold for pack sales
+        UPDATE mattress 
+        SET quantity_sold = quantity_sold + NEW.quantity
+        WHERE id = NEW.mattress_id;
+    END IF;
+END$$
+
+-- Trigger: Revert inventory when pack items are deleted (for Pack transactions)
+DROP TRIGGER IF EXISTS revert_stock_after_pack_item_delete$$
+CREATE TRIGGER revert_stock_after_pack_item_delete
+AFTER DELETE ON pack_items
+FOR EACH ROW
+BEGIN
+    DECLARE transaction_type VARCHAR(50);
+    
+    -- Get the transaction type
+    SELECT type INTO transaction_type
+    FROM transaction
+    WHERE id = OLD.transaction_id;
+    
+    -- Only process if this is a Pack transaction
+    IF transaction_type = 'Pack' THEN
+        -- Revert quantity (increase back)
+        UPDATE mattress 
+        SET quantity = quantity + OLD.quantity
+        WHERE id = OLD.mattress_id;
+        
+        -- Revert quantity_sold (decrease)
+        UPDATE mattress 
+        SET quantity_sold = quantity_sold - OLD.quantity
+        WHERE id = OLD.mattress_id
+        AND quantity_sold >= OLD.quantity;
     END IF;
 END$$
 
 -- Trigger: Prevent negative stock
+-- Note: Pack transactions are validated by check_stock_before_pack_item trigger
 CREATE TRIGGER check_stock_before_transaction
 BEFORE INSERT ON transaction
 FOR EACH ROW
@@ -321,6 +385,34 @@ BEGIN
         IF current_stock < NEW.quantity THEN
             SIGNAL SQLSTATE '45000'
             SET MESSAGE_TEXT = 'Stock insuffisant pour cette transaction';
+        END IF;
+    -- Pack transactions are validated by check_stock_before_pack_item trigger
+    END IF;
+END$$
+
+-- Trigger: Prevent negative stock for pack items
+DROP TRIGGER IF EXISTS check_stock_before_pack_item$$
+CREATE TRIGGER check_stock_before_pack_item
+BEFORE INSERT ON pack_items
+FOR EACH ROW
+BEGIN
+    DECLARE current_stock INT;
+    DECLARE transaction_type VARCHAR(50);
+    
+    -- Get the transaction type
+    SELECT type INTO transaction_type
+    FROM transaction
+    WHERE id = NEW.transaction_id;
+    
+    -- Only validate if this is a Pack transaction
+    IF transaction_type = 'Pack' THEN
+        SELECT quantity INTO current_stock
+        FROM mattress
+        WHERE id = NEW.mattress_id;
+        
+        IF current_stock < NEW.quantity THEN
+            SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = CONCAT('Stock insuffisant pour le matelas ID: ', NEW.mattress_id, ' dans le pack');
         END IF;
     END IF;
 END$$

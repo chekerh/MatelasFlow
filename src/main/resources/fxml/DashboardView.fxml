@@ -68,7 +68,7 @@
                     </VBox>
                     
                     <!-- Quick insights -->
-                    <HBox fx:id="quickActionsBar" spacing="16" managed="false" visible="false" styleClass="quick-actions">
+                    <HBox fx:id="quickActionsBar" spacing="10" managed="false" visible="false" styleClass="quick-actions">
                         <VBox styleClass="quick-card" spacing="4">
                             <Label text="Stock critique" styleClass="quick-card__title"/>
                             <Label fx:id="lowStockValueLabel" text="0" styleClass="quick-card__value"/>

@@ -14,6 +14,8 @@ public final class SchemaMigrator {
             ensureMattressReferenceAndPricing(conn);
             ensureMattressSortOrder(conn);
             ensureTransactionEnhancements(conn);
+            ensurePackItemsTable(conn);
+            ensurePackTransactionType(conn);
         } catch (SQLException e) {
             System.err.println("Impossible d'exécuter les migrations automatiques: " + e.getMessage());
         }
@@ -108,6 +110,88 @@ public final class SchemaMigrator {
         try (ResultSet rs = metaData.getColumns(catalog, null, table, column)) {
             return rs.next();
         }
+    }
+    
+    private static void ensurePackItemsTable(Connection conn) throws SQLException {
+        if (tableExists(conn, "pack_items")) {
+            return; // Table already exists
+        }
+        
+        String sql = "CREATE TABLE IF NOT EXISTS pack_items (" +
+                     "id INT AUTO_INCREMENT PRIMARY KEY, " +
+                     "transaction_id INT NOT NULL, " +
+                     "mattress_id INT NOT NULL, " +
+                     "quantity INT NOT NULL DEFAULT 1, " +
+                     "INDEX idx_transaction_id (transaction_id), " +
+                     "INDEX idx_mattress_id (mattress_id), " +
+                     "FOREIGN KEY (transaction_id) REFERENCES transaction(id) ON DELETE CASCADE, " +
+                     "FOREIGN KEY (mattress_id) REFERENCES mattress(id) ON DELETE RESTRICT " +
+                     ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
+        
+        try (Statement stmt = conn.createStatement()) {
+            stmt.executeUpdate(sql);
+        } catch (SQLException e) {
+            // If foreign key constraint fails, try creating without it (might be a constraint issue)
+            if (e.getMessage().contains("foreign key")) {
+                String sqlNoFK = "CREATE TABLE IF NOT EXISTS pack_items (" +
+                                 "id INT AUTO_INCREMENT PRIMARY KEY, " +
+                                 "transaction_id INT NOT NULL, " +
+                                 "mattress_id INT NOT NULL, " +
+                                 "quantity INT NOT NULL DEFAULT 1, " +
+                                 "INDEX idx_transaction_id (transaction_id), " +
+                                 "INDEX idx_mattress_id (mattress_id) " +
+                                 ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
+                try (Statement stmt2 = conn.createStatement()) {
+                    stmt2.executeUpdate(sqlNoFK);
+                }
+            } else {
+                throw e;
+            }
+        }
+    }
+    
+    private static void ensurePackTransactionType(Connection conn) throws SQLException {
+        // Check if 'Pack' type already exists in the enum
+        if (transactionTypeExists(conn, "Pack")) {
+            return; // Already exists
+        }
+        
+        // Try to modify the ENUM to add 'Pack'
+        // Note: MySQL ENUM modifications can be tricky, so we'll handle errors gracefully
+        try (Statement stmt = conn.createStatement()) {
+            // Try to alter the enum column
+            String sql = "ALTER TABLE transaction MODIFY COLUMN type ENUM('Vente', 'Transfert', 'Prêt', 'retour', 'Réception', 'Pack') NOT NULL";
+            stmt.executeUpdate(sql);
+        } catch (SQLException e) {
+            // If modification fails, that's okay - the application will handle it
+            // The Pack type might not work until the database schema is manually updated
+            System.err.println("Note: Could not add 'Pack' to transaction type enum. " +
+                             "You may need to manually update the database schema. Error: " + e.getMessage());
+        }
+    }
+    
+    private static boolean tableExists(Connection conn, String tableName) throws SQLException {
+        DatabaseMetaData metaData = conn.getMetaData();
+        try (ResultSet rs = metaData.getTables(conn.getCatalog(), null, tableName, null)) {
+            return rs.next();
+        }
+    }
+    
+    private static boolean transactionTypeExists(Connection conn, String typeValue) {
+        try (Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT COLUMN_TYPE FROM information_schema.COLUMNS " +
+                                            "WHERE TABLE_SCHEMA = DATABASE() " +
+                                            "AND TABLE_NAME = 'transaction' " +
+                                            "AND COLUMN_NAME = 'type'")) {
+            if (rs.next()) {
+                String enumDef = rs.getString("COLUMN_TYPE");
+                return enumDef != null && enumDef.contains("'" + typeValue + "'");
+            }
+        } catch (SQLException e) {
+            // If we can't check, assume it doesn't exist and try to add it
+            return false;
+        }
+        return false;
     }
 }
 

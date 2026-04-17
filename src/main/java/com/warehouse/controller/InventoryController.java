@@ -20,6 +20,17 @@ import javafx.beans.property.SimpleDoubleProperty;
 import javafx.application.Platform;
 import javafx.animation.PauseTransition;
 import javafx.util.Duration;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
+import javafx.util.StringConverter;
+import javafx.util.Callback;
+import javafx.scene.control.TextField;
+import javafx.scene.control.TextFormatter;
+import java.text.DecimalFormat;
+import java.text.ParsePosition;
+import java.util.function.UnaryOperator;
+import java.util.regex.Pattern;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -42,6 +53,7 @@ public class InventoryController {
     private Mattress draggedMattress;
     private final SkeletonPane tableSkeleton = SkeletonPane.forTable(420, 220);
     private final Label emptyPlaceholder = new Label("Aucun matelas trouvé dans la base de données.");
+    private TableCell<?, ?> currentlyEditingCell = null; // Track which cell is being edited
 
     public void setDashboardController(DashboardController dashboardController) {
         this.dashboardController = dashboardController;
@@ -62,8 +74,14 @@ public class InventoryController {
         unitPriceColumn.setCellValueFactory(cellData -> new SimpleDoubleProperty(cellData.getValue().getUnitPrice()).asObject());
         totalPriceColumn.setCellValueFactory(cellData -> new SimpleDoubleProperty(cellData.getValue().getTotalPrice()).asObject());
         
-        unitPriceColumn.setCellFactory(column -> createPriceCell());
-        totalPriceColumn.setCellFactory(column -> createPriceCell());
+        // Set up editable cell factories for inline editing
+        typeColumn.setCellFactory(column -> createEditableStringCell("type"));
+        sizeColumn.setCellFactory(column -> createEditableStringCell("size"));
+        brandColumn.setCellFactory(column -> createEditableStringCell("reference"));
+        quantityColumn.setCellFactory(column -> createEditableIntegerCell("quantity"));
+        unitPriceColumn.setCellFactory(column -> createEditableDoubleCell("unitPrice"));
+        totalPriceColumn.setCellFactory(column -> createPriceCell()); // Total price is read-only (calculated)
+        
         typeColumn.setStyle("-fx-alignment: CENTER-LEFT;");
         sizeColumn.setStyle("-fx-alignment: CENTER;");
         brandColumn.setStyle("-fx-alignment: CENTER-LEFT;");
@@ -81,9 +99,36 @@ public class InventoryController {
 
         mattressTable.setPlaceholder(tableSkeleton);
         mattressTable.setItems(mattressList);
+        
+        // Enable editing on double-click
+        mattressTable.setEditable(true);
+        typeColumn.setEditable(true);
+        sizeColumn.setEditable(true);
+        brandColumn.setEditable(true);
+        quantityColumn.setEditable(true);
+        unitPriceColumn.setEditable(true);
+        totalPriceColumn.setEditable(false); // Read-only (calculated)
+        
+        // Set up row factory for both double-click editing and drag-and-drop reordering
         if (MattressDAO.isSortOrderSupported()) {
-            enableRowReordering();
+            enableRowReorderingWithEditing();
         } else {
+            // Just enable double-click editing without drag-and-drop
+            mattressTable.setRowFactory(tv -> {
+                TableRow<Mattress> row = new TableRow<>();
+                row.setOnMouseClicked(event -> {
+                    if (event.getClickCount() == 2 && !row.isEmpty()) {
+                        // Find which column was clicked
+                        double x = event.getX();
+                        TableColumn<Mattress, ?> column = getColumnAtX(x);
+                        if (column != null && column.isEditable() && column != totalPriceColumn) {
+                            mattressTable.getSelectionModel().select(row.getItem());
+                            mattressTable.edit(row.getIndex(), column);
+                        }
+                    }
+                });
+                return row;
+            });
             System.out.println("[InventoryController] L'ordre manuel est indisponible tant que la colonne sort_order n'est pas ajoutée.");
         }
         loadMattresses();
@@ -101,6 +146,448 @@ public class InventoryController {
                 }
             }
         };
+    }
+    
+    /**
+     * Create an editable cell for string fields (type, size, reference)
+     */
+    private TableCell<Mattress, String> createEditableStringCell(String fieldName) {
+        return new TableCell<Mattress, String>() {
+            private TextField textField;
+            private String originalValue;
+            
+            @Override
+            public void startEdit() {
+                if (!isEmpty() && getTableRow() != null && getTableRow().getItem() != null) {
+                    super.startEdit();
+                    createTextField();
+                    setText(null);
+                    setGraphic(textField);
+                    textField.selectAll();
+                    textField.requestFocus();
+                    originalValue = getItem();
+                    currentlyEditingCell = this;
+                }
+            }
+            
+            @Override
+            public void cancelEdit() {
+                super.cancelEdit();
+                setText(getItem());
+                setGraphic(null);
+                currentlyEditingCell = null;
+            }
+            
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty) {
+                    setText(null);
+                    setGraphic(null);
+                } else {
+                    if (isEditing()) {
+                        if (textField != null) {
+                            textField.setText(getString());
+                        }
+                        setText(null);
+                        setGraphic(textField);
+                    } else {
+                        setText(getString());
+                        setGraphic(null);
+                    }
+                }
+            }
+            
+            private void createTextField() {
+                textField = new TextField(getString());
+                textField.setMinWidth(this.getWidth() - this.getGraphicTextGap() * 2);
+                textField.focusedProperty().addListener((obs, wasFocused, isNowFocused) -> {
+                    if (!isNowFocused && isEditing()) {
+                        commitEdit(textField.getText());
+                    }
+                });
+                textField.setOnKeyPressed(t -> {
+                    if (t.getCode() == KeyCode.ENTER) {
+                        commitEdit(textField.getText());
+                    } else if (t.getCode() == KeyCode.ESCAPE) {
+                        cancelEdit();
+                    }
+                });
+            }
+            
+            private String getString() {
+                return getItem() == null ? "" : getItem();
+            }
+            
+            @Override
+            public void commitEdit(String newValue) {
+                if (isEditing()) {
+                    Mattress mattress = getTableView().getItems().get(getIndex());
+                    if (mattress == null) {
+                        cancelEdit();
+                        return;
+                    }
+                    
+                    // Validation
+                    if (fieldName.equals("type") && (newValue == null || newValue.trim().isEmpty())) {
+                        showValidationError("Le type ne peut pas être vide.");
+                        cancelEdit();
+                        return;
+                    }
+                    
+                    // Update the model
+                    String oldValue = originalValue;
+                    switch (fieldName) {
+                        case "type":
+                            mattress.setType(newValue != null ? newValue.trim() : "");
+                            break;
+                        case "size":
+                            mattress.setSize(newValue != null ? newValue.trim() : "");
+                            break;
+                        case "reference":
+                            mattress.setReference(newValue != null ? newValue.trim() : "");
+                            break;
+                    }
+                    
+                    // Save to database
+                    CompletableFuture.supplyAsync(() -> {
+                        return MattressDAO.updateMattress(mattress);
+                    }).thenAccept(success -> {
+                        Platform.runLater(() -> {
+                            if (success) {
+                                super.commitEdit(newValue != null ? newValue.trim() : "");
+                                if (dashboardController != null) {
+                                    dashboardController.showNotification("Modification enregistrée avec succès!", false);
+                                }
+                                // Refresh to update total price
+                                loadMattresses();
+                            } else {
+                                // Rollback on failure
+                                switch (fieldName) {
+                                    case "type":
+                                        mattress.setType(oldValue);
+                                        break;
+                                    case "size":
+                                        mattress.setSize(oldValue);
+                                        break;
+                                    case "reference":
+                                        mattress.setReference(oldValue);
+                                        break;
+                                }
+                                cancelEdit();
+                                if (dashboardController != null) {
+                                    dashboardController.showNotification("Erreur lors de l'enregistrement.", true);
+                                }
+                            }
+                            currentlyEditingCell = null;
+                        });
+                    });
+                }
+            }
+        };
+    }
+    
+    /**
+     * Create an editable cell for integer fields (quantity)
+     */
+    private TableCell<Mattress, Integer> createEditableIntegerCell(String fieldName) {
+        return new TableCell<Mattress, Integer>() {
+            private TextField textField;
+            private Integer originalValue;
+            
+            @Override
+            public void startEdit() {
+                if (!isEmpty() && getTableRow() != null && getTableRow().getItem() != null) {
+                    super.startEdit();
+                    createTextField();
+                    setText(null);
+                    setGraphic(textField);
+                    textField.selectAll();
+                    textField.requestFocus();
+                    originalValue = getItem();
+                    currentlyEditingCell = this;
+                }
+            }
+            
+            @Override
+            public void cancelEdit() {
+                super.cancelEdit();
+                setText(getItem() != null ? getItem().toString() : "0");
+                setGraphic(null);
+                currentlyEditingCell = null;
+            }
+            
+            @Override
+            protected void updateItem(Integer item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty) {
+                    setText(null);
+                    setGraphic(null);
+                } else {
+                    if (isEditing()) {
+                        if (textField != null) {
+                            textField.setText(getItem() != null ? getItem().toString() : "0");
+                        }
+                        setText(null);
+                        setGraphic(textField);
+                    } else {
+                        setText(getItem() != null ? getItem().toString() : "0");
+                        setGraphic(null);
+                    }
+                }
+            }
+            
+            private void createTextField() {
+                textField = new TextField(getItem() != null ? getItem().toString() : "0");
+                textField.setMinWidth(this.getWidth() - this.getGraphicTextGap() * 2);
+                
+                // Only allow numeric input
+                Pattern pattern = Pattern.compile("\\d*");
+                TextFormatter<String> formatter = new TextFormatter<>(change -> {
+                    if (pattern.matcher(change.getControlNewText()).matches()) {
+                        return change;
+                    } else {
+                        return null;
+                    }
+                });
+                textField.setTextFormatter(formatter);
+                
+                textField.focusedProperty().addListener((obs, wasFocused, isNowFocused) -> {
+                    if (!isNowFocused && isEditing()) {
+                        try {
+                            int value = Integer.parseInt(textField.getText());
+                            commitEdit(value);
+                        } catch (NumberFormatException e) {
+                            cancelEdit();
+                        }
+                    }
+                });
+                textField.setOnKeyPressed(t -> {
+                    if (t.getCode() == KeyCode.ENTER) {
+                        try {
+                            int value = Integer.parseInt(textField.getText());
+                            commitEdit(value);
+                        } catch (NumberFormatException e) {
+                            cancelEdit();
+                        }
+                    } else if (t.getCode() == KeyCode.ESCAPE) {
+                        cancelEdit();
+                    }
+                });
+            }
+            
+            @Override
+            public void commitEdit(Integer newValue) {
+                if (isEditing()) {
+                    Mattress mattress = getTableView().getItems().get(getIndex());
+                    if (mattress == null) {
+                        cancelEdit();
+                        return;
+                    }
+                    
+                    // Validation
+                    if (newValue == null || newValue < 0) {
+                        showValidationError("La quantité doit être >= 0.");
+                        cancelEdit();
+                        return;
+                    }
+                    
+                    // Update the model
+                    Integer oldValue = originalValue;
+                    mattress.setQuantity(newValue);
+                    
+                    // Save to database
+                    CompletableFuture.supplyAsync(() -> {
+                        return MattressDAO.updateMattress(mattress);
+                    }).thenAccept(success -> {
+                        Platform.runLater(() -> {
+                            if (success) {
+                                super.commitEdit(newValue);
+                                if (dashboardController != null) {
+                                    dashboardController.showNotification("Quantité mise à jour avec succès!", false);
+                                }
+                                // Refresh to update total price
+                                loadMattresses();
+                            } else {
+                                // Rollback on failure
+                                mattress.setQuantity(oldValue);
+                                cancelEdit();
+                                if (dashboardController != null) {
+                                    dashboardController.showNotification("Erreur lors de l'enregistrement.", true);
+                                }
+                            }
+                            currentlyEditingCell = null;
+                        });
+                    });
+                }
+            }
+        };
+    }
+    
+    /**
+     * Create an editable cell for double fields (unitPrice)
+     */
+    private TableCell<Mattress, Double> createEditableDoubleCell(String fieldName) {
+        return new TableCell<Mattress, Double>() {
+            private TextField textField;
+            private Double originalValue;
+            
+            @Override
+            public void startEdit() {
+                if (!isEmpty() && getTableRow() != null && getTableRow().getItem() != null) {
+                    super.startEdit();
+                    createTextField();
+                    setText(null);
+                    setGraphic(textField);
+                    textField.selectAll();
+                    textField.requestFocus();
+                    originalValue = getItem();
+                    currentlyEditingCell = this;
+                }
+            }
+            
+            @Override
+            public void cancelEdit() {
+                super.cancelEdit();
+                setText(getItem() != null ? String.format("%.2f DT", getItem()) : "0.00 DT");
+                setGraphic(null);
+                currentlyEditingCell = null;
+            }
+            
+            @Override
+            protected void updateItem(Double item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty) {
+                    setText(null);
+                    setGraphic(null);
+                } else {
+                    if (isEditing()) {
+                        if (textField != null) {
+                            textField.setText(getItem() != null ? String.format("%.2f", getItem()) : "0.00");
+                        }
+                        setText(null);
+                        setGraphic(textField);
+                    } else {
+                        setText(getItem() != null ? String.format("%.2f DT", getItem()) : "0.00 DT");
+                        setGraphic(null);
+                    }
+                }
+            }
+            
+            private void createTextField() {
+                textField = new TextField(getItem() != null ? String.format("%.2f", getItem()) : "0.00");
+                textField.setMinWidth(this.getWidth() - this.getGraphicTextGap() * 2);
+                
+                // Allow numeric input with decimal point
+                Pattern pattern = Pattern.compile("\\d*\\.?\\d*");
+                TextFormatter<String> formatter = new TextFormatter<>(change -> {
+                    String newText = change.getControlNewText();
+                    if (pattern.matcher(newText).matches()) {
+                        return change;
+                    } else {
+                        return null;
+                    }
+                });
+                textField.setTextFormatter(formatter);
+                
+                textField.focusedProperty().addListener((obs, wasFocused, isNowFocused) -> {
+                    if (!isNowFocused && isEditing()) {
+                        try {
+                            double value = Double.parseDouble(textField.getText());
+                            commitEdit(value);
+                        } catch (NumberFormatException e) {
+                            cancelEdit();
+                        }
+                    }
+                });
+                textField.setOnKeyPressed(t -> {
+                    if (t.getCode() == KeyCode.ENTER) {
+                        try {
+                            double value = Double.parseDouble(textField.getText());
+                            commitEdit(value);
+                        } catch (NumberFormatException e) {
+                            cancelEdit();
+                        }
+                    } else if (t.getCode() == KeyCode.ESCAPE) {
+                        cancelEdit();
+                    }
+                });
+            }
+            
+            @Override
+            public void commitEdit(Double newValue) {
+                if (isEditing()) {
+                    Mattress mattress = getTableView().getItems().get(getIndex());
+                    if (mattress == null) {
+                        cancelEdit();
+                        return;
+                    }
+                    
+                    // Validation
+                    if (newValue == null || newValue < 0) {
+                        showValidationError("Le prix doit être >= 0.");
+                        cancelEdit();
+                        return;
+                    }
+                    
+                    // Update the model
+                    Double oldValue = originalValue;
+                    mattress.setUnitPrice(newValue);
+                    
+                    // Save to database
+                    CompletableFuture.supplyAsync(() -> {
+                        return MattressDAO.updateMattress(mattress);
+                    }).thenAccept(success -> {
+                        Platform.runLater(() -> {
+                            if (success) {
+                                super.commitEdit(newValue);
+                                if (dashboardController != null) {
+                                    dashboardController.showNotification("Prix mis à jour avec succès!", false);
+                                }
+                                // Refresh to update total price
+                                loadMattresses();
+                            } else {
+                                // Rollback on failure
+                                mattress.setUnitPrice(oldValue);
+                                cancelEdit();
+                                if (dashboardController != null) {
+                                    dashboardController.showNotification("Erreur lors de l'enregistrement.", true);
+                                }
+                            }
+                            currentlyEditingCell = null;
+                        });
+                    });
+                }
+            }
+        };
+    }
+    
+    /**
+     * Show validation error message
+     */
+    private void showValidationError(String message) {
+        if (dashboardController != null) {
+            dashboardController.showNotification(message, true);
+        } else {
+            errorLabel.setText(message);
+        }
+    }
+    
+    /**
+     * Get the column at a specific X position (for double-click detection)
+     */
+    private TableColumn<Mattress, ?> getColumnAtX(double x) {
+        double currentX = 0;
+        for (TableColumn<Mattress, ?> column : mattressTable.getColumns()) {
+            if (column.isVisible()) {
+                double columnWidth = column.getWidth();
+                if (x >= currentX && x <= currentX + columnWidth) {
+                    return column;
+                }
+                currentX += columnWidth;
+            }
+        }
+        return null;
     }
 
     @FXML
@@ -263,9 +750,27 @@ public class InventoryController {
     }
 
     private void enableRowReordering() {
+        enableRowReorderingWithEditing();
+    }
+    
+    private void enableRowReorderingWithEditing() {
         mattressTable.setRowFactory(tv -> {
             TableRow<Mattress> row = new TableRow<>();
 
+            // Double-click to edit
+            row.setOnMouseClicked(event -> {
+                if (event.getClickCount() == 2 && !row.isEmpty()) {
+                    // Find which column was clicked
+                    double x = event.getX();
+                    TableColumn<Mattress, ?> column = getColumnAtX(x);
+                    if (column != null && column.isEditable() && column != totalPriceColumn) {
+                        mattressTable.getSelectionModel().select(row.getItem());
+                        mattressTable.edit(row.getIndex(), column);
+                    }
+                }
+            });
+
+            // Drag-and-drop for reordering
             row.setOnDragDetected(event -> {
                 if (!row.isEmpty()) {
                     draggedMattress = row.getItem();

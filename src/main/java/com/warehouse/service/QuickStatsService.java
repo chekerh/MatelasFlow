@@ -2,6 +2,8 @@ package com.warehouse.service;
 
 import com.warehouse.model.Mattress;
 import com.warehouse.model.MattressDAO;
+import com.warehouse.model.PackItem;
+import com.warehouse.model.PackItemDAO;
 import com.warehouse.model.Transaction;
 import com.warehouse.model.TransactionDAO;
 import javafx.application.Platform;
@@ -59,29 +61,67 @@ public class QuickStatsService {
                                  t.getExpectedReturnDate().isBefore(LocalDate.now().plusDays(1)))
                     .count();
                 
-                // Calculate today's revenue
+                // Calculate today's revenue - include both Vente and Pack transactions
                 stats.todayRevenue = transactions.stream()
-                    .filter(t -> t.getType() != null && 
-                                t.getType().toLowerCase(Locale.ROOT).startsWith("vente"))
-                    .filter(t -> t.getDate() != null && 
-                                t.getDate().toLocalDate().equals(LocalDate.now()))
-                    .mapToDouble(t -> t.getPrix() * t.getQuantity())
+                    .filter(t -> {
+                        if (t.getType() == null || t.getDate() == null) return false;
+                        String lowerType = t.getType().toLowerCase(Locale.ROOT);
+                        return lowerType.startsWith("vente") || lowerType.startsWith("pack");
+                    })
+                    .filter(t -> t.getDate().toLocalDate().equals(LocalDate.now()))
+                    .mapToDouble(t -> {
+                        String lowerType = t.getType().toLowerCase(Locale.ROOT);
+                        if (lowerType.startsWith("pack")) {
+                            // For pack transactions, prix contains the total pack price
+                            return t.getPrix();
+                        } else {
+                            // For regular sales, calculate: unit price * quantity
+                            return t.getPrix() * t.getQuantity();
+                        }
+                    })
                     .sum();
                 
                 // Calculate today's net profit (revenue - cost)
                 // Net profit = (sale price - unit price) * quantity for each sale
+                // For packs, calculate based on individual items in the pack
                 stats.todayNetProfit = transactions.stream()
-                    .filter(t -> t.getType() != null && 
-                                t.getType().toLowerCase(Locale.ROOT).startsWith("vente"))
-                    .filter(t -> t.getDate() != null && 
-                                t.getDate().toLocalDate().equals(LocalDate.now()))
+                    .filter(t -> {
+                        if (t.getType() == null || t.getDate() == null) return false;
+                        String lowerType = t.getType().toLowerCase(Locale.ROOT);
+                        return lowerType.startsWith("vente") || lowerType.startsWith("pack");
+                    })
+                    .filter(t -> t.getDate().toLocalDate().equals(LocalDate.now()))
                     .mapToDouble(t -> {
-                        // Get the mattress to find unit price
-                        Mattress mattress = MattressDAO.getMattressById(t.getMattressId());
-                        if (mattress != null) {
-                            double salePrice = t.getPrix();
-                            double unitPrice = mattress.getUnitPrice();
-                            return (salePrice - unitPrice) * t.getQuantity();
+                        String lowerType = t.getType().toLowerCase(Locale.ROOT);
+                        if (lowerType.startsWith("pack")) {
+                            // For pack transactions, calculate profit based on pack total price
+                            // and estimated cost of pack items
+                            // Get pack items from database
+                            try {
+                                List<PackItem> packItems = PackItemDAO.getPackItemsByTransactionId(t.getId());
+                                double totalCost = 0.0;
+                                double packRevenue = t.getPrix();
+                                
+                                for (PackItem item : packItems) {
+                                    Mattress mattress = MattressDAO.getMattressById(item.getMattressId());
+                                    if (mattress != null) {
+                                        totalCost += mattress.getUnitPrice() * item.getQuantity();
+                                    }
+                                }
+                                
+                                return packRevenue - totalCost;
+                            } catch (Exception e) {
+                                logger.warn("Could not calculate pack profit for transaction {}: {}", t.getId(), e.getMessage());
+                                return 0.0;
+                            }
+                        } else {
+                            // For regular sales
+                            Mattress mattress = MattressDAO.getMattressById(t.getMattressId());
+                            if (mattress != null) {
+                                double salePrice = t.getPrix();
+                                double unitPrice = mattress.getUnitPrice();
+                                return (salePrice - unitPrice) * t.getQuantity();
+                            }
                         }
                         return 0.0;
                     })
